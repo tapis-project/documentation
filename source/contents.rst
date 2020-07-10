@@ -19,3 +19,9 @@ Welcome to Tapis's Documentation!
 
    technical/index
    technical/authentication
+   technical/systems
+   technical/files
+   technical/meta
+   technical/streams
+   technical/actors
+   technical/security

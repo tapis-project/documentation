@@ -20,7 +20,7 @@ Create a TACC account
 
 The main instance of the Tapis platform is hosted at the Texas Advanced Computing Center (`TACC <https://tacc.utexas.edu>`_).
 TACC designs and deploys some of the world's most powerful advanced computing technologies and innovative software
-solutions to enable researchers to answer complex questions. To use the TACC-hosted Abaco service, please
+solutions to enable researchers to answer complex questions. To use the TACC-hosted Tapis platform, please
 create a `TACC account <https://portal.tacc.utexas.edu/account-request>`__ .
 
 
