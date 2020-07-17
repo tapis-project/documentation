@@ -19,12 +19,10 @@ Welcome to Tapis's Documentation!
 
    technical/index
    technical/authentication
+   technical/systems
+   technical/files
+   technical/meta
+   technical/actors
+   technical/security
+   technical/streams
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Streams:
-
-   technical/streams/streams
-   technical/streams/projects
-   technical/streams/sites
-   technical/streams/instruments
