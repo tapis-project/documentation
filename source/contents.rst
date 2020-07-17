@@ -22,6 +22,7 @@ Welcome to Tapis's Documentation!
    technical/systems
    technical/files
    technical/meta
-   technical/streams
    technical/actors
    technical/security
+   technical/streams
+
