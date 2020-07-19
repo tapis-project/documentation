@@ -8,7 +8,7 @@ Tenancy and Authentication
 Tenants
 -------
 
-Tapis is a *mult-tenant* plaform, meaning that different projects (or *tenants*) can have logically isolated views of 
+Tapis is a *multi-tenant* platform, meaning that different projects (or *tenants*) can have logically isolated views of
 the Tapis objects (i.e., the systems, files, actors, etc.) they create for their project. 
 
 Each tenant is made up of the following:
@@ -82,7 +82,7 @@ Authentication
 --------------
 
 The default authenticator provided by the Tapis project is based on OAuth2, and this is the authentication mechanism
-in place for the ``tacc`` tenant. The OAuth2-based authentication services are availabel via the  ``/v3/oauth2`` 
+in place for the ``tacc`` tenant. The OAuth2-based authentication services are available via the  ``/v3/oauth2``
 endpoints.
 
 OAuth uses different *grant type flows* for generating tokens in different situations. We do not provide a comprehensive 
@@ -96,7 +96,7 @@ and ``username``, for example:
 
 .. code-block:: plaintext
 
- >>> t = Tapis(base_url='https://tacc.tapis.io', usernam='jdoe')
+ >>> t = Tapis(base_url='https://tacc.tapis.io', username='jdoe')
 
 
 Password Grant - Generating a Token For Yourself
@@ -149,16 +149,16 @@ the tenant to verify the JWT signature.
 Using a Token
 ~~~~~~~~~~~~~
 
-In order to use an access token in an API request to Tapis, pass the token in as the vaule of the ``X-Tapis-Token`` header.
+In order to use an access token in an API request to Tapis, pass the token in as the value of the ``X-Tapis-Token`` header.
 The PySDK will automatically send the token via this header for you. 
 In CURL examples used throughout this documentation, we assume the raw JWT string representing an access token (like the 
-above) has been exported as a shell varible; i.e.,
+above) has been exported as a shell variable; i.e.,
 
 .. code-block:: plaintext
 
  $ export JWT=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJqdGkiOiJmN2I5YjE5ZS02MDk5LTRmODItYTcyMi1iNjEwYzVkMGJhMGMiLCJpc3MiOiJodHRwczovL3RhY2MudGFwaXMuaW8vdjMvdG9rZW5zIiwic3ViIjoiYXBpdGVzdEB0YWNjIiwidGFwaXMvdGVuYW50X2lkIjoidGFjYyIsInRhcGlzL3Rva2VuX3R5cGUiOiJhY2Nlc3MiLCJ0YXBpcy9kZWxlZ2F0aW9uIjpmYWxzZSwidGFwaXMvZGVsZWdhdGlvbl9zdWIiOm51bGwsInRhcGlzL3VzZXJuYW1lIjoiYXBpdGVzdCIsInRhcGlzL2FjY291bnRfdHlwZSI6InVzZXIiLCJleHAiOjE1OTUwOTk0NTYsInRhcGlzL2NsaWVudF9pZCI6bnVsbCwidGFwaXMvZ3JhbnRfdHlwZSI6InBhc3N3b3JkIn0.alC8rRM-zNsHKcUiz3-tOJPaYtFksKb4Bit_aFE1HH_X_znnP2QkJaqc-xaRoMlQu26MN72TlJE0siIN3T38xXWBGDumHUYbvnNzT-7lk7AQU5MHSyCWx8IRDmTSbqmWOG8WBMCIV9Dh84mDd-X6eLJQ_cz1QqMAiI_cPgA9VVE22qDK3Lbz2pp9t0sm-l9XjE5y5Im8Y0B2p0ssPD0TjW20C5yngZ4-4jowDafboKlscog9ko-adrsVIjG_r-ccCUX3r8SVwQLypZFZAPKqbVzl8jt_mCi30W8AYwiaYGmH7INBbHI9hO7kwJNFMuSylejFhMslxgdzGlIAyXauwg
 
-With that vairiable set, we can use the ``-H`` flag with curl to set the ``X-Tapis-Token`` header as follows:
+With that variable set, we can use the ``-H`` flag with curl to set the ``X-Tapis-Token`` header as follows:
 
 .. code-block:: plaintext
 
@@ -167,10 +167,10 @@ With that vairiable set, we can use the ``-H`` flag with curl to set the ``X-Tap
 
 Note also the *claims* associated with the access token. These claims provide information about the token, including the
 user it represents (``apitest`` in the above example), the tenant it belongs to (``tacc`` above) when it expires, etc. Tapis
-tokens alawys include the following standard claims:
+tokens always include the following standard claims:
 
 +----------------------+-----------------------------------+--------------------------------------+
-| Claim                | Description                       | Examepl Value                        |
+| Claim                | Description                       | Example Value                        |
 +======================+===================================+======================================+
 | sub                  | The subject of the token; the     |                                      |
 |                      | subject uniquely identifies the   | apitest@tacc                         |  
@@ -192,7 +192,7 @@ authenticator for each tenant may optionally choose to support one or more of th
 claims are encouraged and supported by the default OAuth2 Tapis authenticator.
 
 +----------------------+-----------------------------------+--------------------------------------+
-| Claim                | Description                       | Examepl Value                        |
+| Claim                | Description                       | Example Value                        |
 +======================+===================================+======================================+
 | tapis/tenant_id      | The tenant of the subject.        | tacc                                 |
 +----------------------+-----------------------------------+--------------------------------------+
@@ -220,7 +220,7 @@ claims are encouraged and supported by the default OAuth2 Tapis authenticator.
 |                      | the token.                        |                                      |
 +----------------------+-----------------------------------+--------------------------------------+
 
-The autheticator for your tenant may include additional claims not listed here.
+The authenticator for your tenant may include additional claims not listed here.
 
 
 .. _JWT: https://jwt.io/introduction/ 
@@ -241,7 +241,7 @@ Creating Clients
 To create a client, make a POST request the the Clients API. All fields are optional; if you do not pass a 
 ``client_id`` or ``client_key`` in the request, the clients API will generate random ones for you. In order to
 use the ``authorize_code`` grant type you will need to set the ``callback_url`` when registering your client (see :ref: `_auth_code`).
-For a complete list of availble parameters, see the API live-docs for Clients_.
+For a complete list of available parameters, see the API live-docs for Clients_.
 
 With PySDK:
 
@@ -291,7 +291,7 @@ With CURL:
 
  $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/oauth2/clients
 
-The reponse will be similar to
+The response will be similar to
 
 .. code-block:: plaintext
 
@@ -332,15 +332,15 @@ A null response is returned from a successful delete request.
 Authorization Code Grant - Generating Tokens For Users
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An important aspect of OAuth2 is that it enables applications to generate tokens o behalf of users without the applications
-needing to possess user credntials (i.e., passwords). In this section, we discuss using the OAuth2 *authorization code* grant
+An important aspect of OAuth2 is that it enables applications to generate tokens on behalf of users without the applications
+needing to possess user credentials (i.e., passwords). In this section, we discuss using the OAuth2 *authorization code* grant
 type to do just that.
 
 Assuming a Model-View-Controller (MVC) architecture, there are two controllers that must be written to support the
 authorization code grant type flow. 
 
 1. A controller to determine if the user already has a valid access token and direct them to the OAuth2 authorization 
-   server when they do not. This controller starts the authroization code process. To do so, it should: 
+   server when they do not. This controller starts the authorization code process. To do so, it should:
 
   * First inform the user that they will be asked to authenticate with their tenant 
     username and password and then be asked to grant authorization to your client application. 
@@ -375,7 +375,7 @@ authorization code grant type flow.
 Note that many popular web frameworks support OAuth2 flows with minimal custom coding required.
 
 The final step to using the authorization code grant type is to register a client (see above) with a ``callback_url``
-paramter equal to the URL within your web application where it will handle converting authorization codes into access 
+parameter equal to the URL within your web application where it will handle converting authorization codes into access
 tokens (i.e., controller 2 above).
 
 
