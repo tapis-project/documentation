@@ -2,7 +2,7 @@
 # tapis image for documentation
 #
 # usage:
-#   docker build -f ./Docker/Dockerfile -t tapis/tapis-documentation .
+#   docker build -f ./Dockerfile -t tapis/tapis-documentation .
 #
 #   $TAG            tapis/tapis-documentation
 #
