@@ -609,13 +609,13 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.create_measurement(inst_id='demo_instrument',vars=[{"var_id": "batv", "value": 100}],datetime='2020-07-20T22:19:25Z')
+        $ t.streams.create_measurement(inst_id='demo_instrument',vars=[{"var_id": "batv", "value": 10}],datetime='2020-07-20T22:19:25Z')
 
 With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '{"inst_id":"demo_instrument", "datetime":"2020-07-20T23:19:25Z", "vars":[{"var_id": "batv", "value": 100}]}'  $BASE_URL/v3/streams/measurements
+        $ curl -v -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '{"inst_id":"demo_instrument", "datetime":"2020-07-20T23:19:25Z", "vars":[{"var_id": "batv", "value": 10}]}'  $BASE_URL/v3/streams/measurements
 
 
 The response will look something like the following:
@@ -636,20 +636,24 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 
 With PySDK
+
 .. code-block:: plaintext
 
-        $
+        $ t.streams.list_measurements(inst_id='demo_instrument',start_date='2020-05-08T00:00:00Z',end_date='2020-07-21T22:19:25Z', format='csv',project_uuid='tapis_demo_project_testuser6',site_id='tapis_demo_site')
+
 With CURL:
 
 .. code-block:: plaintext
 
-        $
+        $ curl -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/measurements/demo_instrument
 
 The response will look something like the following:
 
 .. container:: foldable
 
      .. code-block:: json
+
+        b'time,batv\n2020-07-20T22:19:25Z,10.0\n2020-07-20T23:19:25Z,10.0\n'
 
 
 |
@@ -661,20 +665,45 @@ Channels
 ^^^^^^^^^^^^^^^^^^^^^
 
 With PySDK
+
 .. code-block:: plaintext
 
-        $
+        $ t.streams.create_channels(channel_id="demo.tapis.channel", channel_name='demo.tapis.channel', template_id="demo_channel_template",triggers_with_actions=[{"inst_ids":["demo_instrument"],"condition":{"key":"demo_instrument.batv","operator":">", "val":20},"action":{"method":"ACTOR","actor_id" :"{actor_id}}","message":"Instrument: demo_instrument exceeded threshold", "abaco_base_url":"https://api.tacc.utexas.edu","nonces":"{nnonce}" }}])
+
 With CURL:
 
 .. code-block:: plaintext
 
-        $
+        $ curl -v -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '{"channel_id":"demo.tapis.channel","channel_name":"demo.tapis.channel_1","template_id":"demo_channel_template","triggers_with_actions":[{"inst_ids":["demo_instrument"],"condition":{"key":"demo_instrument.batv","operator":">", "val":"20"}, "action":{"method":"ACTOR","actor_id" :"{actor_id}","message":"Instrument: demo_instrument batv exceeded threshold", "abaco_base_url":"https://api.tacc.utexas.edu","nonces":"{nonces}"}}]}'  $BASE_URL/v3/streams/channels
+
 
 The response will look something like the following:
 
 .. container:: foldable
 
      .. code-block:: json
+
+        channel_id: demo.tapis.channel
+        channel_name: demo.tapis.channel
+        create_time: 2020-07-21 03:02:51.755215
+        last_updated: 2020-07-21 03:02:51.755227
+        permissions:
+        users: ['testuser6']
+        status: ACTIVE
+        template_id: demo_channel_template
+        triggers_with_actions: [
+        action:
+        abaco_base_url: https://api.tacc.utexas.edu
+        actor_id: {actor_id}
+        message: Instrument: demo_instrument exceeded threshold
+        method: ACTOR
+        nonces: {nonce}
+        condition:
+        key: demo_instrument.batv
+        operator: >
+        val: 20
+        inst_ids: ['demo_instrument']]
+
 
 
 |
@@ -685,12 +714,13 @@ The response will look something like the following:
 With PySDK
 .. code-block:: plaintext
 
-        $
+        $ t.streams.list_channels()
+
 With CURL:
 
 .. code-block:: plaintext
 
-        $
+        $ curl -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/channels
 
 The response will look something like the following:
 
@@ -698,6 +728,10 @@ The response will look something like the following:
 
      .. code-block:: json
 
+        {'message': 'Channels found',
+         'result': [],
+         'status': 'success',
+         'version': 'dev'}
 
 |
 
@@ -707,12 +741,13 @@ The response will look something like the following:
 With PySDK
 .. code-block:: plaintext
 
-        $
+        $ t.streams.get_channel(channel_id='demo.tapis.channel')
+
 With CURL:
 
 .. code-block:: plaintext
 
-        $
+        $ curl -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/channels/demo.tapis.channel
 
 The response will look something like the following:
 
@@ -720,9 +755,29 @@ The response will look something like the following:
 
      .. code-block:: json
 
-
+        channel_id: demo.tapis.channel
+        channel_name: demo.tapis.channel
+        create_time: 2020-07-21 03:02:51.755215
+        last_updated: 2020-07-21 03:02:51.755227
+        permissions:
+        users: ['testuser6']
+        status: ACTIVE
+        template_id: demo_channel_template
+        triggers_with_actions: [
+        action:
+        abaco_base_url: https://api.tacc.utexas.edu
+        actor_id: {actor_id}
+        message: Instrument: demo_instrument exceeded threshold
+        method: ACTOR
+        nonces: nonces
+        condition:
+        key: demo_instrument.batv
+        operator: >
+        val: 20
+        inst_ids: ['demo_instrument']]
 |
-**Update Channels**
+
+**Update Channels**:ToDo
 ^^^^^^^^^^^^^^^^^^^^^
 
 With PySDK
@@ -747,9 +802,11 @@ The response will look something like the following:
 Templates
 -----------
 With PySDK
+
 .. code-block:: plaintext
 
         $
+
 With CURL:
 
 .. code-block:: plaintext
