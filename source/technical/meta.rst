@@ -1,26 +1,28 @@
 .. _meta:
 
-====
+=============================
 Meta   -  Under construction.
-====
+=============================
 
 Root
----------
-TODO introduction for Root resource space.
+----
+The Root resource space represents the root namespace for databases on the MongoDb host. All databases are located here.
 
 **List DB Names**
 
-With SDK operation:
+A request to the Root resource will list Database names found on the server. This request has been limited to those Users with Administrative roles.
+
+With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta.
+        $ t.meta.listDBNames()
 
 With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
+        $ curl -v -X GET -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" $BASE_URL/v3/meta/
 
 The response will look something like the following:
 
@@ -28,35 +30,85 @@ The response will look something like the following:
 
      .. code-block:: json
 
+        [
+            "StreamsDevDB",
+            "v1airr"
+        ]
 
 Database
 ---------
-TODO introduction for Database resource.
+The Database resource is the top level for many tenant projects. The resource maps directly to a MongoDb named database in the database server.
+Case matters for matching the name of the database.
 
-**List Collection Names**
+**Get DB Metadata**
+
+This request will return the metadata properties associated with the database. The core server generates an etag in the _properties collection for a database
+that is necessary for future deletion.
 
 With SDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta
+        $ t.meta.getDBMetadata()
 
 With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
+        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}/_meta
 
 The response will look something like the following:
 
 .. container:: foldable
 
      .. code-block:: json
+
+        {
+           "_id": "_meta",
+           "_etag": { "$oid": "5ef6232b296c81742a6a3e02" }
+        }
+
+
+
+**List Collection Names**
+
+This request will return a list of Collection names from the specified database {db}.
+
+With pySDK operation:
+
+.. code-block:: plaintext
+
+        $ t.meta.listCollectionNames
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}
+
+The response will look something like the following:
+
+.. container:: foldable
+
+     .. code-block:: json
+
+        [
+          "streams_alerts_metadata",
+          "streams_channel_metadata",
+          "streams_instrument_index",
+          "streams_project_metadata",
+          "streams_templates_metadata",
+          "tapisKapa-local"
+        ]
 
 
 **Create DB**
 
-With SDK operation:
+TODO: this is implementation is not exposed.
+
+This request will create a new named database in the MongoDb root space.
+
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -66,7 +118,7 @@ With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
+        $ curl -v -X PUT -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}
 
 The response will look something like the following:
 
@@ -118,7 +170,7 @@ The response will look something like the following:
 
 
 Collection
----------
+----------
 TODO introduction for Collection resource.
 
 **List Documents**
@@ -336,7 +388,7 @@ The response will look something like the following:
 
 
 Index
----------
+-----
 TODO introduction for Index resource.
 
 **List Indexes**
@@ -403,8 +455,9 @@ The response will look something like the following:
 
 
 Aggregation
----------
+-----------
 TODO introduction for Document resource.
+
 
 **Execute Aggregation**
 
