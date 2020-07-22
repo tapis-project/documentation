@@ -3,6 +3,17 @@
 =============================
 Meta   -  Under construction.
 =============================
+Meta V3 is a REST API Microservice for MongoDB which provides server-side Data, Identity and Access Management for Web and Mobile applications.
+
+Meta V3 is:
+
+A Stateless Microservice.
+With Meta V3 teams can focus on building Angular or other frontend applications, because most of the server-side
+logic necessary to manage database operations, authentication / authorization and related APIs is automatically handled,
+without the need to write any server-side code except for the UX/UI.
+
+For example, to insert data into MongoDB a developer has to just create client-side JSON documents and then execute POST operations via HTTP to Meta V3.
+Other functionality of a modern MongoDB installation will be made available as the need presents itself.
 
 Root
 ----
@@ -45,7 +56,7 @@ Case matters for matching the name of the database.
 This request will return the metadata properties associated with the database. The core server generates an etag in the _properties collection for a database
 that is necessary for future deletion.
 
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -55,7 +66,7 @@ With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}/_meta
+        $ curl -v -X GET -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}/_meta
 
 The response will look something like the following:
 
@@ -84,7 +95,7 @@ With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}
+        $ curl -v -X GET -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}
 
 The response will look something like the following:
 
@@ -104,7 +115,7 @@ The response will look something like the following:
 
 **Create DB**
 
-TODO: this is implementation is not exposed.
+TODO: this implementation is not exposed.
 
 This request will create a new named database in the MongoDb root space.
 
@@ -126,31 +137,14 @@ The response will look something like the following:
 
      .. code-block:: json
 
-
-**Get DB Metadata**
-
-With SDK operation:
-
-.. code-block:: plaintext
-
-        $ t.meta
-
-With CURL:
-
-.. code-block:: plaintext
-
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
-
-The response will look something like the following:
-
-.. container:: foldable
-
-     .. code-block:: json
+        { }
 
 
 **Delete DB**
 
-With SDK operation:
+
+
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -160,22 +154,47 @@ With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
+        $ curl -v -X DELETE -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}
 
 The response will look something like the following:
 
 .. container:: foldable
 
      .. code-block:: json
+
+     { }
 
 
 Collection
 ----------
-TODO introduction for Collection resource.
+The Collection resource allows requests for managing and querying json documents.
+
+**Create Collection**
+
+
+
+With pySDK operation:
+
+.. code-block:: plaintext
+
+        $ t.meta.createCollection
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -v -X PUT -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}/{collection}
+
+The response will look something like the following:
+
+.. container:: foldable
+
+     .. code-block:: json
+
 
 **List Documents**
 
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -185,7 +204,7 @@ With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
+        $ curl -v -X GET -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}/{collection}
 
 The response will look something like the following:
 
@@ -194,9 +213,9 @@ The response will look something like the following:
      .. code-block:: json
 
 
-**Get Collection Metadata**
+**Delete Collection**
 
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -217,7 +236,7 @@ The response will look something like the following:
 
 **Get Collection Size**
 
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -235,31 +254,9 @@ The response will look something like the following:
 
      .. code-block:: json
 
+**Get Collection Metadata**
 
-**Create Collection**
-
-With SDK operation:
-
-.. code-block:: plaintext
-
-        $ t.meta
-
-With CURL:
-
-.. code-block:: plaintext
-
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
-
-The response will look something like the following:
-
-.. container:: foldable
-
-     .. code-block:: json
-
-
-**Delete Collection**
-
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -284,7 +281,7 @@ TODO introduction for Document resource.
 
 **Create Document**
 
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -305,7 +302,7 @@ The response will look something like the following:
 
 **Get Document**
 
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -326,7 +323,7 @@ The response will look something like the following:
 
 **Replace Document**
 
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -347,7 +344,7 @@ The response will look something like the following:
 
 **Modify Document**
 
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -368,7 +365,7 @@ The response will look something like the following:
 
 **Delete Document**
 
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -393,7 +390,7 @@ TODO introduction for Index resource.
 
 **List Indexes**
 
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -414,7 +411,7 @@ The response will look something like the following:
 
 **Create Index**
 
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -435,7 +432,7 @@ The response will look something like the following:
 
 **Delete Index**
 
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -461,7 +458,7 @@ TODO introduction for Document resource.
 
 **Execute Aggregation**
 
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -482,7 +479,7 @@ The response will look something like the following:
 
 **Create Aggregation**
 
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
@@ -503,7 +500,7 @@ The response will look something like the following:
 
 **Delete Aggregation**
 
-With SDK operation:
+With pySDK operation:
 
 .. code-block:: plaintext
 
