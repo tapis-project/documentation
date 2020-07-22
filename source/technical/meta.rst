@@ -1,8 +1,8 @@
 .. _meta:
 
-=============================
-Meta   -  Under construction.
-=============================
+=====
+Meta
+=====
 Meta V3 is a REST API Microservice for MongoDB which provides server-side Data, Identity and Access Management for Web and Mobile applications.
 
 Meta V3 is:
@@ -167,17 +167,17 @@ The response will look something like the following:
 
 Collection
 ----------
-The Collection resource allows requests for managing and querying json documents.
+The Collection resource allows requests for managing and querying json documents within a MongoDB collection.
 
 **Create Collection**
 
-
+You can create a new collection of documents by specifying a collection name under a specific database. /v3/meta/{db}/{collection}
 
 With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta.createCollection
+        $ t.meta.createCollection()
 
 With CURL:
 
@@ -191,6 +191,7 @@ The response will look something like the following:
 
      .. code-block:: json
 
+        { }
 
 **List Documents**
 
