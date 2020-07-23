@@ -5,6 +5,9 @@ Meta
 =====
 Meta V3 is a REST API Microservice for MongoDB which provides server-side Data, Identity and Access Management for Web and Mobile applications.
 
+-----------------
+Overview
+-----------------
 Meta V3 is:
 
 A Stateless Microservice.
@@ -22,6 +25,10 @@ the structure of which is left up to the administrators of the tenant database.
 Permissions for access to databases, collections and documents must be predefined before accessing those resources. The definitions
 for access are defined within the Security Kernel API of Tapis V3 and must be added by a tenant or service administrator.
 See the Permissions section below for some examples of permissions definitions and access to resources in the Meta V3 API.
+
+--------------------------------
+Getting Started
+--------------------------------
 
 Create a document
 -----------------
@@ -166,14 +173,9 @@ The response will be an array of json documents from MyCollection :
         ]
 
 
------
-
+---------
 Resources
 ---------
-
------
-
-
 Root resources
 --------------
 The Root resource space represents the root namespace for databases on the MongoDb host. All databases are located here.
