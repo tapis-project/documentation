@@ -11,7 +11,7 @@ Quickstart
 
 If you ``pip install sphinx-autobuild``, you can use ``make livehtml`` which
 will start a server that watches for source changes and will rebuild/refresh
-automatically. Go to http://localhost:8000/ to see its output.
+automatically. Go to http://localhost:7898/ to see its output.
 
 reStructuredText help
 ---------------------
