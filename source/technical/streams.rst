@@ -3,7 +3,7 @@ Streams
 ==============
 
 
-.. image:: ./tapis-v3-streams-api.png
+.. image:: tapis-v3-streams-api.png
 
 Projects
 ---------
@@ -101,11 +101,12 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK:
 
+Note: project_uuid is same as project_id, used in project creation.
+
 .. code-block:: plaintext
 
         $ t.streams.get_project(project_uuid='tapis_demo_project_testuser6')
 
-     Note: project_uuid is same as project_id, used in project creation.
 
 With CURL:
 
@@ -309,6 +310,7 @@ The response will look something like the following:
 **Update Site**: ToDo
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK
+
 .. code-block:: plaintext
 
         $
@@ -457,6 +459,7 @@ The response will look something like the following:
 **Update Instrument**: ToDo
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK
+
 .. code-block:: plaintext
 
         $
@@ -580,6 +583,7 @@ The response will look something like the following:
 **Update Variable** :ToDo
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK
+
 .. code-block:: plaintext
 
         $
@@ -668,13 +672,13 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.create_channels(channel_id="demo.tapis.channel", channel_name='demo.tapis.channel', template_id="demo_channel_template",triggers_with_actions=[{"inst_ids":["demo_instrument"],"condition":{"key":"demo_instrument.batv","operator":">", "val":20},"action":{"method":"ACTOR","actor_id" :"{actor_id}}","message":"Instrument: demo_instrument exceeded threshold", "abaco_base_url":"https://api.tacc.utexas.edu","nonces":"{nnonce}" }}])
+        $ t.streams.create_channels(channel_id="demo.tapis.channel", channel_name='demo.tapis.channel', template_id="demo_channel_template",triggers_with_actions=[{"inst_ids":["demo_instrument"],"condition":{"key":"demo_instrument.batv","operator":">", "val":20},"action":{"method":"ACTOR","actor_id" :"XXXX","message":"Instrument: demo_instrument exceeded threshold", "abaco_base_url":"https://api.tacc.utexas.edu","nonces":"XXXX-YYYY-ZZZZ" }}])
 
 With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '{"channel_id":"demo.tapis.channel","channel_name":"demo.tapis.channel_1","template_id":"demo_channel_template","triggers_with_actions":[{"inst_ids":["demo_instrument"],"condition":{"key":"demo_instrument.batv","operator":">", "val":"20"}, "action":{"method":"ACTOR","actor_id" :"{actor_id}","message":"Instrument: demo_instrument batv exceeded threshold", "abaco_base_url":"https://api.tacc.utexas.edu","nonces":"{nonces}"}}]}'  $BASE_URL/v3/streams/channels
+        $ curl -v -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '{"channel_id":"demo.tapis.channel","channel_name":"demo.tapis.channel_1","template_id":"demo_channel_template","triggers_with_actions":[{"inst_ids":["demo_instrument"],"condition":{"key":"demo_instrument.batv","operator":">", "val":"20"}, "action":{"method":"ACTOR","actor_id" :"XXXX","message":"Instrument: demo_instrument batv exceeded threshold", "abaco_base_url":"https://api.tacc.utexas.edu","nonces":"XXXX-YYYY-ZZZZ"}}]}'  $BASE_URL/v3/streams/channels
 
 
 The response will look something like the following:
@@ -694,10 +698,10 @@ The response will look something like the following:
         triggers_with_actions: [
         action:
         abaco_base_url: https://api.tacc.utexas.edu
-        actor_id: {actor_id}
+        actor_id: XXXX
         message: Instrument: demo_instrument exceeded threshold
         method: ACTOR
-        nonces: {nonce}
+        nonces: XXXX-YYYY-ZZZZ
         condition:
         key: demo_instrument.batv
         operator: >
@@ -712,6 +716,7 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 
 With PySDK
+
 .. code-block:: plaintext
 
         $ t.streams.list_channels()
@@ -739,6 +744,7 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 
 With PySDK
+
 .. code-block:: plaintext
 
         $ t.streams.get_channel(channel_id='demo.tapis.channel')
@@ -766,10 +772,10 @@ The response will look something like the following:
         triggers_with_actions: [
         action:
         abaco_base_url: https://api.tacc.utexas.edu
-        actor_id: {actor_id}
+        actor_id: XXXX
         message: Instrument: demo_instrument exceeded threshold
         method: ACTOR
-        nonces: nonces
+        nonces: XXXX-YYYY-ZZZZ
         condition:
         key: demo_instrument.batv
         operator: >
@@ -781,6 +787,7 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 
 With PySDK
+
 .. code-block:: plaintext
 
         $
@@ -799,8 +806,176 @@ The response will look something like the following:
 
 |
 
+**Update Channels Status**
+^^^^^^^^^^^^^^^^^^^^^
+
+With PySDK
+
+.. code-block:: plaintext
+
+        $ t.streams.update_status(channel_id='demo.tapis.channel', status='INACTIVE')
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" -d '{"status":"INACTIVE"}' $BASE_URL/v3/streams/channels/demo.tapis.channel
+
+The response will look something like the following:
+
+.. container:: foldable
+
+     .. code-block:: json
+        channel_id: demo.tapis.channel
+        channel_name: demo.tapis.channel
+        create_time: 2020-07-21 03:02:51.755215
+        last_updated: 2020-07-22 18:09:19.940080
+        permissions:
+        users: ['testuser6']
+        status: INACTIVE
+        template_id: demo_channel_template
+        triggers_with_actions: [
+        action:
+        abaco_base_url: https://api.tacc.utexas.edu
+        actor_id: XXXX
+        message: Instrument: demo_instrument exceeded threshold
+        method: ACTOR
+        nonces: XXXX-YYYY-ZZZZ
+        condition:
+        key: demo_instrument.batv
+        operator: >
+        val: 90
+        inst_ids: ['demo_instrument']]
+
+|
+
 Templates
 -----------
+**Create Template**
+^^^^^^^^^^^^^^^^^^^^^
+
+With PySDK
+
+.. code-block:: plaintext
+
+        $ t.streams.create_template(template_id='test_template_for_tutorial', type='stream',
+                script=' var crit lambda \n var channel_id string\n stream\n    |from()\n        .measurement(\'tsdata\')\n        '
+                       ' .groupBy(\'var\')\n   |alert()\n       '
+                       ' .id(channel_id +  \' {{ .Name }}/{{ .Group }}/{{.TaskName}}/{{index .Tags \"var\" }}\')\n         .crit(crit)\n    .noRecoveries()\n      '
+                       '  .message(\'{{.ID}} is {{ .Level}} at time: {{.Time}} as value: {{ index .Fields \"value\" }} exceeded the threshold\')\n       '
+                       ' .details(\'\')\n         .post()\n         .endpoint(\'api-alert\')\n     .captureResponse()\n    |httpOut(\'msg\')', _tapis_debug=True)
+
+
+With CURL: ToDo
+
+
+
+The response will look something like the following:
+
+.. container:: foldable
+
+     .. code-block:: json
+
+        create_time: 2020-07-22 15:30:58.244391
+        last_updated: 2020-07-22 15:30:58.244407
+        permissions:
+        users: ['testuser6']
+        script:  var crit lambda
+         var channel_id string
+         stream
+            |from()
+                .measurement('tsdata')
+                 .groupBy('var')
+           |alert()
+                .id(channel_id +  ' {{ .Name }}/{{ .Group }}/{{.TaskName}}/{{index .Tags "var" }}')
+                 .crit(crit)
+            .noRecoveries()
+                .message('{{.ID}} is {{ .Level}} at time: {{.Time}} as value: {{ index .Fields "value" }} exceeded the threshold')
+                .details('')
+                 .post()
+                 .endpoint('api-alert')
+             .captureResponse()
+            |httpOut('msg')
+        template_id: test_template_for_tutorial
+        type: stream
+
+|
+
+**List Templates**
+^^^^^^^^^^^^^^^^^^^^^
+With PySDK
+
+.. code-block:: plaintext
+
+        $ t.streams.list_templates()
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/templates
+
+The response will look something like the following:
+
+.. container:: foldable
+
+     .. code-block:: json
+        {'message': 'Templates found',
+         'result': [],
+         'status': 'success',
+         'version': 'dev'}
+
+
+
+|
+**Get Template Details**
+^^^^^^^^^^^^^^^^^^^^^
+With PySDK
+
+.. code-block:: plaintext
+
+        $ t.streams.get_template(template_id='test_template_for_tutorial')
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl  -H "X-Tapis-Token:$jwt" $BASE_URL/v3/streams/templates/test_template_for_tutorial
+
+
+The response will look something like the following:
+
+.. container:: foldable
+
+     .. code-block:: json
+
+        create_time: 2020-07-22 15:30:58.244391
+        last_updated: 2020-07-22 15:30:58.244407
+        permissions:
+        users: ['testuser6']
+        script:  var crit lambda
+         var channel_id string
+         stream
+            |from()
+                .measurement('tsdata')
+                 .groupBy('var')
+           |alert()
+                .id(channel_id +  ' {{ .Name }}/{{ .Group }}/{{.TaskName}}/{{index .Tags "var" }}')
+                 .crit(crit)
+            .noRecoveries()
+                .message('{{.ID}} is {{ .Level}} at time: {{.Time}} as value: {{ index .Fields "value" }} exceeded the threshold')
+                .details('')
+                 .post()
+                 .endpoint('api-alert')
+             .captureResponse()
+            |httpOut('msg')
+        template_id: test_template_for_tutorial
+        type: stream
+
+
+|
+
+**Update Template**:ToDo
+^^^^^^^^^^^^^^^^^^^^^
 With PySDK
 
 .. code-block:: plaintext
@@ -824,21 +999,50 @@ The response will look something like the following:
 
 Alerts
 -----------
+
+**List Alerts**:
+^^^^^^^^^^^^^^^^^^^^^
+
 With PySDK
+
 .. code-block:: plaintext
 
-        $
+        $ t.streams.list_alerts(channel_id='demo_wq_channel2020-06-19T17_34_46.425419')
+
+
 With CURL:
 
 .. code-block:: plaintext
 
-        $
+        $ curl  -H "X-Tapis-Token:$jwt" $BASE_URL/v3/streams/channels/demo_wq_channel2020-06-19T17_34_46.425419/alerts
 
 The response will look something like the following:
 
 .. container:: foldable
 
      .. code-block:: json
-
-
+        alerts: [
+            actor_id: XXXX
+            alert_id: 70fa63b4-c6b1-45a4-91a8-f4e9803ec898
+            channel_id: demo_wq_channel2020-06-19T17_34_46.425419
+            channel_name: demo.wq.channel
+            create_time: 2020-06-19 20:51:44.390887
+            execution_id: 7mBGaJbD4q0M1
+            message: demo_wq_channel2020-06-19T17_34_46.425419 tsdata/var=11/demo_wq_channel2020-06-19T17_34_46.425419/11 is CRITICAL at time: 2020-06-19 20:51:43.229988 +0000 UTC as value: 150 exceeded the threshold,
+            actor_id: XXXX
+            alert_id: c16ab843-8417-4af0-a06c-ce1e4e7e4816
+            channel_id: demo_wq_channel2020-06-19T17_34_46.425419
+            channel_name: demo.wq.channel
+            create_time: 2020-06-19 20:51:21.138143
+            execution_id: ByOkp5W8Jxkqj
+            message: demo_wq_channel2020-06-19T17_34_46.425419 tsdata/var=11/demo_wq_channel2020-06-19T17_34_46.425419/11 is CRITICAL at time: 2020-06-19 20:51:20.114319 +0000 UTC as value: 150 exceeded the threshold,
+            actor_id: XXXX
+            alert_id: 4c4b7e70-a034-419b-be8c-2c337803e5d4
+            channel_id: demo_wq_channel2020-06-19T17_34_46.425419
+            channel_name: demo.wq.channel
+            create_time: 2020-06-19 20:51:10.454269
+            execution_id: jboJWNqRKAA6V
+            message: demo_wq_channel2020-06-19T17_34_46.425419 tsdata/var=11/demo_wq_channel2020-06-19T17_34_46.425419/11 is CRITICAL at time: 2020-06-19 20:51:09.862752 +0000 UTC as value: 150 exceeded the threshold]
+            num_of_alerts: 3
+        ]
 |
