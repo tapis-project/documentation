@@ -134,18 +134,44 @@ The response will be a json document from MyCollection with the "_id" of 5f1892e
 
 Find a document
 ---------------
-We can pass a query parameter named "filter" set to the value of a json MongoDB query document. Let's find a document by a specific "name".
+We can pass a query parameter named "filter" and set the value to a json MongoDB query document. Let's find a document by a specific "name".
 
 With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X GET -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" $BASE_URL/v3/meta/MyTstDB/MyCollection?filter=
+        $ curl -v -X GET -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data-urlencode filter='{"name": "test document slt 7.21.2020-14:25"}' $BASE_URL/v3/meta/MyTstDB/MyCollection
+
+The response will be an array of json documents from MyCollection :
+
+.. container:: foldable
+
+     .. code-block:: json
+
+        [
+          {
+            "_id": {
+              "$oid": "5f1892ece37f7b5a692285e9"
+            },
+            "name": "test document slt 7.21.2020-14:25",
+            "jimmyList": [
+              "1",
+              "3"
+            ],
+            "description": "new whatever",
+            "_etag": {
+              "$oid": "5f1892ec296c81742a6a3e4b"
+            }
+          }
+        ]
 
 
+-----
 
+Resources
+---------
 
-
+-----
 
 
 Root resources
@@ -277,7 +303,10 @@ The response will look something like the following:
 
 
 **Delete DB**
+TODO: this implementation is not exposed. Deletion of a database by tenant administrators is scheduled for inclusion in
+an administrative interface API in a future release.
 
+This request will delete a named database in the MongoDb root space by a tenant or service administrator.
 
 
 With pySDK operation:
@@ -301,8 +330,8 @@ The response will look something like the following:
      { }
 
 
-Collection
-----------
+Collection Resources
+--------------------
 The Collection resource allows requests for managing and querying json documents within a MongoDB collection.
 
 **Create Collection**
@@ -319,7 +348,7 @@ With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X PUT -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}/{collection}
+        $ curl -v -X PUT -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" $BASE_URL/v3/meta/{db}/{collection}
 
 The response will look something like the following:
 
@@ -391,6 +420,8 @@ The response will look something like the following:
 
      .. code-block:: json
 
+
+
 **Get Collection Metadata**
 
 With pySDK operation:
@@ -412,8 +443,8 @@ The response will look something like the following:
      .. code-block:: json
 
 
-Document
----------
+Document Resources
+------------------
 TODO introduction for Document resource.
 
 **Create Document**
@@ -521,8 +552,8 @@ The response will look something like the following:
      .. code-block:: json
 
 
-Index
------
+Index Resources
+---------------
 TODO introduction for Index resource.
 
 **List Indexes**
@@ -588,8 +619,8 @@ The response will look something like the following:
      .. code-block:: json
 
 
-Aggregation
------------
+Aggregation Resources
+---------------------
 TODO introduction for Document resource.
 
 
