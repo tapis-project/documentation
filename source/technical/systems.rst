@@ -62,7 +62,7 @@ Various attributes related to job execution
 Getting Started
 --------------------------------
 
-Before going into further details about Systems, here we give give some examples of how to create and view systems.
+Before going into further details about Systems, here we give some examples of how to create and view systems.
 In the examples below we assume you are using the TACC tenant with a base URL of ``tacc.tapis.io`` and that you have
 authenticated using PySDK or obtained an authorization token and stored it in the environment variable JWT,
 or perhaps both.
