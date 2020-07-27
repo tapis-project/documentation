@@ -132,7 +132,7 @@ With PySDK
 
 .. code-block:: plain-text
 
-  permitted_client.files.listFiles(systemId="my.test.bucket", path="/")
+  t.files.listFiles(systemId="my.test.bucket", path="/")
 
 The output should include a list of all files in the bucket; for example
 
