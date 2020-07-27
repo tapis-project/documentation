@@ -361,6 +361,7 @@ The response will look something like the following:
         { }
 
 **List Documents**
+A default number of documents found in the collection are returned in an array of documents.
 
 With pySDK operation:
 
@@ -374,7 +375,7 @@ With CURL:
 
         $ curl -v -X GET -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}/{collection}
 
-The response will look something like the following:
+The response will look like the following:
 
 .. container:: foldable
 
@@ -382,18 +383,20 @@ The response will look something like the following:
 
 
 **Delete Collection**
+This administrative method is only available to tenant or meta administrators and requires an If-Match header parameter of the Etag for
+the collection. The Etag value, if not already known, can be retrieved from the "_meta" call for a collection.
 
 With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta
+        $ t.meta.deleteCollection()
 
 With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
+        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" $BASE_URL/v3/meta/{db}/{collection}
 
 The response will look something like the following:
 
@@ -403,6 +406,7 @@ The response will look something like the following:
 
 
 **Get Collection Size**
+You can find the given size or number of documents in a given collection by calling "_size" on a collection.
 
 With pySDK operation:
 
@@ -414,7 +418,7 @@ With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
+        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}/{collection}/_size
 
 The response will look something like the following:
 
@@ -425,6 +429,9 @@ The response will look something like the following:
 
 
 **Get Collection Metadata**
+You can find the metadata properties of a given collection by calling "_meta" on a collection. This would include the Etag value for a collection
+that is needed for deletion.
+
 
 With pySDK operation:
 
@@ -436,7 +443,7 @@ With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
+        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}/{collection}/_meta
 
 The response will look something like the following:
 
