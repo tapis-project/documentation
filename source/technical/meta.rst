@@ -368,7 +368,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta
+        $ t.meta  TODO
 
 With CURL:
 
@@ -382,6 +382,7 @@ The response will look like the following:
 
      .. code-block:: json
 
+         TODO
 
 **Delete a Collection**
 
@@ -406,6 +407,7 @@ The response will look something like the following:
 
      .. code-block:: json
 
+         TODO
 
 **Get Collection Size**
 
@@ -519,8 +521,6 @@ The response body will be empty:
 
 **Get a Document**
 
-TODO
-
 Get a specific document by its "_id".
 
 With pySDK operation:
@@ -545,7 +545,7 @@ The response will be the standard json response:
 
 **Replace a Document**
 
-TODO
+This call replaces an existing document identified by document id  ("_id"), with the json supplied in the request body.
 
 With pySDK operation:
 
@@ -557,7 +557,7 @@ With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}/{collection}/{document_id}
+        $ curl -v -X PUT -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '{"docName":"test doc another one"}' $BASE_URL/v3/meta/{db}/{collection}/{document_id}
 
 The response will look something like the following:
 
@@ -570,7 +570,7 @@ The response will look something like the following:
 
 **Modify a Document**
 
-TODO
+This call will replace a portion of a document identified by document id ("_id") with the supplied json.
 
 With pySDK operation:
 
@@ -582,7 +582,7 @@ With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/ TODO
+        $ curl -v -X PATCH -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '{"docName":"test changed"}' $BASE_URL/v3/meta/{db}/{collection}/{document_id}
 
 The response will look something like the following:
 
@@ -595,7 +595,7 @@ The response will look something like the following:
 
 **Delete Document**
 
-TODO
+Deleting a document with a specific document id ("_id"), removes it from the collection.
 
 With pySDK operation:
 
@@ -607,7 +607,7 @@ With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/   TODO
+        $ curl -v -X DELETE -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}/{collection}/{document_id}
 
 The response will look something like the following:
 
