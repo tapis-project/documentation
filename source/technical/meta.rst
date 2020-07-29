@@ -230,7 +230,7 @@ With CURL:
 
         $ curl -v -X GET -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
@@ -263,7 +263,7 @@ With CURL:
 
         $ curl -v -X GET -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}/_meta
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
@@ -295,7 +295,7 @@ With CURL:
 
         $ curl -v -X PUT -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
@@ -323,7 +323,7 @@ With CURL:
 
         $ curl -v -X DELETE -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
@@ -352,7 +352,7 @@ With CURL:
 
         $ curl -v -X PUT -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" $BASE_URL/v3/meta/{db}/{collection}
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
@@ -401,7 +401,7 @@ With CURL:
 
         $ curl -v -X DELETE -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" $BASE_URL/v3/meta/{db}/{collection}
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
@@ -425,7 +425,7 @@ With CURL:
 
         $ curl -v -X GET -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" $BASE_URL/v3/meta/{db}/{collection}/_size
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
@@ -451,7 +451,7 @@ With CURL:
 
         $ curl -v -X GET -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" $BASE_URL/v3/meta/{db}/{collection}/_meta
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
@@ -489,7 +489,7 @@ With CURL:
 
         $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '{"docName":"test doc"}' $BASE_URL/v3/meta/{db}/{collection}
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
@@ -559,7 +559,7 @@ With CURL:
 
         $ curl -v -X PUT -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '{"docName":"test doc another one"}' $BASE_URL/v3/meta/{db}/{collection}/{document_id}
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
@@ -584,7 +584,7 @@ With CURL:
 
         $ curl -v -X PATCH -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '{"docName":"test changed"}' $BASE_URL/v3/meta/{db}/{collection}/{document_id}
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
@@ -609,7 +609,7 @@ With CURL:
 
         $ curl -v -X DELETE -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/{db}/{collection}/{document_id}
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
@@ -620,11 +620,13 @@ The response will look something like the following:
 
 Index Resources
 ---------------
-TODO introduction for Index resource.
+Indexes can help speed up queries of your collection and the API gives you the ability to define and manage your indexes.
+You can create an index for a collection, list indexes for a collection and delete an index. Indexes can't be updated they
+must be deleted and recreated.
 
 **List Indexes**
 
-TODO
+List the indexes defined for a collection.
 
 With pySDK operation:
 
@@ -636,9 +638,9 @@ With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
+        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/meta/{db}/{collection}/_indexes
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
@@ -648,7 +650,14 @@ The response will look something like the following:
 
 **Create Index**
 
-TODO
+Create a new Index with a new name. To create an index you have to specify the keys and the index options.
+Let's create an unique, sparse index on property qty and name our index "qtyIndex".
+
+PUT /v3/meta/{db}/{collection}/_indexes/qtyIndex
+
+.. code-block:: json
+
+   {"keys": {"qty": 1},"ops": {"unique": true, "sparse": true }}
 
 With pySDK operation:
 
@@ -660,18 +669,19 @@ With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
+        $ curl -v -X PUT -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '{ "keys":  <keys>, "ops": <options> }' $BASE_URL/v3/meta/{db}/{collection}/_indexes/{indexName}
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
      .. code-block:: json
 
+        TODO
 
 **Delete Index**
 
-TODO
+Remove a named Index from the index list.
 
 With pySDK operation:
 
@@ -683,9 +693,9 @@ With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
+        $ curl -v -X DELETE -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" $BASE_URL/v3/meta/{db}/{collection}/_indexes/{indexName}
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
@@ -695,10 +705,65 @@ The response will look something like the following:
 
 Aggregation Resources
 ---------------------
-TODO introduction for Document resource.
+Aggregations operations process data records and return computed results. Aggregation operations group values from
+multiple documents together, and can perform a variety of operations on the grouped data to return a single result.
+Aggregations in the API are predefined and added to a collections properties. They may also be parameterized for use
+with multiple sets of inputs.
 
+**Create an Aggregation**
 
-**Execute Aggregation**
+Create an aggregation pipeline by adding the aggregation to the collection for future execution. The aggregation may have
+variables that are defined so that a future request may pass variable values for aggregation execution. See "Execute an Aggregation".
+
+.. code-block:: json
+
+    { "aggrs" : [
+          { "stages" : [ { "$match" : { "name" : { "$var" : "n" } } },
+                { "$group" : { "_id" : "$name",
+                      "avg_age" : { "$avg" : "$age" }
+                    } }
+              ],
+            "type" : "pipeline",
+            "uri" : "example-pipeline"
+          }
+        ]
+    }
+
++------------+---------------+-------------------------------------------------------------------------------------------+
+| Property   | Mandatory     | Description                                                                               |
++============+===============+===========================================================================================+
+| type       | yes           | - for aggregation pipeline operations is "pipeline"                                       |
++------------+---------------+-------------------------------------------------------------------------------------------+
+| uri        | yes           | - specifies the URI when the operation is bound under the path /<db>/<collection>/_aggrs. |
++------------+---------------+-------------------------------------------------------------------------------------------+
+| stages     | yes           | - the MongoDB aggregation pipeline stages.                                                |
++------------+---------------+-------------------------------------------------------------------------------------------+
+
+For more information refer to https://docs.mongodb.org/manual/core/aggregation-pipeline/
+
+With pySDK operation:
+
+.. code-block:: plaintext
+
+        $ t.meta  TODO
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -v -X PUT -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt"
+             -d '{ "aggrs" : [{ "stages" : [ { "$match" : { "name" : { "$var" : "n" } } },{ "$group" : { "_id" : "$name","avg_age" : { "$avg" : "$age" }} } ],
+                "type" : "pipeline","uri" : "example-pipeline"}]}' $BASE_URL/v3/meta/{db}/{collection}
+
+Here is an example response:
+
+.. container:: foldable
+
+     .. code-block:: json
+
+        TODO
+
+**Execute an Aggregation**
 
 TODO
 
@@ -714,7 +779,7 @@ With CURL:
 
         $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
@@ -722,32 +787,7 @@ The response will look something like the following:
 
         TODO
 
-**Create Aggregation**
-
-TODO
-
-With pySDK operation:
-
-.. code-block:: plaintext
-
-        $ t.meta  TODO
-
-With CURL:
-
-.. code-block:: plaintext
-
-        $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
-
-The response will look something like the following:
-
-.. container:: foldable
-
-     .. code-block:: json
-
-        TODO
-
-
-**Delete Aggregation**
+**Delete an Aggregation**
 
 TODO
 
@@ -763,7 +803,7 @@ With CURL:
 
         $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '' $BASE_URL/v3/meta/
 
-The response will look something like the following:
+Here is an example response:
 
 .. container:: foldable
 
