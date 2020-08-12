@@ -176,6 +176,40 @@ The response will be an array of json documents from MyCollection :
 ---------
 Resources
 ---------
+General resources
+-----------------
+An unauthenticated Health check is in included in the Meta V3 API to let any user know the current condition of the service.
+
+**Health Check**
+
+An unauthenticated request for the health status of Meta V3 API.
+
+With pySDK operation:
+
+.. code-block:: plaintext
+
+        $ t.meta.healthCheck()
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -v -X GET -H "Content-Type:application/json" $BASE_URL/v3/meta/
+
+The response will be a Basic Tapis response on health:
+
+.. container:: foldable
+
+     .. code-block:: json
+
+        {
+          "result": "",
+          "status": "200",
+          "message": "OK",
+          "version": "0.0.1"
+        }
+
+
 Root resources
 --------------
 The Root resource space represents the root namespace for databases on the MongoDb host. All databases are located here.
@@ -222,7 +256,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta.listCollectionNames
+        $ t.meta.listCollectionNames(db='')
 
 With CURL:
 
@@ -255,7 +289,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta.getDBMetadata()
+        $ t.meta.getDBMetadata(db='')
 
 With CURL:
 
@@ -287,7 +321,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta
+        $ t.meta.createDB(db='')
 
 With CURL:
 
@@ -315,7 +349,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta
+        $ t.meta.deleteDB(db='')
 
 With CURL:
 
@@ -344,7 +378,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta.createCollection()
+        $ t.meta.createCollection(db='',collection='')
 
 With CURL:
 
@@ -368,7 +402,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta  TODO
+        $ t.meta.createCollection(db='',collection='',filter='')
 
 With CURL:
 
@@ -382,7 +416,28 @@ The response will look like the following:
 
      .. code-block:: json
 
-         TODO
+        [
+          {
+            "_id": {
+              "$oid": "5f1892ece37f7b5a692285e9"
+            },
+            "name": "test document slt 7.21.2020-14:25",
+            "description": "new whatever",
+            "_etag": {
+              "$oid": "5f1892ec296c81742a6a3e4b"
+            }
+          },
+          {
+            "_id": {
+              "$oid": "5f1892ece37f7b5a69228533"
+            },
+            "name": "test document slt 7.21.2020-14:25",
+            "description": "new whatever",
+            "_etag": {
+              "$oid": "5f1892ec296c81742a6a3e444"
+            }
+          }
+        ]
 
 **Delete a Collection**
 
@@ -393,7 +448,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta.deleteCollection()
+        $ t.meta.deleteCollection(db='',collection='')
 
 With CURL:
 
@@ -407,7 +462,7 @@ Here is an example response:
 
      .. code-block:: json
 
-         TODO
+        Empty response body with status code 204
 
 **Get Collection Size**
 
@@ -417,7 +472,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta  TODO
+        $ t.meta.getCollectionSize(db='',collection='')
 
 With CURL:
 
