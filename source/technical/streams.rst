@@ -307,19 +307,22 @@ The response will look something like the following:
 
 
 
-**Update Site**: ToDo
+**Update Site**
 ^^^^^^^^^^^^^^^^^^^^^
-With PySDK
-
-.. code-block:: plaintext
-
-        $
 
 With CURL:
 
 .. code-block:: plaintext
 
-        $
+        $ curl -X PUT -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '{"project_id": "tapis_demo_project_testuser6","site_name":"tapis_demo_site","latitude":10, "longitude":80, "elevation":2, "description":"test site changed"}' $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site
+
+
+With PySDK
+
+.. code-block:: plaintext
+
+        $ t.streams.update_site(project_uuid='tapis_demo_project_testuser6',site_name='tapis_demo_site', site_id='tapis_demo_site', latitude=10, longitude = 80, elevation=2,description='test_site changed')
+
 
 The response will look something like the following:
 
@@ -327,6 +330,18 @@ The response will look something like the following:
 
      .. code-block:: json
 
+    chords_id: 4
+    created_at: 2020-08-10 19:36:48.649316
+    description: test_site changed
+    elevation: 2
+    last_updated: 2020-08-10 19:37:20.115021
+    latitude: 10
+    location:
+    coordinates: [80.0, 10.0]
+    type: Point
+    longitude: 80
+    site_id: tapis_demo_site
+    site_name: tapis_demo_site
 
 |
 
