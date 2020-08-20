@@ -392,7 +392,7 @@ Here is an example response:
 
      .. code-block:: json
 
-        { }
+        Empty response with HTTP status of 201
 
 **List Documents**
 
@@ -402,7 +402,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta.createCollection(db='',collection='',filter='')
+        $ t.meta.listDocuments(db='',collection='',filter='')
 
 With CURL:
 
@@ -439,6 +439,53 @@ The response will look like the following:
           }
         ]
 
+
+**List Documents Large Query**
+
+A default number of documents found in the collection are returned in an array of documents.
+
+With pySDK operation:
+
+.. code-block:: plaintext
+
+        $ t.meta.submitLargeQuery(db='',collection='',page='',pagesize='',sort='',keys='',fileinput)
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -v -X GET -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d @FILENAME '' $BASE_URL/v3/meta/{db}/{collection}/_filter
+
+The response will look like the following:
+
+.. container:: foldable
+
+     .. code-block:: json
+
+        [
+          {
+            "_id": {
+              "$oid": "5f1892ece37f7b5a692285e9"
+            },
+            "name": "test document slt 7.21.2020-14:25",
+            "description": "new whatever",
+            "_etag": {
+              "$oid": "5f1892ec296c81742a6a3e4b"
+            }
+          },
+          {
+            "_id": {
+              "$oid": "5f1892ece37f7b5a69228533"
+            },
+            "name": "test document slt 7.21.2020-14:25",
+            "description": "new whatever",
+            "_etag": {
+              "$oid": "5f1892ec296c81742a6a3e444"
+            }
+          }
+        ]
+
+
 **Delete a Collection**
 
 This administrative method is only available to tenant or meta administrators and requires an If-Match header parameter of the Etag for
@@ -472,7 +519,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta.getCollectionSize(db='',collection='')
+        $ t.meta.getCollectionSize(db='',collection=' ')
 
 With CURL:
 
@@ -498,7 +545,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta  TODO
+        $ t.meta.getCollectionMetadata(db='',collection=' ')
 
 With CURL:
 
@@ -536,7 +583,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta   TODO
+        $ t.meta.createDocument(db='',collection=' ',basic=' ',body=' ')
 
 With CURL:
 
@@ -550,7 +597,7 @@ Here is an example response:
 
      .. code-block:: json
 
-        TODO
+        Empty response
 
 Multiple documents can be added to a collection by POSTing a json array of documents. The batch addition of documents only supports the default response.
 
@@ -558,7 +605,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta  TODO
+        $ t.meta.createDocument(db='',collection=' ',basic=' ',body=' ')
 
 With CURL:
 
@@ -582,7 +629,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta TODO
+        $ t.meta.getDocument(db='',collection=' ',documentId=' ')
 
 With CURL:
 
@@ -606,7 +653,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta TODO
+        $ t.meta.replaceDocument(db='',collection=' ',documentId=' ')
 
 With CURL:
 
@@ -631,7 +678,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta TODO
+        $ t.meta.modifyDocument(db='',collection=' ',documentId=' ')
 
 With CURL:
 
@@ -656,7 +703,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta  TODO
+        $ t.meta.deleteDocument(db='',collection=' ',documentId=' ')
 
 With CURL:
 
