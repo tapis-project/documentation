@@ -195,7 +195,7 @@ With CURL:
 
 .. code-block:: plaintext
 
-       $  curl -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt --data '{"site_name":"tapis_demo_site","latitude":50,"longitude":10,"elevation":2,"site_id":"tapis_demo_site", "description":"test_site"}' $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites
+       $  curl -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '{"site_name":"tapis_demo_site","latitude":50,"longitude":10,"elevation":2,"site_id":"tapis_demo_site", "description":"test_site"}' $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites
 
 
 The response will look something like the following:
@@ -307,19 +307,22 @@ The response will look something like the following:
 
 
 
-**Update Site**: ToDo
+**Update Site**
 ^^^^^^^^^^^^^^^^^^^^^
-With PySDK
-
-.. code-block:: plaintext
-
-        $
 
 With CURL:
 
 .. code-block:: plaintext
 
-        $
+        $ curl -X PUT -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '{"project_id": "tapis_demo_project_testuser6","site_name":"tapis_demo_site","latitude":10, "longitude":80, "elevation":2, "description":"test site changed"}' $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site
+
+
+With PySDK
+
+.. code-block:: plaintext
+
+        $ t.streams.update_site(project_uuid='tapis_demo_project_testuser6',site_name='tapis_demo_site', site_id='tapis_demo_site', latitude=10, longitude = 80, elevation=2,description='test_site changed')
+
 
 The response will look something like the following:
 
@@ -327,6 +330,18 @@ The response will look something like the following:
 
      .. code-block:: json
 
+    chords_id: 4
+    created_at: 2020-08-10 19:36:48.649316
+    description: test_site changed
+    elevation: 2
+    last_updated: 2020-08-10 19:37:20.115021
+    latitude: 10
+    location:
+    coordinates: [80.0, 10.0]
+    type: Point
+    longitude: 80
+    site_id: tapis_demo_site
+    site_name: tapis_demo_site
 
 |
 
@@ -563,20 +578,26 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.get_variable(project_uuid='tapis_demo_project_testuser6',site_id='tapis_demo_site', inst_id='demo_instrument', var_id='batv')
+        $ t.streams.get_variable(project_uuid='tapis_demo_project_testuser6_1', site_id='tapis_site_final', inst_id='tapis_inst_final', var_id='batv')
 
 With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site/instruments/demo_instrument/variables/batv
+        $ curl -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6_1/sites/tapis_site_final/instruments/tapis_inst_final/variables/batv
 
 The response will look something like the following:
 
 .. container:: foldable
 
      .. code-block:: json
-
+        [
+        chords_id: 21
+        shortname: bat
+        updated_at: 2020-08-18 20:46:11.673033
+        var_id: batv
+        var_name: battery
+        ]
 
 |
 
