@@ -5,6 +5,7 @@ Streams
 
 .. image:: tapis-v3-streams-api.png
 
+
 Projects
 ---------
 Projects are defined at a top level in the hierarchy of Streams resources. A user registers a project by providing metadata information such as the principal Investigator, project URL, funding resource, etc. A list of authorized users can be added to various project roles to have a controlled access over the project resources. When a project is first registered, a collection is created in the back-end MongoDB. User permissions to access this collection are then set up in the security kernel. Every request to access the project resource or documents within (i.e sites, instruments, variables) goes through a security kernel check and only the authorized user requests are allowed to be processed.
@@ -330,18 +331,18 @@ The response will look something like the following:
 
      .. code-block:: json
 
-    chords_id: 4
-    created_at: 2020-08-10 19:36:48.649316
-    description: test_site changed
-    elevation: 2
-    last_updated: 2020-08-10 19:37:20.115021
-    latitude: 10
-    location:
-    coordinates: [80.0, 10.0]
-    type: Point
-    longitude: 80
-    site_id: tapis_demo_site
-    site_name: tapis_demo_site
+        chords_id: 4
+        created_at: 2020-08-10 19:36:48.649316
+        description: test_site changed
+        elevation: 2
+        last_updated: 2020-08-10 19:37:20.115021
+        latitude: 10
+        location:
+        coordinates: [80.0, 10.0]
+        type: Point
+        longitude: 80
+        site_id: tapis_demo_site
+        site_name: tapis_demo_site
 
 |
 
@@ -471,18 +472,21 @@ The response will look something like the following:
 
 
 
-**Update Instrument**: ToDo
+**Update Instrument**
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK
 
 .. code-block:: plaintext
 
-        $
+        $ t.streams.update_instrument(inst_id= 'Ohio_River_Robert_C_Byrd_Locks', project_uuid='wq_demo_tapis_streams_proj2020-08-26T08:41:11.813391', site_id='wq_demo_site', inst_name='test', inst_description='test')
 With CURL:
 
 .. code-block:: plaintext
 
-        $
+        $ curl -X PUT -H "X-Tapis-token:$jwt" -H "Content-Type:application/json" --data '{"inst_id": "Ohio_River_Robert_C_Byrd_Locks",
+        "site_id": "wq_demo_site", "inst_name": "UpdatedNAME","inst_description": "updated descript"}'
+        $BASE_URL/v3/streams/projects/wq_demo_tapis_streams_proj2020-08-26T08:41:11.813391/sites/wq_demo_site/instruments/Ohio_River_Robert_C_Byrd_Locks'
+
 
 The response will look something like the following:
 
@@ -490,6 +494,38 @@ The response will look something like the following:
 
      .. code-block:: json
 
+        chords_id: 6
+        inst_description: test
+        inst_id: Ohio_River_Robert_C_Byrd_Locks
+        inst_name: test
+        site_chords_id: 7
+        updated_at: 2020-08-26 18:40:07.534077
+        variables: [
+        chords_id: 21
+        shortname: temp
+        updated_at: 2020-08-26 16:15:49.835211
+        var_id: temp
+        var_name: temperature,
+        chords_id: 22
+        shortname: bat
+        updated_at: 2020-08-26 16:15:50.349601
+        var_id: batv
+        var_name: battery,
+        chords_id: 23
+        shortname: spc
+        updated_at: 2020-08-26 16:15:50.749192
+        var_id: spc
+        var_name: specific_conductivity,
+        chords_id: 24
+        shortname: turb
+        updated_at: 2020-08-26 16:15:51.158687
+        var_id: turb
+        var_name: turbidity,
+        chords_id: 25
+        shortname: ph
+        updated_at: 2020-08-26 16:15:51.588573
+        var_id: ph
+        var_name: ph_level]
 
 |
 
@@ -572,7 +608,7 @@ The response will look something like the following:
 
 |
 
-**Get Variable Details** :ToDo
+**Get Variable Details**
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK
 
@@ -601,18 +637,20 @@ The response will look something like the following:
 
 |
 
-**Update Variable** :ToDo
+**Update Variable**
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK
 
 .. code-block:: plaintext
 
-        $
+        $ t.streams.update_variable(var_name='"updated_temp', var_id='temp', shortname='temp_updated', project_uuid='wq_demo_tapis_streams_proj2020-08-25T16:21:30.113392', site_id='wq_demo_site',inst_id='Ohio_River_Robert_C_Byrd_Locks')
+
 With CURL:
 
 .. code-block:: plaintext
 
-        $
+        $ curl -X PUT -H "X-Tapis-token:$jwt" -H "Content-type:application/json"  --data '{ "var_name": "updated_temp","var_id": "temp","shortname":"temp_updated"}' $BASE_URL/v3/streams/projects/wq_demo_tapis_streams_proj2020-08-25T16:21:30.113392/sites/wq_demo_site/instruments/Ohio_River_Robert_C_Byrd_Locks/variables/temp
+
 
 The response will look something like the following:
 
@@ -620,6 +658,13 @@ The response will look something like the following:
 
      .. code-block:: json
 
+        chords_id: 16
+        inst_chords_id: 5
+        shortname: temp_updated
+        site_chords_id: 6
+        updated_at: 2020-08-27 14:36:04.271154
+        var_id: temp
+        var_name: "updated_temp
 
 |
 
@@ -804,19 +849,25 @@ The response will look something like the following:
         inst_ids: ['demo_instrument']]
 |
 
-**Update Channels**:ToDo
+**Update Channels**:
 ^^^^^^^^^^^^^^^^^^^^^
 
 With PySDK
 
 .. code-block:: plaintext
 
-        $
+       $ t.streams.update_channel(channel_id="test1", channel_name='demo.wq.channel', template_id="demo_channel_template",triggers_with_actions=[{"inst_ids":[
+       "Ohio_River_Robert_C_Byrd_Locks"],"condition":{"key":"Ohio_River_Robert_C_Byrd_Locks.temp","operator":">", "val":30},
+       "action":{"method":"ACTOR","actor_id" :"XXXX","message":"Instrument: Ohio_River_Robert_C_Byrd_Locks  exceeded threshold",
+       "abaco_base_url":"https://api.tacc.utexas.edu","nonces":"XXXX-YYYY-ZZZZ" }}])
+
 With CURL:
 
 .. code-block:: plaintext
 
-        $
+        $ curl -X PUT -H "X-Tapis-Token:$jwt" -H "Content-Type:application/json" $BASE_URL/v3/streams/channels/test1 -d '{"channel_id": "test1","channel_name":"demo.wq.channel","template_id": "demo_channel_template",
+        "triggers_with_actions": [{"inst_ids": ["Ohio_River_Robert_C_Byrd_Locks" ],
+        "condition": {"key": "Ohio_River_Robert_C_Byrd_Locks.temp","operator": ">","val": "40" } }]}'
 
 The response will look something like the following:
 
@@ -824,6 +875,26 @@ The response will look something like the following:
 
      .. code-block:: json
 
+        channel_id: test1
+        channel_name: demo.wq.channel
+        create_time: 2020-08-18 20:51:41.350377
+        last_updated: 2020-08-18 21:57:42.174860
+        permissions:
+        users: ['testuser2']
+        status: ACTIVE
+        template_id: demo_channel_template
+        triggers_with_actions: [
+        action:
+        abaco_base_url: https://api.tacc.utexas.edu
+        actor_id: XXXX
+        message: Instrument: Ohio_River_Robert_C_Byrd_Locks  exceeded threshold
+        method: ACTOR
+        nonces: XXXX-YYYY-ZZZZ
+        condition:
+        key: Ohio_River_Robert_C_Byrd_Locks.temp
+        operator: >
+        val: 30
+        inst_ids: ['Ohio_River_Robert_C_Byrd_Locks']]
 
 |
 
@@ -846,6 +917,7 @@ The response will look something like the following:
 .. container:: foldable
 
      .. code-block:: json
+
         channel_id: demo.tapis.channel
         channel_name: demo.tapis.channel
         create_time: 2020-07-21 03:02:51.755215
@@ -886,7 +958,6 @@ With PySDK
                        ' .details(\'\')\n         .post()\n         .endpoint(\'api-alert\')\n     .captureResponse()\n    |httpOut(\'msg\')', _tapis_debug=True)
 
 
-With CURL: ToDo
 
 
 
@@ -995,19 +1066,20 @@ The response will look something like the following:
 
 |
 
-**Update Template**:ToDo
+**Update Template**
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK
 
 .. code-block:: plaintext
 
-        $
+        t.streams.update_template(template_id='test_template_for_tutorial', type='stream',
+                script=' var period=5s\n var every=0s\n var crit lambda \n var channel_id string\n stream\n    |from()\n        .measurement(\'tsdata\')\n        '
+                       ' .groupBy(\'var\')\n   |alert()\n       '
+                       ' .id(channel_id +  \' {{ .Name }}/{{ .Group }}/{{.TaskName}}/{{index .Tags \"var\" }}\')\n         .crit(crit)\n    .noRecoveries()\n      '
+                       '  .message(\'{{.ID}} is {{ .Level}} at time: {{.Time}} as value: {{ index .Fields \"value\" }} exceeded the threshold\')\n       '
+                       ' .details(\'\')\n         .post()\n         .endpoint(\'api-alert\')\n     .captureResponse()\n    |httpOut(\'msg\')', _tapis_debug=True)
 
-With CURL:
 
-.. code-block:: plaintext
-
-        $
 
 The response will look something like the following:
 
@@ -1015,6 +1087,30 @@ The response will look something like the following:
 
      .. code-block:: json
 
+        create_time: 2020-08-19 19:48:59.177935
+        last_updated: 2020-08-19 19:50:00.102827
+        permissions:
+        users: ['testuser2']
+        script:  var period=5s
+         var every=0s
+         var crit lambda
+         var channel_id string
+         stream
+            |from()
+                .measurement('tsdata')
+                 .groupBy('var')
+           |alert()
+                .id(channel_id +  ' {{ .Name }}/{{ .Group }}/{{.TaskName}}/{{index .Tags "var" }}')
+                 .crit(crit)
+            .noRecoveries()
+                .message('{{.ID}} is {{ .Level}} at time: {{.Time}} as value: {{ index .Fields "value" }} exceeded the threshold')
+                .details('')
+                 .post()
+                 .endpoint('api-alert')
+             .captureResponse()
+            |httpOut('msg')
+        template_id: test_template_update
+        type: stream
 
 |
 
@@ -1042,6 +1138,7 @@ The response will look something like the following:
 .. container:: foldable
 
      .. code-block:: json
+
         alerts: [
             actor_id: XXXX
             alert_id: 70fa63b4-c6b1-45a4-91a8-f4e9803ec898
