@@ -32,6 +32,10 @@ associated with the request to the service.
 
 At a high level a system represents the following information:
 
+Name
+  A short descriptive name for the system that is unique within the tenant.
+Description
+  An optional more verbose description for the system.
 Type of system
   LINUX or OBJECT_STORE
 Owner
@@ -496,6 +500,121 @@ Table of Attributes
 +------------------------+--------------+----------------------+--------------------------------------------------------------------------------------+
 | updated                | Timestamp    | 2020-07-04T23:21:22Z | - When the system was last updated. Maintained by service.                           |
 +------------------------+--------------+----------------------+--------------------------------------------------------------------------------------+
+
+-----------------------
+Searching and Filtering
+-----------------------
+The service provides a way for users to search for systems based on a list of search conditions and to filter
+(i.e. select) which attributes are returned with the results. Searching and filtering can be combined.
+
+Search using GET
+~~~~~~~~~~~~~~~~
+To search when using a GET request to the ``systems`` endpoint a list of search conditions may be specified
+using a query parameter named ``search``. Each search condition must be surrounded with parentheses, have three parts
+separated by the character ``.`` and be joined using the character ``~``.
+All conditions are combined using logical AND. The general form for specifying the query parameter is as follows::
+
+  ?search=(<attribute_1>.<op_1>.<value_1>)~(<attribute_2>.<op_2>.<value_2>)~ ... ~(<attribute_N>.<op_N>.<value_N>)
+
+Attribute names are given in the table above and may be specified using Camel Case or Snake Case.
+
+Supported operators: ``eq`` ``neq`` ``gt`` ``gte`` ``lt`` ``lte`` ``in`` ``nin`` ``like`` ``nlike`` ``between`` ``nbetween``
+
+For more information on search operators, handling of timestamps, lists, quoting, escaping and other general information on
+search please see <TBD>.
+
+Example CURL command to search for systems that have ``Test`` in the name, are of type LINUX,
+are using a port less than ``1024`` and have a default access method of either ``PKI_KEYS`` or ``PASSWORD``::
+
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems?search="(name.like.*Test*)~(system_type.eq.LINUX)~(port.lt.1024)~(DefaultAccessMethod.in.PKI_KEYS,PASSWORD)"
+
+Notes:
+
+* For the ``like`` and ``nlike`` operators the wildcard character ``*`` matches zero or more characters and ``!`` matches exactly one character.
+* For the ``between`` and ``nbetween`` operators the value must be a two item comma separated list of unquoted values.
+* If there is only one condition the surrounding parentheses are optional.
+* In a shell environment the character ``&`` separating query parameters must be escaped with a backslash.
+* In a shell environment the query value must be surrounded by double quotes and the following characters must be escaped with a backslash in order to be properly interpreted by the shell:  ``"`` ``\`` `````
+* Attribute names may be specified using Camel Case or Snake Case.
+* Following complex attributes not supported when searching: ``accessCredential`` ``transferMethods`` ``jobCapabilities`` ``tags``  ``notes``
+
+
+Dedicated Search Endpoint
+~~~~~~~~~~~~~~~~~~~~~~~~~
+The service provides the dedicated search endpoint ``systems/search`` for specifying complex queries. Using a GET
+request to this endpoint provides functionality similar to above but with a different syntax. For more complex
+queries a POST request may be used with a request body specifying the search conditions using an SQL-like syntax.
+
+Search using GET on Dedicated Endpoint
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sending a GET request to the search endpoint provides functionality very similar to that provided for the endpoint
+``systems`` described above. A list of search conditions may be specified using a series of query parameters, one for each attribute.
+All conditions are combined using logical AND. The general form for specifying the query parameters is as follows::
+
+  ?<attribute_1>.<op_1>=<value_1>&<attribute_2>.<op_2>=<value_2>)& ... &<attribute_N>.<op_N>=<value_N>
+
+Attribute names are given in the table above and may be specified using Camel Case or Snake Case.
+
+Supported operators: ``eq`` ``neq`` ``gt`` ``gte`` ``lt`` ``lte`` ``in`` ``nin`` ``like`` ``nlike`` ``between`` ``nbetween``
+
+For more information on search operators, handling of timestamps, lists, quoting, escaping and other general information on
+search please see <TBD>.
+
+Example CURL command to search for systems that have ``Test`` in the name, are of type LINUX,
+are using a port less than ``1024`` and have a default access method of either ``PKI_KEYS`` or ``PASSWORD``::
+
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/search?name.like=*Test*\&enabled.eq=true\&system_type.eq=LINUX\&DefaultAccessMethod.in=PKI_KEYS,PASSWORD
+
+Notes:
+
+* For the ``like`` and ``nlike`` operators the wildcard character ``*`` matches zero or more characters and ``!`` matches exactly one character.
+* For the ``between`` and ``nbetween`` operators the value must be a two item comma separated list of unquoted values.
+* In a shell environment the character ``&`` separating query parameters must be escaped with a backslash.
+* Attribute names may be specified using Camel Case or Snake Case.
+* Following complex attributes not supported when searching: ``accessCredential`` ``transferMethods`` ``jobCapabilities`` ``tags``  ``notes``
+
+Search using POST on Dedicated Endpoint
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TBD
+
+
+
+Filter using GET
+~~~~~~~~~~~~~~~~
+When retrieving systems the attributes to be returned may be specified using a query parameter named ``select``.
+Each attribute name must be preceded by ``result.`` and attribute names must be specified using Camel Case.
+By default all attributes are returned. Specifying complex attributes such as ``tansferMethods`` is supported.
+
+For example, to return only the attributes ``id``, ``name``, ``host`` and ``effectiveUserId`` the
+CURL command would look like this::
+
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems?select=result.id,result.name,result.host,result.effectiveUserId
+
+The response should look similar to the following::
+
+ {
+  "result": [
+        {
+            "effectiveUserId": "effUserCltSrchGet_011",
+            "host": "hostCltSrchGet_011",
+            "id": 5754,
+            "name": "CSys_CltSrchGet_011"
+        },
+        {
+            "effectiveUserId": "effUserCltSrchGet_012",
+            "host": "hostCltSrchGet_012",
+            "id": 5755,
+            "name": "CSys_CltSrchGet_012"
+        },
+        {
+            "effectiveUserId": "effUserCltSrchGet_013",
+            "host": "hostCltSrchGet_013",
+            "id": 5756,
+            "name": "CSys_CltSrchGet_013"
+        }
+    ],
+    "type": "respSystemArray"
+ }
 
 
 Heading 2
