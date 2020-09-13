@@ -180,6 +180,8 @@ Retrieving details for all systems
 
 To see the current list of systems that you are authorized to view:
 
+(NOTE: See the section below on searching and filtering to find out how to control the amount of information returned)
+
 Using PySDK:
 
 .. code-block:: python
@@ -541,7 +543,7 @@ Notes:
 
 Dedicated Search Endpoint
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-The service provides the dedicated search endpoint ``systems/search`` for specifying complex queries. Using a GET
+The service provides the dedicated search endpoint ``systems/search/systems`` for specifying complex queries. Using a GET
 request to this endpoint provides functionality similar to above but with a different syntax. For more complex
 queries a POST request may be used with a request body specifying the search conditions using an SQL-like syntax.
 
@@ -560,10 +562,10 @@ Supported operators: ``eq`` ``neq`` ``gt`` ``gte`` ``lt`` ``lte`` ``in`` ``nin``
 For more information on search operators, handling of timestamps, lists, quoting, escaping and other general information on
 search please see <TBD>.
 
-Example CURL command to search for systems that have ``Test`` in the name, are of type LINUX,
+Example CURL command to search for systems that have ``Test`` in the name, are of type ``LINUX``,
 are using a port less than ``1024`` and have a default access method of either ``PKI_KEYS`` or ``PASSWORD``::
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/search?name.like=*Test*\&enabled.eq=true\&system_type.eq=LINUX\&DefaultAccessMethod.in=PKI_KEYS,PASSWORD
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/search/systems?name.like=*Test*\&enabled.eq=true\&system_type.eq=LINUX\&DefaultAccessMethod.in=PKI_KEYS,PASSWORD
 
 Notes:
 
@@ -575,8 +577,70 @@ Notes:
 
 Search using POST on Dedicated Endpoint
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TBD
+More complex search queries are supported when sending a POST request to the endpoint ``systems/search/systems``.
+For these requests the request body must contain json with a top level property name of ``search``. The
+``search`` property must contain an array of strings specifying the search criteria in
+an SQL-like syntax. The array of strings are concatenated to form the full search query.
+The full query must be in the form of an SQL-like ``WHERE`` clause. Note that not all SQL features are supported.
 
+For example, to search for systems that are owned by ``jdoe`` and of type ``LINUX`` or owned by
+``jsmith`` and using a port less than ``1024`` create a local file named ``system_search.json``
+with following json::
+
+  {
+    "search":
+      [
+        "(owner = 'jdoe' AND system_type = 'LINUX') OR",
+        "(owner = 'jsmith' AND port < 1024)"
+      ]
+  }
+
+To execute the search use a CURL command similar to the following::
+
+   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/search/systems -d @system_search.json
+
+Notes:
+
+* String values must be surrounded by single quotes.
+* Values for BETWEEN must be surrounded by single quotes.
+* Search query parameters as described above may not be used in conjunction with a POST request.
+* SQL features not supported include:
+
+  * ``IS NULL`` and ``IS NOT NULL``
+  * Arithmetic operations
+  * Unary operators
+  * Specifying escape character for ``LIKE`` operator
+
+
+Map of SQL operators to Tapis operators
+***************************************
++----------------+----------------+
+| Sql Operator   | Tapis Operator |
++================+================+
+| =              | eq             |
++----------------+----------------+
+| <>             | neq            |
++----------------+----------------+
+| <              | lt             |
++----------------+----------------+
+| <=             | lte            |
++----------------+----------------+
+| >              | gt             |
++----------------+----------------+
+| >=             | gte            |
++----------------+----------------+
+| LIKE           | like           |
++----------------+----------------+
+| NOT LIKE       | nlike          |
++----------------+----------------+
+| BETWEEN        | between        |
++----------------+----------------+
+| NOT BETWEEN    | nbetween       |
++----------------+----------------+
+| IN             | in             |
++----------------+----------------+
+| NOT IN         | nin            |
++----------------+----------------+
 
 
 Filter using GET
@@ -623,3 +687,5 @@ Heading 2
 Heading 3
 ^^^^^^^^^
 
+Heading 4
+*********
