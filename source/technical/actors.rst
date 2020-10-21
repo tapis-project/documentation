@@ -108,8 +108,8 @@ username and password. Do so by typing the following in a Python shell:
 
     # Log into you the Tapis service by providing user/pass and url.
     t = Tapis(base_url='https://tacc.tapis.io',
-            username='your username',
-            password='your password')
+              username='your username',
+              password='your password')
 
 
 Generate a Token
@@ -165,7 +165,7 @@ A Basic Python Function
 
 Suppose we want to write a Python function that counts words in a string. We might write something like this:
 
-.. code-block:: bash
+.. code-block:: python
 
   def string_count(message):
       words = message.split(' ')
@@ -178,7 +178,7 @@ We can access it by using the ``get_context`` method from the ``actors`` module 
 For this example, create a new local directory to hold your work. Then, create a new file in this directory called
 ``example.py``. Add the following to this file:
 
-.. code-block:: bash
+.. code-block:: python
 
   # example.py
 
@@ -273,38 +273,48 @@ client object we created above (see `Working with TACC OAuth`_).
 To register an actor using the tapipy library, we use the ``actors.add()`` method and pass the arguments describing
 the actor we want to register through the ``body`` parameter. For example:
 
-.. code-block:: bash
+.. code-block:: python
 
-  >>> my_actor = {"image": "user/my_actor", "name": "word_counter", "description": "Actor that counts words."}
-  >>> t.actors.add(body=**my_actor)
+  my_actor = {"image": "user/my_actor", "name": "word_counter", "description": "Actor that counts words."}
+  t.actors.createActor(**my_actor)
 
 You should see a response like this:
 
-.. code-block:: bash
+.. code-block:: python
 
-    {'_links': {'executions': 'https://tacc.tapis.io/actors/v3/O08Nzb3mRA7Bz/executions',
-    'owner': 'https://tacc.tapis.io/profiles/v3/jstubbs',
-    'self': 'https://tacc.tapis.io/actors/v3/O08Nzb3mRA7Bz'},
-    'createTime': '2018-07-03 22:41:29.563024',
-    'defaultEnvironment': {},
-    'description': 'Actor that counts words.',
-    'id': 'O08Nzb3mRA7Bz',
-    'image': 'abacosamples/wc',
-    'lastUpdateTime': '2018-07-03 22:41:29.563024',
-    'mounts': [],
-    'name': 'word_counter',
-    'owner': 'jstubbs',
-    'privileged': False,
-    'state': {},
-    'stateless': False,
-    'status': 'SUBMITTED',
-    'statusMessage': '',
-    'type': 'none',
-    'useContainerUid': False}
+  _links: 
+  executions: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/executions
+  owner: https://tacc.tapis.io/profiles/v3/jstubbs
+  createTime: 2020-10-21T17:20:20.718177
+  defaultEnvironment:
+  description: Actor that counts words.
+  hints: []
+  id: JWpkNmBwKewYo
+  image: abacosamples/wc
+  lastUpdateTime: 2020-10-21T17:20:20.718177
+  link: 
+  mounts: [
+  container_path: /home/tapis/runtime_files/_abaco_data1
+  host_path: /home/apim/staging/runtime_files/data1
+  mode: ro, 
+  container_path: /home/tapis/runtime_files/_abaco_data2
+  host_path: /home/apim/staging/runtime_files/data2/master/abaco
+  mode: rw]
+  owner: abaco
+  privileged: False
+  queue: default
+  state: 
+  stateless: True
+  status: SUBMITTED
+  statusMessage: 
+  token: false
+  type: none
+  useContainerUid: False
+  webhook: 
 
 Notes:
 
-- Abaco assigned an id to the actor (in this case ``O08Nzb3mRA7Bz``) and associated it with the image (in this case,
+- Abaco assigned an id to the actor (in this case ``JWpkNmBwKewYo``) and associated it with the image (in this case,
   ``abacosamples/wc``) which it began pulling from the public Docker Hub.
 - Abaco returned a status of ``SUBMITTED`` for the actor; behind the scenes, Abaco is starting a worker container to
   handle messages passed to this actor. The worker must initialize itself (download the image, etc) before the
@@ -313,9 +323,9 @@ Notes:
 
 At any point we can check the details of our actor, including its status, with the following:
 
-.. code-block:: bash
+.. code-block:: python
 
-  >>> t.actors.get(actorId='O08Nzb3mRA7Bz')
+  t.actors.getActor(actor_id='JWpkNmBwKewYo')
 
 The response format is identical to that returned from the ``.add()`` method.
 
@@ -329,21 +339,21 @@ that is what we will send, but there other options, including JSON and binary da
 
 We send our actor a message using the ``sendMessage()`` method:
 
-.. code-block:: bash
+.. code-block:: python
 
-  >>> t.actors.sendMessage(actorId='O08Nzb3mRA7Bz',
-                            body={'message': 'Actor, please count these words.'})
+ t.actors.sendMessage(actor_id='JWpkNmBwKewYo',
+                      request_body={'message': 'Actor, please count these words.'})
 
 Abaco queues up an execution for our actor and then responds with JSON, including an id for the execution contained in
 the ``executionId``:
 
-.. code-block:: bash
+.. code-block:: python
 
-    {'_links': {'messages': 'https://tacc.tapis.io/actors/v3/O08Nzb3mRA7Bz/messages',
-      'owner': 'https://tacc.tapis.io/profiles/v3/jstubbs',
-      'self': 'https://tacc.tapis.io/actors/v3/O08Nzb3mRA7Bz/executions/kA1P1m8NkkolK'},
-     'executionId': 'kA1P1m8NkkolK',
-     'msg': 'Actor, please count these words.'}
+  _links: 
+  messages: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/messages
+  owner: https://tacc.tapis.io/profiles/v3/jstubbs
+  executionId: kA1P1m8NkkolK
+  msg: Actor, please count these words.
 
 In general, an execution does not start immediately but is instead queued until a future time when a worker for the
 actor can take the message and start an actor container with the message. We can retrieve the details about an
@@ -351,38 +361,40 @@ execution, including its status, using the ``getExecution()`` method:
 
 .. code-block:: bash
 
-  >>> t.actors.getExecution(actorId='O08Nzb3mRA7Bz', executionId='kA1P1m8NkkolK')
+  >>> t.actors.getExecution(actor_id='JWpkNmBwKewYo', execution_id='kA1P1m8NkkolK')
 
 The response will be similar to the following:
 
-.. code-block:: bash
+.. code-block:: python
 
-    {'_links': {'logs': 'https://tacc.tapis.io/actors/v3/TACC-PROD_O08Nzb3mRA7Bz/executions/kA1P1m8NkkolK/logs',
-      'owner': 'https://tacc.tapis.io/profiles/v3/jstubbs',
-      'self': 'https://tacc.tapis.io/actors/v3/TACC-PROD_O08Nzb3mRA7Bz/executions/kA1P1m8NkkolK'},
-     'actorId': 'O08Nzb3mRA7Bz',
-     'apiServer': 'https://tacc.tapis.io',
-     'cpu': 0,
-     'executor': 'jstubbs',
-     'exitCode': 1,
-     'finalState': {'Dead': False,
-      'Error': '',
-      'ExitCode': 1,
-      'FinishedAt': '2018-07-03T22:56:30.605256563Z',
-      'OOMKilled': False,
-      'Paused': False,
-      'Pid': 0,
-      'Restarting': False,
-      'Running': False,
-      'StartedAt': '2018-07-03T22:56:30.474917256Z',
-      'Status': 'exited'},
-     'id': 'kA1P1m8NkkolK',
-     'io': 0,
-     'messageReceivedTime': '2018-07-03 22:56:29.075122',
-     'runtime': 1,
-     'startTime': '2018-07-03 22:56:29.558470',
-     'status': 'COMPLETE',
-     'workerId': 'e7B3JXDNxM6M0'}
+  _links: 
+  logs: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/executions/kA1P1m8NkkolK/logs
+  owner: https://tacc.tapis.io/profiles/v3/jstubbs
+  actorId: JWpkNmBwKewYo
+  apiServer: https://tacc.tapis.io
+  cpu: 9678006850
+  executor: jstubbs
+  exitCode: 1
+  finalState: 
+  Dead: False
+  Error: 
+  ExitCode: 1
+  FinishedAt: 2020-10-21T17:26:49.77Z0
+  OOMKilled: False
+  Paused: False
+  Pid: 0
+  Restarting: False
+  Running: False
+  StartedAt: 2020-10-21T17:26:45.24Z0
+  Status: exited
+  finishTime: 2020-10-21T17:26:49.77Z0
+  id: kA1P1m8NkkolK
+  io: 152287298
+  messageReceivedTime: 2020-10-21T17:26:44.367Z
+  runtime: 5
+  startTime: 2020-10-21T17:26:44.841Z
+  status: COMPLETE
+  workerId: QBmoQx4pOx1oA
 
 Note that a status of ``COMPLETE`` indicates that the execution has finished and we are ready to retrieve our results.
 
@@ -394,18 +406,18 @@ The Abaco system collects all standard out from an actor execution and makes it 
 Let's retrieve the logs from the execution we just made. We use the ``getExecutionLogs()``
 method, passing out ``actorId`` and our ``executionId``:
 
-.. code-block:: bash
+.. code-block:: python
 
-  >>> t.actors.getExecutionLogs(actorId='O08Nzb3mRA7Bz', executionId='kA1P1m8NkkolK')
+  t.actors.getExecutionLogs(actor_id='JWpkNmBwKewYo', execution_id='kA1P1m8NkkolK')
 
 The response should be similar to the following:
 
-.. code-block:: bash
+.. code-block:: python
 
-    {'_links': {'execution': 'https://tacc.tapis.io/actors/v3/6PlMbDLa4zlON/executions/kGQk6RRJQBL3',
-      'owner': 'https://tacc.tapis.io/profiles/v3/jstubbs',
-      'self': 'https://tacc.tapis.io/actors/v3/6PlMbDLa4zlON/executions/kGQk6RRJQBL3/logs'},
-     'logs': 'Number of words is: 5\n'}
+  _links: 
+  execution: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/executions/kA1P1m8NkkolK
+  owner: https://tacc.tapis.io/profiles/v3/jstubbs
+  logs: Number of words is: 5\n
 
 We see our actor output `Number of words is: 5`, which is the expected result!
 
@@ -495,7 +507,7 @@ be sure to pass properly formatted JSON in the payload.
 
 .. code-block:: bash
 
-  $ curl -H "Authorization: Bearer $TOKEN" \
+  $ curl -H "X-Tapis-Token: $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"image": "abacosamples/test", "name": "test", "description": "My test actor using the abacosamples image.", "default_environment":{"key1": "value1", "key2": "value2"} }' \
   https://tacc.tapis.io/v3/actors
@@ -504,20 +516,20 @@ be sure to pass properly formatted JSON in the payload.
 Python
 ~~~~~~
 
-To register the same actor using the tapipy library, we use the ``actors.add()`` method and pass the same arguments
-through the `body` parameter. In this case, the ``default_environment`` is just a standard Python dictionary where the
+To register the same actor using the tapipy library, we use the ``actors.createActor()`` method and pass the same arguments
+through the `request_body` parameter. In this case, the ``default_environment`` is just a standard Python dictionary where the
 keys and values are ``str`` type. For example,
 
-.. code-block:: bash
+.. code-block:: python
 
-  >>> from tapipy.tapis import Tapis
-  >>> t = Tapis(api_server='https://tacc.tapis.io', username='<username>', password='<password>')
-  >>> t.get_tokens()
-  >>> actor = {"image": "abacosamples/test",
-               "name": "test",
-               "description": "My test actor using the abacosamples image registered using tapipy.",
-               "default_environment":{"key1": "value1", "key2": "value2"} }
-  >>> t.actors.add(body=actor)
+  from tapipy.tapis import Tapis
+  t = Tapis(api_server='https://tacc.tapis.io', username='<username>', password='<password>')
+  t.get_tokens()
+  actor = {"image": "abacosamples/test",
+           "name": "test",
+           "description": "My test actor using the abacosamples image registered using tapipy.",
+           "default_environment":{"key1": "value1", "key2": "value2"} }
+  t.actors.createActor(**actor)
 
 
 
@@ -662,9 +674,9 @@ To send a message to the ``messages`` endpoint with cURL, you would do the follo
 
 .. code-block:: bash
     
-    $ curl -H "Authorization: Bearer $TOKEN" \
-    -d "message=<your content here>" \
-    https://tacc.tapis.io/v3/actors/<actor_id>/messages
+  $ curl -H "X-Tapis-Token: $TOKEN" \
+  -d "message=<your content here>" \
+  https://tacc.tapis.io/v3/actors/<actor_id>/messages
 
 Python
 ~~~~~~
@@ -673,24 +685,22 @@ To send a message to the ``messages`` endpoint with ``tapipy`` and Python, you w
 
 .. code-block:: python
 
-    t.actors.sendMessage(actorId='<actor_id>',
-                          body={'message':'<your content here>'})
+  t.actors.sendMessage(actor_id='<actor_id>',
+                       request_body={'message':'<your content here>'})
 
 Results
 ~~~~~~~
 
-These calls result in a JSON list similar to the following:
+These calls result in a list similar to the following:
 
-.. code-block:: bash
+.. code-block:: python
 
-    {'message': 'The request was successful',
-     'result': {'_links': {'messages': 'https://tacc.tapis.io/v3/actors/R0y3eYbWmgEwo/messages',
-       'owner': 'https://tacc.tapis.io/profiles/v3/apitest',
-       'self': 'https://tacc.tapis.io/v3/actors/R0y3eYbWmgEwo/executions/00wLaDX53WBAr'},
-      'executionId': '00wLaDX53WBAr',
-      'msg': '<your content here>'},
-     'status': 'success',
-     'version': '0.11.0'}
+  _links: 
+  messages: https://tacc.tapis.io/actors/v3/NPpjZkmZ4elY8/messages
+  owner: https://tacc.tapis.io/profiles/v3/jstubbs
+  executionId: WrMk5EPmwYoL6
+  msg: <your content here>
+
 
 Get message count
 ^^^^^^^^^^^^^^^^^
@@ -705,8 +715,8 @@ The following retrieves the current number of messages an actor has:
 
 .. code-block:: bash
 
-    $ curl -H "X-Tapis-Token: $TOKEN" \
-    https://tacc.tapis.io/v3/actors/<actor_id>/messages
+  $ curl -H "X-Tapis-Token: $TOKEN" \
+  https://tacc.tapis.io/v3/actors/<actor_id>/messages
 
 Python
 ~~~~~~
@@ -715,7 +725,7 @@ To retrieve the current number of messages with ``tapipy`` the following is done
 
 .. code-block:: python
 
-    t.actors.getMessages(actorId='<actor_id>')
+    t.actors.getMessages(actor_id='<actor_id>')
 
 Results
 ~~~~~~~
@@ -724,12 +734,9 @@ The result of getting the ``messages`` endpoint should be similar to:
 
 .. code-block:: bash
 
-    {'message': 'The request was successful',
-     'result': {'_links': {'owner': 'https://tacc.tapis.io/profiles/v3/cgarcia',
-       'self': 'https://tacc.tapis.io/v3/actors/R4OR3KzGbRQmW/messages'},
-      'messages': 12},
-     'status': 'success',
-     'version': '0.11.0'}
+  _links: 
+  owner: https://tacc.tapis.io/profiles/v3/jstubbs
+  messages: 12
 
 Binary Messages
 ^^^^^^^^^^^^^^^
@@ -755,47 +762,47 @@ Setting up an ``Tapis`` object with token and API address information:
 
 .. code-block:: python
 
-  >>> from tapipy.tapis import Tapis
-  >>> t = Tapis(api_server='https://tacc.tapis.io', username='<username>', password='<password>')
-  >>> t.get_tokens()
+  from tapipy.tapis import Tapis
+  t = Tapis(api_server='https://tacc.tapis.io', username='<username>', password='<password>')
+  t.get_tokens()
 
 Creating actor with the TensorFlow image classifier docker image:
 
 .. code-block:: python
 
-    my_actor = {'image': 'notchristiangarcia/bin_classifier',
-                'name': 'JPEG_classifier',
-                'description': 'Labels a read in binary image'}
-    actor_data = t.actors.add(body=my_actor)
+  my_actor = {'image': 'abacosamples/binary_message_classifier',
+              'name': 'JPEG_classifier',
+              'description': 'Labels a read in binary image'}
+  actor_data = t.actors.createActor(**my_actor)
 
 The following creates a binary message from a JPEG image file:
 
 .. code-block:: python
     
-    with open('<path to jpeg image here>', 'rb') as file:
-        binary_image = file.read()
+  with open('<path to jpeg image here>', 'rb') as file:
+      binary_image = file.read()
 
-Sending binary JPEG file to actor as message with the ``application/octet-stream`` header:
+Sending binary JPEG file to actor as message with the sendBinaryMessage function (You can
+also just set the headers with ``Content-Type: application/octet-stream``):
 
 .. code-block:: python
 
-    result = t.actors.sendMessage(actorId=actor_data['id'],
-                                   body={'binary': binary_image},
-                                   headers={'Content-Type': 'application/octet-stream'})
+  result = t.actors.sendBinaryMessage(actor_id = actor_data.id,
+                                      request_body = binary_image)
 
 The following returns information pertaining to the execution:
 
 .. code-block:: python
 
-    execution = t.actors.getExecution(actorId=actor_data['id'],
-                                       executionId = result['executionId'])
+  execution = t.actors.getExecution(actor_id = actor_data.id,
+                                    execution_id = result.executionId)
 
 Once the execution has complete, the logs can be called with the following:
 
 .. code-block:: python
     
-    exec_info = t.actors.getExecutionLogs(actorId=actor_data['id'],
-                                       executionId = result['executionId'])
+  exec_logs = t.actors.getExecutionLogs(actor_id = actor_data.id,
+                                        execution_id = result.executionId)
 
 Sending binary from execution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -829,9 +836,9 @@ To retrieve a result with cURL you would do the following:
 
 .. code-block:: bash
     
-    $ curl -H "X-Tapis-Token: $TOKEN" \
-    -d "message=<your content here>" \
-    https://tacc.tapis.io/v3/actors/<actor_id>/executions/<execution_id>/results
+  $ curl -H "X-Tapis-Token: $TOKEN" \
+  -d "message=<your content here>" \
+  https://tacc.tapis.io/v3/actors/<actor_id>/executions/<execution_id>/results
 
 ----
 
@@ -869,9 +876,9 @@ The following example uses the curl command line client to send a synchronous me
 
 .. code-block:: bash
 
-    $ curl -H "X-Tapis-Token: $TOKEN" \
-    -d "message=<your content here>" \
-    https://tacc.tapis.io/v3/actors/<actor_id>/messages?_abaco_synchronous=true
+  $ curl -H "X-Tapis-Token: $TOKEN" \
+  -d "message=<your content here>" \
+  https://tacc.tapis.io/v3/actors/<actor_id>/messages?_abaco_synchronous=true
 
 As stated above, the request blocks until the execution (and all previous executions queued for the actor) completes.
 To make the response to a synchronous message request, Abaco uses the following rules:
@@ -899,8 +906,8 @@ You can access the ``execution_id`` endpoint using cURL with the following:
 
 .. code-block:: bash
     
-    $ curl -H "X-Tapis-Token: $TOKEN" \
-    https://tacc.tapis.io/v3/actors/<actor_id>/executions/<execution_id>
+  $ curl -H "X-Tapis-Token: $TOKEN" \
+  https://tacc.tapis.io/v3/actors/<actor_id>/executions/<execution_id>
 
 Python
 ~~~~~~
@@ -909,45 +916,44 @@ You can access the ``execution_id`` endpoint using ``tapipy`` and Python with th
 
 .. code-block:: python
 
-    t.actors.getExecution(actorId='<actor_id>',
-                           executionId='<execution_id>')    
+  t.actors.getExecution(actor_id='<actor_id>',
+                        execution_id='<execution_id>')    
 
 Results
 ~~~~~~~
 
 Access the ``execution_id`` endpoint will result in something similar to the following:
 
-.. code-block:: bash
+.. code-block:: python
     
-    {'message': 'Actor execution retrieved successfully.',
-     'result': {'_links': {'logs': 'https://tacc.tapis.io/v3/actors/R0y3eYbWmgEwo/executions/00wLaDX53WBAr/logs',
-       'owner': 'https://tacc.tapis.io/profiles/v3/apitest',
-       'self': 'https://tacc.tapis.io/v3/actors/R0y3eYbWmgEwo/executions/00wLaDX53WBAr'},
-      'actorId': 'R0y3eYbWmgEwo',
-      'apiServer': 'https://tacc.tapis.io',
-      'cpu': 7638363913,
-      'executor': 'apitest',
-      'exitCode': 1,
-      'finalState': {'Dead': False,
-       'Error': '',
-       'ExitCode': 1,
-       'FinishedAt': '2019-02-21T17:32:18.56680737Z',
-       'OOMKilled': False,
-       'Paused': False,
-       'Pid': 0,
-       'Restarting': False,
-       'Running': False,
-       'StartedAt': '2019-02-21T17:32:14.893485694Z',
-       'Status': 'exited'},
-      'id': '00wLaDX53WBAr',
-      'io': 124776656,
-      'messageReceivedTime': '2019-02-21 17:31:24.300900',
-      'runtime': 11,
-      'startTime': '2019-02-21 17:32:12.798836',
-      'status': 'COMPLETE',
-      'workerId': 'oQpeybmGRVNyB'},
-     'status': 'success',
-     'version': '0.11.0'}
+  _links: 
+  logs: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/executions/kA1P1m8NkkolK/logs
+  owner: https://tacc.tapis.io/profiles/v3/jstubbs
+  actorId: JWpkNmBwKewYo
+  apiServer: https://tacc.tapis.io
+  cpu: 9678006850
+  executor: jstubbs
+  exitCode: 1
+  finalState: 
+  Dead: False
+  Error: 
+  ExitCode: 1
+  FinishedAt: 2020-10-21T17:26:49.77Z0
+  OOMKilled: False
+  Paused: False
+  Pid: 0
+  Restarting: False
+  Running: False
+  StartedAt: 2020-10-21T17:26:45.24Z0
+  Status: exited
+  finishTime: 2020-10-21T17:26:49.77Z0
+  id: kA1P1m8NkkolK
+  io: 152287298
+  messageReceivedTime: 2020-10-21T17:26:44.367Z
+  runtime: 5
+  startTime: 2020-10-21T17:26:44.841Z
+  status: COMPLETE
+  workerId: QBmoQx4pOx1oA
      
 List executions
 ^^^^^^^^^^^^^^^
@@ -962,8 +968,8 @@ List executions with cURL by getting the ``executions endpoint``
 
 .. code-block:: bash
 
-    $ curl -H "X-Tapis-Token: $TOKEN" \
-    https://tacc.tapis.io/v3/actors/<actor_id>/executions
+  $ curl -H "X-Tapis-Token: $TOKEN" \
+  https://tacc.tapis.io/v3/actors/<actor_id>/executions
 
 Python
 ~~~~~~
@@ -972,31 +978,35 @@ To list executions with ``tapipy`` the following is done:
 
 .. code-block:: python
 
-    t.actors.listExecutions(actorId='<actor_id>')
+  t.actors.listExecutions(actor_id='<actor_id>')
 
 Results
 ~~~~~~~
 
 Calling the list of executions should result in something similar to:
 
-.. code-block:: bash
+.. code-block:: python
 
-    {'message': 'Actor execution retrieved successfully.',
-     'result': {'_links': {'logs': 'https://tacc.tapis.io/v3/actors/R4OR3KzGbRQmW/executions/YqM3RPRoWqz3g/logs',
-       'owner': 'https://tacc.tapis.io/profiles/v3/apitest',
-       'self': 'https://tacc.tapis.io/v3/actors/R4OR3KzGbRQmW/executions/YqM3RPRoWqz3g'},
-      'actorId': 'R4OR3KzGbRQmW',
-      'apiServer': 'https://tacc.tapis.io',
-      'cpu': 0,
-      'executor': 'apitest',
-      'id': 'YqM3RPRoWqz3g',
-      'io': 0,
-      'messageReceivedTime': '2019-02-22 01:01:50.546993',
-      'runtime': 0,
-      'startTime': 'None',
-      'status': 'SUBMITTED'},
-     'status': 'success',
-     'version': '0.11.0'}
+  _links: 
+  owner: https://master.staging.tapis.io/profiles/v3/abaco
+  actorId: WP7vMmRvrDXxN
+  apiServer: https://master.staging.tapis.io
+  executions: [
+  finishTime: Wed, 21 Oct 2020 17:48:33 GMT
+  id: QBmoQx4pOx1oA
+  messageReceivedTime: Wed, 21 Oct 2020 17:48:20 GMT
+  startTime: Wed, 21 Oct 2020 17:48:20 GMT
+  status: COMPLETE, 
+  finishTime: None
+  id: QZY8W1Z30Zmbq
+  messageReceivedTime: Wed, 21 Oct 2020 17:49:56 GMT
+  startTime: None
+  status: SUBMITTED]
+  owner: abaco
+  totalCpu: 61248097463
+  totalExecutions: 2
+  totalIo: 752526010
+  totalRuntime: 13
 
 Reading message in execution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1012,11 +1022,11 @@ To retrieve JSON or raw data from inside of an execution using Python and
 get it's ``raw_message`` field. 
 
 .. code-block:: python
-	
-	from tapipy.actors import get_context
+  
+  from tapipy.actors import get_context
 
-	context = get_context()
-	message = context['raw_message']
+  context = get_context()
+  message = context['raw_message']
 
 Python - Reading in binary
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1032,9 +1042,9 @@ message.
 
 .. code-block:: python
 
-	from tapipy.actors import get_binary_message
+  from tapipy.actors import get_binary_message
 
-	bin_message = get_binary_message()
+  bin_message = get_binary_message()
 
  
 
@@ -1057,8 +1067,8 @@ To call the ``log`` endpoint using cURL, do the following:
 
 .. code-block:: bash
 
-    $ curl -H "X-Tapis-Token: $TOKEN" \
-    https://tacc.tapis.io/v3/actors/<actor_id>/executions/<execution_id>/logs
+  $ curl -H "X-Tapis-Token: $TOKEN" \
+  https://tacc.tapis.io/v3/actors/<actor_id>/executions/<execution_id>/logs
 
 Python
 ~~~~~~
@@ -1067,8 +1077,8 @@ To call the ``log`` endpoint using ``tapipy`` and Python, do the following:
 
 .. code-block:: python
 
-    t.actors.getExecutionLogs(actorId='<actor_id>',
-                               executionId='<executionId>')
+  t.actors.getExecutionLogs(actor_id='<actor_id>',
+                            execution_id='<executionId>')
 
 Results
 ~~~~~~~
@@ -1077,13 +1087,10 @@ This would result in data similar to the following:
 
 .. code-block:: bash
 
-    {'message': 'Logs retrieved successfully.',
-     'result': {'_links': {'execution': 'https://tacc.tapis.io/v3/actors/qgKRpNKxg0DME/executions/qgmq08wKARlg3',
-       'owner': 'https://tacc.tapis.io/profiles/v3/apitest',
-       'self': 'https://tacc.tapis.io/v3/actors/qgKRpNKxg0DME/executions/qgmq08wKARlg3/logs'},
-      'logs': '<command line output here>'},
-     'status': 'success',
-     'version': '0.11.0'}
+  _links: 
+  execution: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/executions/kA1P1m8NkkolK
+  owner: https://tacc.tapis.io/profiles/v3/jstubbs
+  logs: <command line output here>
 
 
 ----
@@ -1412,6 +1419,9 @@ Result
 
 
 
+
+
+
 ----
 
 Actor State
@@ -1452,8 +1462,7 @@ Registering an actor specifying statefulness: ``stateless=false``.
 
 .. code-block:: bash
 
-  $curl -H "$header" \
-  -X POST \
+  $ curl -H "X-Tapis-Token: $TOKEN" \
   -d "image=abacosamples/test&stateless=false" \
   https://tacc.tapis.io/v3/actors
 
@@ -1461,7 +1470,7 @@ POSTing a state to a particular actor; keep in mind we must indicate in the head
 
 .. code-block:: bash
 
-  $curl -H "$header" \
+  $ curl -H "X-Tapis-Token: $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"some variable": "value", "another variable": "value2"}' \
   https://tacc.tapis.io/v3/actors/<actor_id>/state
@@ -1470,7 +1479,7 @@ GETting information about a particular actor's state.
 
 .. code-block:: bash
 
-  $curl -H "$header" \
+  $ curl -H "X-Tapis-Token: $TOKEN" \
   https://tacc.tapis.io/v3/actors/<actor_id>/state
 
 
@@ -1481,29 +1490,29 @@ Here are some examples interacting with state using Python. The ``tapipy.actors`
 
 Registering an actor specifying statefulness: ``stateless=false``.
 
-.. code-block:: bash
+.. code-block:: python
 
-  >>> from tapipy.tapis import Tapis
-  >>> t = Tapis(api_server='https://tacc.tapis.io', username='<username>', password='<password>')
-  >>> t.get_tokens()
-  >>> actor = {"image": "abacosamples/test",
-      "stateless": "False"}
-  >>> t.actors.add(body=actor)
+  from tapipy.tapis import Tapis
+  t = Tapis(api_server='https://tacc.tapis.io', username='<username>', password='<password>')
+  t.get_tokens()
+  actor = {"image": "abacosamples/test",
+           "stateless": "False"}
+  actor_res = t.actors.createActor(**actor)
 
 POSTing a state to a particular actor; again keep in mind we must pass in JSON serializable data.
 
-.. code-block:: bash
+.. code-block:: python
 
-  >>> from tapipy.actors import update_state
-  >>> state = {"some variable": "value", "another variable": "value2"}
-  >>> update_state(state)
+  state = {"some variable": "value", "another variable": "value2"}
+  t.actors.updateState(actor_id = actor_res.id,
+                       request_body = state)
 
 GETting information about a particular actor's state. This function returns a Python dictionary with many fields one of which is state. 
 
-.. code-block:: bash
+.. code-block:: python
 
-  >>> from tapipy.actors import get_context
-  >>> get_context()
+  from tapipy.actors import get_context
+  get_context()
   {'raw_message': '<text>', 'content_type': '<text>', 'execution_id': '<text>', 'username': '<text>', 'state': 'some_state', 'actor_dbid': '<text>', 'actor_id': '<text>', 'raw_message_parse_log': '<text>', 'message_dict': {}}
 
 
@@ -1536,48 +1545,48 @@ cURL
 To share an actor with another API user, make a POST request to the `/permissions` endpoint; the following example
 uses curl to grant READ permission to API user `jdoe`.
 
-.. code-block:: bash
+.. code-block:: python
 
-    $ curl -H "X-Tapis-Token: $TOKEN" \
-    -d "user=jdoe&level=READ" \
-    https://tacc.tapis.io/v3/actors/<actor_id>/permissions
+  $ curl -H "X-Tapis-Token: $TOKEN" \
+  -d "user=jdoe&level=READ" \
+  https://tacc.tapis.io/v3/actors/<actor_id>/permissions
 
 Example response:
 
 .. code-block:: bash
 
-    {
-      "message": "Permission added successfully.",
-      "result": {
-        "jdoe": "READ",
-        "testuser": "UPDATE"
-      },
-      "status": "success",
-      "version": "1.0.0"
-    }
+  {
+    "message": "Permission added successfully.",
+    "result": {
+      "jdoe": "READ",
+      "testuser": "UPDATE"
+    },
+    "status": "success",
+    "version": "1.0.0"
+  }
 
 
 We can list all permissions associated with an actor at any time using a GET request:
 
 .. code-block:: bash
 
-    $ curl -H "X-Tapis-Token: $TOKEN" \
-    https://tacc.tapis.io/v3/actors/<actor_id>/permissions
+  $ curl -H "X-Tapis-Token: $TOKEN" \
+  https://tacc.tapis.io/v3/actors/<actor_id>/permissions
 
 Example response:
 
 .. code-block:: bash
 
-    {
-      "message": "Permissions retrieved successfully.",
-      "result": {
-        "jdoe": "READ",
-        "jsmith": "EXECUTE",
-        "testuser": "UPDATE"
-      },
-      "status": "success",
-      "version": "1.0.0"
-    }
+  {
+    "message": "Permissions retrieved successfully.",
+    "result": {
+      "jdoe": "READ",
+      "jsmith": "EXECUTE",
+      "testuser": "UPDATE"
+    },
+    "status": "success",
+    "version": "1.0.0"
+  }
 
 .. Note::
   To remove a user's permission, POST to the permission endpoint and set `level=NONE`
@@ -1597,9 +1606,9 @@ The following grants `READ` permission to all API users:
 
 .. code-block:: bash
 
-    $ curl -H "X-Tapis-Token: $TOKEN" \
-    -d "user=ABACO_WORLD&level=READ" \
-    https://tacc.tapis.io/v3/actors/<actor_id>/permissions
+  $ curl -H "X-Tapis-Token: $TOKEN" \
+  -d "user=ABACO_WORLD&level=READ" \
+  https://tacc.tapis.io/v3/actors/<actor_id>/permissions
 
 
 Nonces
@@ -1620,37 +1629,37 @@ The following example uses curl to create a nonce with `READ` level permission a
 
 .. code-block:: bash
 
-    $ curl -H "X-Tapis-Token: $TOKEN" \
-    -d "maxUses=5&level=READ" \
-    https://tacc.tapis.io/v3/actors/<actor_id>/nonces
+  $ curl -H "X-Tapis-Token: $TOKEN" \
+  -d "maxUses=5&level=READ" \
+  https://tacc.tapis.io/v3/actors/<actor_id>/nonces
 
 A typical response:
 
 .. code-block:: bash
 
-    {
-      "message": "Actor nonce created successfully.",
-      "result": {
-        "_links": {
-          "actor": "https://tacc.tapis.io/v3/actors/rNjQG5BBJoxO1",
-          "owner": "https://tacc.tapis.io/profiles/v3/testuser",
-          "self": "https://tacc.tapis.io/v3/actors/rNjQG5BBJoxO1/nonces/DEV_qBMrvO6Zy0yQz"
-        },
-        "actorId": "rNjQG5BBJoxO1",
-        "apiServer": "http://172.17.0.1:8000",
-        "createTime": "2019-06-18 12:20:53.087704",
-        "currentUses": 0,
-        "description": "",
-        "id": "TACC_qBMrvO6Zy0yQz",
-        "lastUseTime": "None",
-        "level": "READ",
-        "maxUses": 5,
-        "owner": "testuser",
-        "remainingUses": 5,
+  {
+    "message": "Actor nonce created successfully.",
+    "result": {
+      "_links": {
+        "actor": "https://tacc.tapis.io/v3/actors/rNjQG5BBJoxO1",
+        "owner": "https://tacc.tapis.io/profiles/v3/testuser",
+        "self": "https://tacc.tapis.io/v3/actors/rNjQG5BBJoxO1/nonces/DEV_qBMrvO6Zy0yQz"
       },
-      "status": "success",
-      "version": "1.0.0"
-    }
+      "actorId": "rNjQG5BBJoxO1",
+      "apiServer": "http://172.17.0.1:8000",
+      "createTime": "2019-06-18 12:20:53.087704",
+      "currentUses": 0,
+      "description": "",
+      "id": "TACC_qBMrvO6Zy0yQz",
+      "lastUseTime": "None",
+      "level": "READ",
+      "maxUses": 5,
+      "owner": "testuser",
+      "remainingUses": 5,
+    },
+    "status": "success",
+    "version": "1.0.0"
+  }
 
 
 The `id` of the nonce (in the above example, `TACC_qBMrvO6Zy0yQz`) can be used to access the actor in place of the
@@ -1673,8 +1682,8 @@ For example
 
 .. code-block:: bash
 
-    $ curl -X POST -d "message=<your content here>" \
-    https://tacc.tapis.io/v3/actors/<actor_id>/messages?x-nonce=TACC_vr9rMO6Zy0yHz
+  $ curl -X POST -d "message=<your content here>" \
+  https://tacc.tapis.io/v3/actors/<actor_id>/messages?x-nonce=TACC_vr9rMO6Zy0yHz
 
 The response will be exactly the same as if issuing the request with an access token.
 
@@ -1713,37 +1722,37 @@ the words sent in a message. We might create an alias for it with the following:
 
 .. code-block:: bash
 
-    $ curl -H "X-Tapis-Token: $TOKEN" \
-    -d "alias=counter&actorId=6PlMbDLa4zlON" \
-    https://tacc.tapis.io/v3/actors/aliases
+  $ curl -H "X-Tapis-Token: $TOKEN" \
+  -d "alias=counter&actorId=6PlMbDLa4zlON" \
+  https://tacc.tapis.io/v3/actors/aliases
 
 Example response:
 
 .. code-block:: bash
 
-    {
-      "message": "Actor alias created successfully.",
-      "result": {
-        "_links": {
-          "actor": "https://tacc.tapis.io/v3/actors/6PlMbDLa4zlON",
-          "owner": "https://tacc.tapis.io/profiles/v3/jstubbs",
-          "self": "https://tacc.tapis.io/v3/actors/aliases/counter"
-        },
-        "actorId": "6PlMbDLa4zlON",
-        "alias": "counter",
-        "owner": "apitest"
+  {
+    "message": "Actor alias created successfully.",
+    "result": {
+      "_links": {
+        "actor": "https://tacc.tapis.io/v3/actors/6PlMbDLa4zlON",
+        "owner": "https://tacc.tapis.io/profiles/v3/jstubbs",
+        "self": "https://tacc.tapis.io/v3/actors/aliases/counter"
       },
-      "status": "success",
-      "version": "1.1.0"
-    }
+      "actorId": "6PlMbDLa4zlON",
+      "alias": "counter",
+      "owner": "apitest"
+    },
+    "status": "success",
+    "version": "1.1.0"
+  }
 
 With the alias ``counter`` created, we can now use it in place of the actor id in any Abaco request. For example, we
 can get the actor's details:
 
 .. code-block:: bash
 
-    $ curl -H "X-Tapis-Token: $TOKEN" \
-    https://tacc.tapis.io/v3/actors/counter
+  $ curl -H "X-Tapis-Token: $TOKEN" \
+  https://tacc.tapis.io/v3/actors/counter
 
 The response returned is identical to that returned when the actor id is used.
 
@@ -1766,9 +1775,9 @@ POST message payload is the same. For example:
 
 .. code-block:: bash
 
-    $ curl -H "X-Tapis-Token: $TOKEN" \
-    -d "maxUses=5&level=READ" \
-    https://tacc.tapis.io/v3/actors/aliases/counter/nonces
+  $ curl -H "X-Tapis-Token: $TOKEN" \
+  -d "maxUses=5&level=READ" \
+  https://tacc.tapis.io/v3/actors/aliases/counter/nonces
 
 will create a nonce associated with the ``counter`` alias.
 
@@ -1947,10 +1956,10 @@ actor with the ``sync`` hint using curl:
 
 .. code-block:: bash
 
-    $ curl -H "X-Tapis-Token: $TOKEN" \
-    -H "Content-type: application/json" \
-    -d '{"image": "abacosamples/wc", "hints": ["sync"]}' \
-    https://tacc.tapis.io/v3/actors
+  $ curl -H "X-Tapis-Token: $TOKEN" \
+  -H "Content-type: application/json" \
+  -d '{"image": "abacosamples/wc", "hints": ["sync"]}' \
+  https://tacc.tapis.io/v3/actors
 
 
 
