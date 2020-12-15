@@ -99,7 +99,7 @@ The response will look something like the following:
 |
 
 **Get Project Details**
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 With PySDK:
 
 Note: project_uuid is same as project_id, used in project creation.
@@ -174,6 +174,41 @@ The response will look something like the following:
         project_id: tapis_demo_project_testuser6
         project_name: tapis_demo_project_testuser6
         project_url: tapis_demo_project.tacc.utexas.edu
+
+
+**Delete Project**
+^^^^^^^^^^^^^^^^^^^^^
+With PySDK:
+
+.. code-block:: plaintext
+
+        $ t.streams.delete_project(project_uuid='tapis_demo_project_testuser6')
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -X DELETE -H "X-tapis-token:$jwt" $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6
+
+
+The response will look something like the following:
+
+.. container:: foldable
+
+     .. code-block:: json
+
+        active: True
+        description: project for early adopters demo
+        funding_resource: tapis
+        last_updated: 2020-12-04 15:06:41.460343
+        owner: testuser6
+        permissions:
+        users: ['testuser6']
+        pi: testuser6
+        project_id: tapis_demo_project_testuser6
+        project_name: tapis_demo_project_testuser6
+        project_url: test.tacc.utexas.edu
+        tapis_deleted: True
 
 
 
@@ -344,6 +379,24 @@ The response will look something like the following:
         site_id: tapis_demo_site
         site_name: tapis_demo_site
 
+
+**Delete Site**
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -X DELETE -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site
+
+
+With PySDK
+
+.. code-block:: plaintext
+
+        $ t.streams.delete_site(project_uuid='tapis_demo_project_testuser6', site_id='tapis_demo_site')
+
+
 |
 
 Instruments
@@ -442,7 +495,7 @@ The response will look something like the following:
 |
 
 **Get instrument Details**
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 With PySDK
 
 .. code-block:: plaintext
@@ -479,6 +532,7 @@ With PySDK
 .. code-block:: plaintext
 
         $ t.streams.update_instrument(inst_id= 'Ohio_River_Robert_C_Byrd_Locks', project_uuid='wq_demo_tapis_streams_proj2020-08-26T08:41:11.813391', site_id='wq_demo_site', inst_name='test', inst_description='test')
+
 With CURL:
 
 .. code-block:: plaintext
@@ -526,6 +580,20 @@ The response will look something like the following:
         updated_at: 2020-08-26 16:15:51.588573
         var_id: ph
         var_name: ph_level]
+
+**Delete Instrument**
+^^^^^^^^^^^^^^^^^^^^^
+With PySDK
+
+.. code-block:: plaintext
+
+        $ t.streams.delete_instrument(inst_id= 'tapis_demo_instrument', project_uuid='tapis_demo_project_testuser6_3', site_id='tapis_demo_site')
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -X DELETE -H "X-Tapis-token:$jwt" $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6_3/sites/tapis_demo_site/instruments/tapis_demo_instrument
 
 |
 
@@ -609,7 +677,8 @@ The response will look something like the following:
 |
 
 **Get Variable Details**
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 With PySDK
 
 .. code-block:: plaintext
@@ -627,13 +696,14 @@ The response will look something like the following:
 .. container:: foldable
 
      .. code-block:: json
+
         [
         chords_id: 21
         shortname: bat
         updated_at: 2020-08-18 20:46:11.673033
         var_id: batv
-        var_name: battery
-        ]
+        var_name: battery]
+
 
 |
 
@@ -666,6 +736,32 @@ The response will look something like the following:
         var_id: temp
         var_name: "updated_temp
 
+
+**Delete Variable**
+^^^^^^^^^^^^^^^^^^^^^
+With PySDK
+
+.. code-block:: plaintext
+
+        $ t.streams.delete_variable( var_id='139', project_uuid='tapis_demo_instrument', site_id='tapis_demo_site',inst_id='tapis_demo_instrument')
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -v -X DELETE  -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6_3/sites/tapis_demo_site/instruments/tapis_demo_instrument/variables/batv
+
+
+The response will look something like the following:
+
+.. container:: foldable
+
+     .. code-block:: json
+
+        inst_chords_id: 24
+        updated_at: 2020-12-03 02:52:27.437378
+        var_id: 139
+
 |
 
 
@@ -673,7 +769,7 @@ Measurements
 --------------
 
 **Create Measurements**
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 With PySDK
 
@@ -807,7 +903,7 @@ The response will look something like the following:
 |
 
 **Get Channel Details**
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 With PySDK
 
@@ -843,10 +939,10 @@ The response will look something like the following:
         method: ACTOR
         nonces: XXXX-YYYY-ZZZZ
         condition:
-        key: demo_instrument.batv
-        operator: >
-        val: 20
-        inst_ids: ['demo_instrument']]
+            key: demo_instrument.batv
+            operator: >
+            val: 20
+            inst_ids: ['demo_instrument']]
 |
 
 **Update Channels**:
@@ -899,7 +995,7 @@ The response will look something like the following:
 |
 
 **Update Channels Status**
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 With PySDK
 
@@ -1020,7 +1116,7 @@ The response will look something like the following:
 
 |
 **Get Template Details**
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 With PySDK
 
 .. code-block:: plaintext
@@ -1139,28 +1235,28 @@ The response will look something like the following:
 
      .. code-block:: json
 
-        alerts: [
-            actor_id: XXXX
-            alert_id: 70fa63b4-c6b1-45a4-91a8-f4e9803ec898
-            channel_id: demo_wq_channel2020-06-19T17_34_46.425419
-            channel_name: demo.wq.channel
-            create_time: 2020-06-19 20:51:44.390887
-            execution_id: 7mBGaJbD4q0M1
-            message: demo_wq_channel2020-06-19T17_34_46.425419 tsdata/var=11/demo_wq_channel2020-06-19T17_34_46.425419/11 is CRITICAL at time: 2020-06-19 20:51:43.229988 +0000 UTC as value: 150 exceeded the threshold,
-            actor_id: XXXX
-            alert_id: c16ab843-8417-4af0-a06c-ce1e4e7e4816
-            channel_id: demo_wq_channel2020-06-19T17_34_46.425419
-            channel_name: demo.wq.channel
-            create_time: 2020-06-19 20:51:21.138143
-            execution_id: ByOkp5W8Jxkqj
-            message: demo_wq_channel2020-06-19T17_34_46.425419 tsdata/var=11/demo_wq_channel2020-06-19T17_34_46.425419/11 is CRITICAL at time: 2020-06-19 20:51:20.114319 +0000 UTC as value: 150 exceeded the threshold,
-            actor_id: XXXX
-            alert_id: 4c4b7e70-a034-419b-be8c-2c337803e5d4
-            channel_id: demo_wq_channel2020-06-19T17_34_46.425419
-            channel_name: demo.wq.channel
-            create_time: 2020-06-19 20:51:10.454269
-            execution_id: jboJWNqRKAA6V
-            message: demo_wq_channel2020-06-19T17_34_46.425419 tsdata/var=11/demo_wq_channel2020-06-19T17_34_46.425419/11 is CRITICAL at time: 2020-06-19 20:51:09.862752 +0000 UTC as value: 150 exceeded the threshold]
-            num_of_alerts: 3
-        ]
+            alerts: [
+                actor_id: XXXX
+                alert_id: 70fa63b4-c6b1-45a4-91a8-f4e9803ec898
+                channel_id: demo_wq_channel2020-06-19T17_34_46.425419
+                channel_name: demo.wq.channel
+                create_time: 2020-06-19 20:51:44.390887
+                execution_id: 7mBGaJbD4q0M1
+                message: demo_wq_channel2020-06-19T17_34_46.425419 tsdata/var=11/demo_wq_channel2020-06-19T17_34_46.425419/11 is CRITICAL at time: 2020-06-19 20:51:43.229988 +0000 UTC as value: 150 exceeded the threshold,
+                actor_id: XXXX
+                alert_id: c16ab843-8417-4af0-a06c-ce1e4e7e4816
+                channel_id: demo_wq_channel2020-06-19T17_34_46.425419
+                channel_name: demo.wq.channel
+                create_time: 2020-06-19 20:51:21.138143
+                execution_id: ByOkp5W8Jxkqj
+                message: demo_wq_channel2020-06-19T17_34_46.425419 tsdata/var=11/demo_wq_channel2020-06-19T17_34_46.425419/11 is CRITICAL at time: 2020-06-19 20:51:20.114319 +0000 UTC as value: 150 exceeded the threshold,
+                actor_id: XXXX
+                alert_id: 4c4b7e70-a034-419b-be8c-2c337803e5d4
+                channel_id: demo_wq_channel2020-06-19T17_34_46.425419
+                channel_name: demo.wq.channel
+                create_time: 2020-06-19 20:51:10.454269
+                execution_id: jboJWNqRKAA6V
+                message: demo_wq_channel2020-06-19T17_34_46.425419 tsdata/var=11/demo_wq_channel2020-06-19T17_34_46.425419/11 is CRITICAL at time: 2020-06-19 20:51:09.862752 +0000 UTC as value: 150 exceeded the threshold]
+                num_of_alerts: 3
+            ]
 |
