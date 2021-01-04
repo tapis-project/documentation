@@ -1,9 +1,78 @@
 .. _authentication:
 
-==========================
-Tenancy and Authentication
-==========================
+=================================
+Sites, Tenancy and Authentication
+=================================
 
+
+Sites
+-----
+Tapis supports geographically distributed deployments where different components are
+running in different data centers and managed by different institutions. These 
+physically isolated installations of Tapis software are referred to as  *sites*. 
+There is a single *primary site* and zero or more *associate sites* within a Tapis
+installtion.
+
+
+Primary Site
+^^^^^^^^^^^^
+The primary site in a Tapis installation runs a complete set of Tapis API services and
+all associated 3rd-party services, such as databases and message queues. The creation
+of new sites is coordinated through the primary site, and the primary site runs the 
+unique instance of the Sites and Tenants API (see :ref:`Tenants` below) which maintain the
+complete registry of all sites and tenants in the installation.
+
+The primary site of the main Tapis installation is hosted at the Texas Advanced 
+Computing Center, at URL https://tapis.io.
+
+Associate Sites
+^^^^^^^^^^^^^^^
+Associate sites are required to run the Tapis Security Kernel, a compliant Token Generator API,
+and one or more additional Tapis services. Each associate site is managed and operated by a separate,
+partner institution. For Tapis services not run at the associate site, the corresponding service at the primary
+site is used for requests. In this way, partner institutions can choose which Tapis services to run within their
+institution and leverage the primary site deployment for the rest.
+
+Deployment
+^^^^^^^^^^
+The official Tapis deployment tooling targets the Kubernetes container orchestration platform. The project maintains a
+set of deployment templates which can be used in conjunction with a configuration file to deploy any number of Tapis
+services. If your institution is interested in becomming a Tapis associate site please contact us.
+
+Details about the current list of sites is available from the tenants API. For example, one can retrieve the full list
+of sites as follows:
+
+With PySDK:
+
+.. code-block:: plaintext
+
+ >>> t.tenants.list_sites()
+
+With CURL:
+
+.. code-block:: plaintext
+
+ $ curl https://admin.tapis.io/v3/sites
+
+
+The response will look similar to the following (the response below is truncated for brevity):
+
+.. code-block:: plaintext
+
+ [
+  base_url: https://tapis.io
+  primary: True
+  services: ['systems', 'files', 'security', 'tokens', 'streams', 'authenticator', 'meta', 'actors']
+  site_admin_tenant_id: admin
+  site_id: tacc
+  tenant_base_url_template: https://${tenant_id}.tapis.io]
+  .  .  .
+ ]
+
+Each site has a ``site_id`` as well as a list of Tapis services it provides and the tenant ID of the administrative
+tenant (``admin_tenant``) associated with it.
+
+.. _Tenants:
 
 Tenants
 -------
@@ -18,6 +87,7 @@ Each tenant is made up of the following:
    ``https://tacc.tapis.io`` is the base URL for the ``tacc`` tenant.
 2. An *authenticator* providing the rules for who can authenticate in the tenant. 
 
+Additionally, each tenant is "managed" by a site.
 
 To see the current list of tenants registered with Tapis, we can use the tenants API.
 
