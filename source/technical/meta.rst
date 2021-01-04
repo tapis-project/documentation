@@ -1,9 +1,25 @@
 .. _meta:
 
-=====
 Meta
 =====
 Meta V3 is a REST API Microservice for MongoDB which provides server-side Data, Identity and Access Management for Web and Mobile applications.
+-----------------
+Why Meta V3
+-----------------
+Meta V2 functionality was built on MongoDb version 1.0 technology. Although limited, it brought the basic functions of a document
+store to Agave/Tapis platform. Some projects decided to use basic key/value storage to add metadata to Jobs, Apps, Systems and Files.
+Other projects stored complex document data to associate Jobs and other entities to add a richer information layer to their portals.
+The limited search functionality and imposed document structure created impediments to using MongoDb as projects had envisioned.
+Meta V3 removes these impediments.
+
+Meta V3 is built on top of MongoDb version 4.2 technology. The REST API opens up the full functionality of MongoDb as a document store.
+and delivers MongoDb as a service so that projects are free to create metadata and documents in a fashion that fits their needs.
+Meta V3 advantages over Meta V2
+
+* one
+* two
+* three
+
 
 -----------------
 Overview
@@ -559,7 +575,13 @@ Here is an example response:
 
      .. code-block:: json
 
-        TODO
+        {
+          "_id": "_meta",
+          "_etag": {
+            "$oid": "5f2b2b7a204ce7637579c85f"
+          }
+        }
+
 
 Document Resources
 ------------------
@@ -643,7 +665,8 @@ The response will be the standard json response:
 
      .. code-block:: json
 
-        TODO
+        {
+            "_id"}
 
 **Replace a Document**
 
