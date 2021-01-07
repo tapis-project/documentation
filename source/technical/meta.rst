@@ -1,9 +1,35 @@
 .. _meta:
 
-=====
 Meta
 =====
 Meta V3 is a REST API Microservice for MongoDB which provides server-side Data, Identity and Access Management for Web and Mobile applications.
+
+-----------------
+Why Meta V3
+-----------------
+Meta V2 functionality was built on MongoDB version 1.0 technology. Although limited, it brought the basic functions of a document
+store to Agave/Tapis platform. Some projects decided to use basic key/value storage to add metadata to Jobs, Apps, Systems and Files.
+Other projects stored complex document data to associate Jobs and other entities to add a richer information layer to their portals.
+The limited search functionality and imposed document structure created impediments to using MongoDB as projects had envisioned.
+Meta V3 removes these impediments.
+
+Meta V3 is built on top of MongoDB version 4.2 technology. The REST API opens up the full functionality of MongoDB as a document store.
+and delivers MongoDB as a service so that projects are free to create metadata and documents in a fashion that fits their needs.
+Some of the Meta V3 advantages over Meta V2 include:
+
+* Any valid MongoDB document structure can be used.
+* If a search runs in MongoDB CLI, it should run from the API.
+* Aggregations are available.
+* Database, collection and document creation can be managed by tenant administrator.
+* Performance is many times faster.
+
+-----------------
+Migration from Meta V2 to V3
+-----------------
+Migration can simply be accomplished by creating a new database with one or more collections for your project.
+The tenant administrator can request the initial permissions setup. Once your collection(s) are in place move the
+result and associatedIds into your new document model.
+
 
 -----------------
 Overview
@@ -212,7 +238,7 @@ The response will be a Basic Tapis response on health:
 
 Root resources
 --------------
-The Root resource space represents the root namespace for databases on the MongoDb host. All databases are located here.
+The Root resource space represents the root namespace for databases on the MongoDB host. All databases are located here.
 Requests to this space are limited to READ only for tenant administrators.
 
 **List DB Names**
@@ -244,7 +270,7 @@ The response will a json list of database names:
 
 Database resources
 ------------------
-The Database resource is the top level for many tenant projects. The resource maps directly to a MongoDb named database in the database server.
+The Database resource is the top level for many tenant projects. The resource maps directly to a MongoDB named database in the database server.
 Case matters for matching the name of the database and must be specified when making requests for collections or documents. Currently
 
 **List Collection Names**
@@ -315,7 +341,7 @@ Here is an example response:
 TODO: this implementation is not exposed. Creation of a database by tenant administrators is scheduled for inclusion in
 an administrative interface API in a future release.
 
-This request will create a new named database in the MongoDb root space by a tenant or service administrator.
+This request will create a new named database in the MongoDB root space by a tenant or service administrator.
 
 With pySDK operation:
 
@@ -342,7 +368,7 @@ Here is an example response:
 TODO: this implementation is not exposed. Deletion of a database by tenant administrators is scheduled for inclusion in
 an administrative interface API in a future release.
 
-This request will delete a named database in the MongoDb root space by a tenant or service administrator.
+This request will delete a named database in the MongoDB root space by a tenant or service administrator.
 
 
 With pySDK operation:
@@ -559,7 +585,13 @@ Here is an example response:
 
      .. code-block:: json
 
-        TODO
+        {
+          "_id": "_meta",
+          "_etag": {
+            "$oid": "5f2b2b7a204ce7637579c85f"
+          }
+        }
+
 
 Document Resources
 ------------------
@@ -643,7 +675,8 @@ The response will be the standard json response:
 
      .. code-block:: json
 
-        TODO
+        {
+            "_id"}
 
 **Replace a Document**
 
