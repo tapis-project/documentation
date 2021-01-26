@@ -21,6 +21,7 @@ Welcome to Tapis's Documentation!
    technical/authentication
    technical/systems
    technical/files
+   technical/apps
    technical/meta
    technical/actors
    technical/security

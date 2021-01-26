@@ -1,121 +1,91 @@
-.. _systems:
+.. _apps:
 
 =======================================
-Systems
+Applications
 =======================================
-
 **WORK IN PROGRESS**
 
-Once you are authorized to make calls to the various services, one of first
-things you may want to do is view storage and execution resources available
-to you or create your own. In Tapis a storage or execution resource is referred
-to as a *system*.
+In order to run a job on a system you will need to create or have access to a Tapis *application*.
 
 -----------------
 Overview
 -----------------
-A Tapis system represents a server or collection of servers exposed through a
-single host name or IP address. Each system is associated with a specific tenant.
-A system can be used for the following purposes:
+A Tapis application represents all the information required to run a Tapis job on a Tapis system
+and produce useful results. Each application is versioned and is associated with a specific tenant and owned by a
+specific user who has special privileges for the application.
 
-* Running a job, including:
-
-  * Staging files to an execution system in preparation for running a job.
-  * Executing a job on an execution system.
-  * Archiving files and data on a remote storage system after job execution.
-
-* Storing and retrieving files and data.
-
-Each system is of a specific type and owned by a specific user who has special
-privileges for the system. The system definition also includes the user that is
-used to access the system, referred to as *effectiveUserId*. This access user
-can be a specific user (such as a service account) or dynamically specified as
-``${apiUserId}`` in which case the user name is extracted from the identity
-associated with the request to the service.
-
-At a high level a system represents the following information:
+At a high level an application contains the following information:
 
 Id
-  A short descriptive name for the system that is unique within the tenant.
+  A short descriptive name for the application that is unique within the tenant.
+Version
+  Applications are expected to evolve over time. Id + version must be unique within a tenant.
 Description
-  An optional more verbose description for the system.
-Type of system
-  LINUX or OBJECT_STORE
+  An optional more verbose description for the application.
+Type of application
+  DIRECT or FORK
 Owner
-  A specific user set at system creation. By default this is ``${apiUserId}``, the user making the request to
-  create the system.
-Host name or IP address.
-  FQDN or IP address
+  A specific user set at application creation. By default this is ``${apiUserId}``, the user making the request to
+  create the application.
 Enabled flag
-  Indicates if system is currently considered active and available for use.
-  By default the system is enabled when first created.
-Effective User
-  The user name to use when accessing the system. Referred to as *effectiveUserId.*
-  A specific user (such as a service account) or the dynamic user ``${apiUserId}``
-Default authorization method
-  How access authorization is handled by default. Authorization method can also be
-  specified as part of a request.
-  Supported methods: PASSWORD, PKI_KEYS, ACCESS_KEY.
-Bucket name
-  For an object storage system this is the name of the bucket.
-Effective root directory
-  Directory to be used when listing files or moving files to and from the system.
-Transfer methods
-  Supported methods for moving files or objects to and from the system. Allowable entries are determined by the system
-  type. Initially supported: SFTP, S3.
-DTN system Id
-  An alternate system to use as a Data Transfer Node (DTN).
-DTN mount point
-  Mount point (aka target) used when running the mount command on this system.
-DTN mount source path
-  The path exported by *dtnSystemId* that matches the *dtnMountPoint* on this system. This will be relative to
-  *rootDir* on *dtnSystemId*.
-isDtn flag
-  Indicates if system will be used as a data transfer node (DTN). By default this is *false*.
-canExec flag
-  Indicates if system can be used to execute jobs.
+  Indicates if application is currently considered active and available for use.
+  By default the application is enabled when first created.
+Containerized flag
+  Indicates if application has been fully containerized. Default is true.
+Runtime
+  Runtime to be used when executing the application. DOCKER, SINGULARITY. Default is DOCKER.
+Runtime version
+  Runtime version to be used when executing the application.
+Container image
+  Reference to be used when running the container image. Required if *containerized* is true.
+Interactive flag
+  Indicates if the application is interactive. Default is false.
+Max jobs
+  Maximum total number of jobs that can be queued or running for this application on a given execution system at
+  a given time. Note that the execution system may also limit the number of jobs on the system which may further
+  restrict the total number of jobs. Set to -1 for unlimited. Default is unlimited.
+Max jobs per user
+  Maximum total number of jobs associated with a specific job owner that can be queued or running for this application
+  on a given execution system at a given time. Note that the execution system may also limit the number of jobs on the
+  system which may further restrict the total number of jobs. Set to -1 for unlimited. Default is unlimited.
+Strict file inputs flag
+  Indicates if a job request is allowed to have unnamed file inputs. If value is true then a job request may only use
+  the named file inputs defined in the application. Default is false.
 Job related attributes
-  Various attributes related to job execution such as *jobRuntimes*, *jobWorkingDir*, *jobIsBatch*,
-  *batchScheduler*, *batchLogicalQueues* and *jobCapabilities*
+  Various attributes related to job execution such as *jobDescription*, *execSystemId*, *execSystemExecDir*,
+  *execSystemInputDir*, *appArgs*, *fileInputs*, etc.
 
-When creating a system the required attributes are: *id*, *systemType*, *host*, *defaultAuthnMethod* and *canExec*.
-Depending on the type of system and specific values for certain attributes there are other requirements.
+When creating a application the required attributes are: *id*, *version* and *appType*.
+Depending on the type of application and specific values for certain attributes there are other requirements.
 
 --------------------------------
 Getting Started
 --------------------------------
 
-Before going into further details about Systems, here we give some examples of how to create and view systems.
+Before going into further details about applications, here we give some examples of how to create and view applications.
 In the examples below we assume you are using the TACC tenant with a base URL of ``tacc.tapis.io`` and that you have
 authenticated using PySDK or obtained an authorization token and stored it in the environment variable JWT,
 or perhaps both.
 
-Creating a System
-~~~~~~~~~~~~~~~~~
+Creating an application
+~~~~~~~~~~~~~~~~~~~~~~~
 
-Create a local file named ``system_s3.json`` with json similar to the following::
+Create a local file named ``app_sample.json`` with json similar to the following::
 
   {
-    "id":"tacc-bucket-sample-<userid>",
-    "description":"My Bucket",
-    "host":"https://tapis-sample-test-<userid>.s3.us-east-1.amazonaws.com/",
-    "systemType":"OBJECT_STORE",
-    "defaultAuthnMethod":"ACCESS_KEY",
-    "effectiveUserId":"${owner}",
-    "bucketName":"tapis-tacc-bucket-<userid>",
-    "rootDir":"/",
-    "canExec": false,
-    "transferMethods":["S3"],
-    "authnCredential":
-    {
-      "accessKey":"***",
-      "accessSecret":"***"
+    "id":"tacc-sample-ls5-<userid>",
+    "version":"0.1",
+    "appType":"FORK",
+    "description":"My sample Lonestar5 application",
+    "runtime":"DOCKER",
+    "containerImage":"docker.io/hello-world:latest",
+    "jobAttributes": {
+      "description": "default job description",
+      "execSystemId": "execsystem1"
     }
   }
 
-where <userid> is replaced with your user name, your S3 host name is updated appropriately and if desired you have
-filled in your access key and secret. Note that credentials are stored in the Security Kernel and may also be set or
-updated using a separate API call. However, only specific Tapis services are authorized to retrieve credentials.
+where <userid> is replaced with your user name.
 
 Using PySDK:
 
@@ -124,86 +94,59 @@ Using PySDK:
  import json
  from tapipy.tapis import Tapis
  t = Tapis(base_url='https://tacc.tapis.io', username='<userid>', password='************')
- with open('system_s3.json', 'r') as openfile:
-     my_s3_system = json.load(openfile)
- t.systems.createSystem(**my_s3_system)
+ with open('app_sample.json', 'r') as openfile:
+     my_app = json.load(openfile)
+ t.apps.createAppVersion(**my_app)
 
 Using CURL::
 
-   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems -d @system_s3.json
+   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps -d @app_sample.json
 
-Viewing Systems
-~~~~~~~~~~~~~~~
+Viewing Applications
+~~~~~~~~~~~~~~~~~~~~
 
-Retrieving details for a system
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Retrieving details for an application
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To retrieve details for a specific system, such as the one above:
+To retrieve details for a specific application, such as the one above:
 
 Using PySDK:
 
 .. code-block:: python
 
- t.systems.getSystemById(systemId='tacc-bucket-sample-<userid>')
+ t.apps.getAppLatestVersion(appId='tacc-sample-ls5-<userid>')
 
 Using CURL::
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/tacc-bucket-sample-<userid>?pretty=true
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps/tacc-sample-ls5-<userid>?pretty=true
 
 The response should look similar to the following::
 
  {
-    "message": "TAPIS_FOUND System found: tacc-bucket-sample-<userid>",
+    "message": "TAPIS_FOUND App found: tacc-sample-ls5-<userid>",
     "result": {
-        "authnCredential": null,
-        "batchDefaultLogicalQueue": null,
-        "batchLogicalQueues": [],
-        "batchScheduler": null,
-        "bucketName": "tapis-tacc-bucket-<userid>",
-        "canExec": false,
-        "defaultAuthnMethod": "ACCESS_KEY",
-        "description": "My Bucket",
-        "dtnMountPoint": null,
-        "dtnMountSourcePath": null,
-        "dtnSystemId": null,
-        "effectiveUserId": "<userid>",
+        "?????????????????????": "???????",
+        "description": "??????????",
         "enabled": true,
-        "host": "https://tapis-sample-test-<userid>.s3.us-east-1.amazonaws.com/",
         "id": "tacc-bucket-sample-<userid>",
-        "isDtn": false,
-        "jobCapabilities": [],
-        "jobEnvVariables": [],
-        "jobIsBatch": false,
-        "jobMaxJobs": -1,
-        "jobMaxJobsPerUser": -1,
-        "jobRuntimes": [],
-        "jobWorkingDir": null,
         "notes": {},
         "owner": "<userid>",
-        "port": -1,
-        "proxyHost": "",
-        "proxyPort": -1,
         "refImportId": null,
-        "rootDir": "/",
         "seqId": 2,
-        "systemType": "OBJECT_STORE",
+        "appType": "FORK",
         "tags": [],
-        "tenant": "dev",
-        "transferMethods": [
-            "S3"
-        ],
-        "useProxy": false
+        "tenant": "dev"
     },
     "status": "success",
     "version": "0.0.1"
  }
 
-Note that authnCredential is null. Only specific Tapis services are authorized to retrieve credentials.
+TBD Note that TBD .
 
-Retrieving details for all systems
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Retrieving details for all applications
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To see the current list of systems that you are authorized to view:
+To see the current list of applications that you are authorized to view:
 
 .. comment
 .. comment (NOTE: See the section below on searching and filtering to find out how to control the amount of information returned)
@@ -212,38 +155,68 @@ Using PySDK:
 
 .. code-block:: python
 
- t.systems.getSystems()
+ t.apps.getApps()
 
 Using CURL::
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems?pretty=true
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps?pretty=true
 
 The response should contain a list of items similar to the single listing shown above.
 
 -----------------
 Minimal Definition and Restrictions
 -----------------
-When creating a system the required attributes are: *id*, *systemType*, *host*, *defaultAuthnMethod* and *canExec*.
-Depending on the type of system and specific values for certain attributes there are other requirements.
+When creating an application the required attributes are: *id*, *systemType*, *host*, *defaultAuthnMethod* and *canExec*.
+Depending on the type of application and specific values for certain attributes there are other requirements.
 The restrictions are:
 
-* If *systemType* is OBJECT_STORE then *bucketName* is required and *canExec* must be false.
-* If *systemType* is LINUX then *rootDir* is required.
-* If *effectiveUserId* is ``${apiUserId}`` (i.e. it is not static) then *authnCredential* may not be specified.
-* If *isDtn* is true then *canExec* must be false and following may not be specified: *dtnSystemId*, *dtnMountSourcePath*, *dtnMountPoint*, all job execution related attributes.
-* Allowable entries for transferMethods vary by the *systemType*.
-* If *canExec* is true then *jobWorkingDir* is required and *jobRuntimes* must have at least one entry.
-* If *jobIsBatch* is true then *batchScheduler* must be specified.
-* If *jobIsBatch* is true and the *batchLogicalQueues* list is not empty then *batchLogicalDefaultQueue* must be specified.
+* If *containerized* is true then
+
+  * Must be specified: *containerImage*
+  * May not be specified: *command*, *execCodes*
+
+* If *containerized* is false then
+
+  * Must be specified: *command*, *execCodes*
+  * May not be specified: *containerImage*
+
+* If *dynamicExecSystem* is true then *execSystemConstraints* is required.
+* If *archiveSystemId* is specified then *archiveSystemDir* is required.
+* If *appType* is FORK then the following attributes may not be specified: *maxJobs*, *maxJobsPerUser*, *nodeCount*,
+  *coresPerNode*, *memoryMB*, *maxMinutes*.
+
+------------------
+Version
+------------------
+Versioning scheme is at the discretion of the application author. The combination of tenant+id+version uniquely
+identifies an application in the Tapis environment. It is recommended that a two or three level form of
+semantic versioning be used. The fully qualified application reference within a tenant is constructed by appending
+a hyphen to the name followed by the version string. For example, the first two versions of an application might
+be myapp-0.0.1 and myapp-0.0.2. If a version is not specified when retrieving an application then by default the most
+recently created version of the application will be returned.
+
+-----------------
+Containerized Application
+-----------------
+An application that has been containerized is one that can be executed using a single container image. When the flag
+*containerized* is set to true then the *containerImage* attribute must be specified. Tapis will use the appropriate
+container runtime command and provide support for making the input and output directories available to the container
+when running the container image.
+
+-----------------
+Non-containerized Application
+-----------------
+An application that has not yet been containerized can still be run via Tapis but it will most likely be less portable.
+When the flag *containerized* is set to false then the *command* and *execCodes* attributes must be specified. Tapis
+will stage the *execCodes* files to *execSystemExecDir* and use *command* to launch the application. Note that command
+must be available after staging of *execCodes*.
 
 -----------------
 Permissions
 -----------------
-At system creation time the owner is given full system authorization. If the effective
-access user *effectiveUserId* is a specific user (such as a service account) then this
-user is given the same authorizations. If the effective access user is the dynamic user
-``${apiUserId}`` then the authorizations for each user must be granted and credentials created in separate API calls.
-Permissions for a system may be granted and revoked through the systems API. Please
+At application creation time the owner is given full authorization. Authorizations for other users must be granted
+in separate API calls.
+Permissions may be granted and revoked through the applications API. Please
 note that grants and revokes through this service only impact the default role for the
 user. A user may still have access through permissions in another role. So even after
 revoking permissions through this service when permissions are retrieved the access may
@@ -253,32 +226,13 @@ Permissions are specified as either ``*`` for all permissions or some combinatio
 following specific permissions: ``("READ","MODIFY","EXECUTE")``. Specifying permissions in all
 lower case is also allowed.
 
-------------------
-Authorization Credentials
-------------------
-At system creation time the authorization credentials may be specified if the effective
-access user *effectiveUserId* is a specific user (such as a service account) and not
-a dynamic user, i.e. ``${apiUserId}``. If the effective access user is dynamic then
-authorization credentials for any user allowed to access the system must be registered in
-separate API calls. Note that the Systems service does not store credentials.
-Credentials are persisted by the Security Kernel service and only specific Tapis services
-are authorized to retrieve credentials.
-
------------------
-Capabilities
------------------
-In addition to the system capabilities reflected in the basic attributes each system
-definition may contain a list of additional capabilities supported by that system.
-An Application or Job definition may then specify required capabilities. These are
-used for determining eligible systems for running an application or job.
-
 -----------------
 Deletion
 -----------------
-A system may be soft deleted. Soft deletion means the system is marked as deleted and
+An application may be soft deleted. Soft deletion means the application is marked as deleted and
 is no longer available for use. It will no longer show up in searches and operations on
-the system will no longer be allowed. The system definition is retained for auditing
-purposes. Note this means that system IDs may not be re-used after deletion.
+the application will no longer be allowed. The application definition is retained for auditing
+purposes. Note this means that application IDs may not be re-used after deletion.
 
 ------------------------
 Table of Attributes
@@ -287,18 +241,22 @@ Table of Attributes
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | Attribute           | Type           | Example              | Notes                                                                                |
 +=====================+================+======================+======================================================================================+
-| tenant              | String         | designsafe           | - Name of the tenant for which the system is defined.                                |
-|                     |                |                      | - *tenant* + *name* must be unique.                                                  |
+| tenant              | String         | designsafe           | - Name of the tenant for which the application is defined.                           |
+|                     |                |                      | - *tenant* + $version* + *name* must be unique.                                      |
 |                     |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| id                  | String         | ds1.storage.default  | - Name of the system. URI safe, see RFC 3986.                                        |
-|                     |                |                      | - *tenant* + *id* must be unique.                                                    |
+| id                  | String         | ds1.storage.default  | - Name of the application. URI safe, see RFC 3986.                                   |
+|                     |                |                      | - *tenant* + $version* + *id* must be unique.                                        |
+|                     |                |                      | - Allowed characters: Alphanumeric [0-9a-zA-Z] and special characters [-._~].        |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| version             | String         | 0.0.1                | - Version of the application. URI safe, see RFC 3986.                                |
+|                     |                |                      | - *tenant* + $version* + *id* must be unique.                                        |
 |                     |                |                      | - Allowed characters: Alphanumeric [0-9a-zA-Z] and special characters [-._~].        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | description         | String         | Default storage      | - Description                                                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| systemType          | enum           | LINUX                | - Type of system.                                                                    |
-|                     |                |                      | - Types: LINUX, OBJECT_STORE                                                         |
+| appType             | enum           | LINUX                | - Type of application.                                                               |
+|                     |                |                      | - Types: BATCH, FORK                                                                 |
 |                     |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | owner               | String         | jdoe                 | - User name of *owner*.                                                              |
