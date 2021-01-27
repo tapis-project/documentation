@@ -47,8 +47,7 @@ Owner
 Host name or IP address.
   FQDN or IP address
 Enabled flag
-  Indicates if system is currently considered active and available for use.
-  By default the system is enabled when first created.
+  Indicates if system is currently considered active and available for use. Default is true.
 Effective User
   The user name to use when accessing the system. Referred to as *effectiveUserId.*
   A specific user (such as a service account) or the dynamic user ``${apiUserId}``

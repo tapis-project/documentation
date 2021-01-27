@@ -23,13 +23,12 @@ Version
 Description
   An optional more verbose description for the application.
 Type of application
-  DIRECT or FORK
+  BATCH or FORK
 Owner
-  A specific user set at application creation. By default this is ``${apiUserId}``, the user making the request to
+  A specific user set at application creation. Default is ``${apiUserId}``, the user making the request to
   create the application.
 Enabled flag
-  Indicates if application is currently considered active and available for use.
-  By default the application is enabled when first created.
+  Indicates if application is currently considered active and available for use. Default is true.
 Containerized flag
   Indicates if application has been fully containerized. Default is true.
 Runtime
@@ -53,7 +52,7 @@ Strict file inputs flag
   the named file inputs defined in the application. Default is false.
 Job related attributes
   Various attributes related to job execution such as *jobDescription*, *execSystemId*, *execSystemExecDir*,
-  *execSystemInputDir*, *appArgs*, *fileInputs*, etc.
+  *execSystemInputDir*, *execSystemLogicalQueue* *appArgs*, *fileInputs*, etc.
 
 When creating a application the required attributes are: *id*, *version* and *appType*.
 Depending on the type of application and specific values for certain attributes there are other requirements.
@@ -73,10 +72,10 @@ Creating an application
 Create a local file named ``app_sample.json`` with json similar to the following::
 
   {
-    "id":"tacc-sample-ls5-<userid>",
+    "id":"tacc-sample-app-<userid>",
     "version":"0.1",
     "appType":"FORK",
-    "description":"My sample Lonestar5 application",
+    "description":"My sample application",
     "runtime":"DOCKER",
     "containerImage":"docker.io/hello-world:latest",
     "jobAttributes": {
@@ -85,7 +84,7 @@ Create a local file named ``app_sample.json`` with json similar to the following
     }
   }
 
-where <userid> is replaced with your user name.
+where <userid> is replaced with your user name and *execSystemId* must already exist.
 
 Using PySDK:
 
@@ -114,21 +113,21 @@ Using PySDK:
 
 .. code-block:: python
 
- t.apps.getAppLatestVersion(appId='tacc-sample-ls5-<userid>')
+ t.apps.getAppLatestVersion(appId='tacc-sample-app-<userid>')
 
 Using CURL::
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps/tacc-sample-ls5-<userid>?pretty=true
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps/tacc-sample-app-<userid>?pretty=true
 
 The response should look similar to the following::
 
  {
-    "message": "TAPIS_FOUND App found: tacc-sample-ls5-<userid>",
+    "message": "TAPIS_FOUND App found: tacc-sample-app-<userid>",
     "result": {
         "?????????????????????": "???????",
         "description": "??????????",
         "enabled": true,
-        "id": "tacc-bucket-sample-<userid>",
+        "id": "tacc-sample-app-<userid>",
         "notes": {},
         "owner": "<userid>",
         "refImportId": null,
@@ -166,7 +165,7 @@ The response should contain a list of items similar to the single listing shown 
 -----------------
 Minimal Definition and Restrictions
 -----------------
-When creating an application the required attributes are: *id*, *systemType*, *host*, *defaultAuthnMethod* and *canExec*.
+When creating an application the required attributes are: *id*, *version* and *appType*.
 Depending on the type of application and specific values for certain attributes there are other requirements.
 The restrictions are:
 
@@ -199,7 +198,7 @@ recently created version of the application will be returned.
 Containerized Application
 -----------------
 An application that has been containerized is one that can be executed using a single container image. When the flag
-*containerized* is set to true then the *containerImage* attribute must be specified. Tapis will use the appropriate
+*containerized* is set to true then the attribute *containerImage* must be specified. Tapis will use the appropriate
 container runtime command and provide support for making the input and output directories available to the container
 when running the container image.
 
@@ -210,6 +209,25 @@ An application that has not yet been containerized can still be run via Tapis bu
 When the flag *containerized* is set to false then the *command* and *execCodes* attributes must be specified. Tapis
 will stage the *execCodes* files to *execSystemExecDir* and use *command* to launch the application. Note that command
 must be available after staging of *execCodes*.
+
+-----------------
+Directory Semantics and Macros
+-----------------
+At job submission time the Jobs service supports the use of macros based on template variables. These variables may be
+referenced when specifying directories in an application definition. For a full list of supported variables please see
+the Jobs Service. Here are some examples of variables that may be used when specifying directories for an application:
+
+* *jobId* - The Id of the job determined at job submission.
+* *jobOwner* - The owner of the job determined at job submission.
+* *jobWorkingDir* - Default parent directory from which a job is run. This will be relative to the effective root
+  directory *rootDir* on the execution system. *rootDir* and *jobWorkingDir* are attributes of the execution system.
+* *HOST_EVAL($<ENV_VARIABLE>)* - The value of the environment variable *ENV_VARIABLE* when evaluated on the execution
+  system host when logging in under the job's effective user ID. This is a dynamic value determined at job submission
+  time. The function *HOST_EVAL()* extracts specific environment variable values for use during job setup. In
+  particular, the TACC specific values of *$HOME*, *$WORK*, *$SCRATCH* and *$FLASH* can be referenced. The specified
+  environment variable name is used **as-is**. It is **not** subject to macro substitution. However, the function call
+  can have a path string appended to it, such as in *HOST_EVAL($SCRATCH)/tmp/${jobId}*, and macro substitution will be
+  applied to the path string.
 
 -----------------
 Permissions
@@ -245,7 +263,7 @@ Table of Attributes
 |                     |                |                      | - *tenant* + $version* + *name* must be unique.                                      |
 |                     |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| id                  | String         | ds1.storage.default  | - Name of the application. URI safe, see RFC 3986.                                   |
+| id                  | String         | my-ds-app            | - Name of the application. URI safe, see RFC 3986.                                   |
 |                     |                |                      | - *tenant* + $version* + *id* must be unique.                                        |
 |                     |                |                      | - Allowed characters: Alphanumeric [0-9a-zA-Z] and special characters [-._~].        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -253,99 +271,47 @@ Table of Attributes
 |                     |                |                      | - *tenant* + $version* + *id* must be unique.                                        |
 |                     |                |                      | - Allowed characters: Alphanumeric [0-9a-zA-Z] and special characters [-._~].        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| description         | String         | Default storage      | - Description                                                                        |
+| description         | String         | A sample application | - Description                                                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| appType             | enum           | LINUX                | - Type of application.                                                               |
+| appType             | enum           | BATCH                | - Type of application.                                                               |
 |                     |                |                      | - Types: BATCH, FORK                                                                 |
-|                     |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| owner               | String         | jdoe                 | - User name of *owner*.                                                              |
+| owner               | String         | jdoe                 | - User name of *owner*. Default is *${apiUserId}*.                                   |
 |                     |                |                      | - Variable references: *${apiUserId}*                                                |
-|                     |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| host                | String         | data.tacc.utexas.edu | - Host name or ip address of the system                                              |
+| enabled             | boolean        | FALSE                | - Indicates if application currently enabled for use. Default is TRUE.               |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| enabled             | boolean        | FALSE                | - Indicates if system currently enabled for use.                                     |
+| containerized       | boolean        | TRUE                 | - Indicates if application has been fully containerized. Default is TRUE.            |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| effectiveUserId     | String         | tg869834             | - User to use when accessing the system.                                             |
-|                     |                |                      | - May be a static string or a variable reference.                                    |
-|                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*                                    |
-|                     |                |                      | - On output variable reference will be resolved.                                     |
+| runtime             | enum           | SINGULARITY          | - Runtime to be used when executing the application. Default is DOCKER.              |
+|                     |                |                      | - Runtimes: DOCKER, SINGULARITY                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| defaultAuthnMethod  | enum           | PKI_KEYS             | - How access authorization is handled by default.                                    |
-|                     |                |                      | - Can be overridden as part of a request to get a system or credentials.             |
-|                     |                |                      | - Methods: PASSWORD, PKI_KEYS, ACCESS_KEY                                            |
+| runtimeVersion      | String         | 2.5.2                | - Version or range of versions required.                                             |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| authnCredential     | Credential     |                      | - On input credentials to be stored in Security Kernel.                              |
-|                     |                |                      | - *effectiveUserId* must be static, either a string constant or ${owner}.            |
-|                     |                |                      | - May not be specified if *effectiveUserId* is dynamic, i.e. *${apiUserId}*.         |
-|                     |                |                      | - On output contains credentials for *effectiveUserId*.                              |
-|                     |                |                      | - Returned credentials contain relevant information based on *systemType*.           |
+| containerImage      | String         |docker.io/hello-world | - Reference for the container image. Other examples:                                 |
+|                     |                |                      | - Singularity: shub://GodloveD/lolcow                                                |
+|                     |                |                      | - Docker: tapis/hello-tapis:0.0.1                                                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| bucketName          | String         | tapis-ds1-jdoe       | - Name of bucket for OBJECT_STORAGE system.                                          |
-|                     |                |                      | - Required if *systemType* is OBJECT_STORAGE.                                        |
-|                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
+| isInteractive       | boolean        | FALSE                | - Indicates if application is interactive. Default is FALSE.                         |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| rootDir             | String         | $HOME                | - Required if *systemType* is LINUX or *isDtn* = true. Must be an absolute path.     |
-|                     |                |                      | - Serves as effective root directory when listing or moving files.                   |
-|                     |                |                      | - For DTN must be source location used in mount command.                             |
-|                     |                |                      | - Optional for an OBJECT_STORE system but may be used for a similar purpose.         |
-|                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
+| command             | String         | runMyApp.sh          | - Primary command to execute when running a non-containerized application.           |
+|                     |                |                      | - Must be available after staging of *execCodes*.                                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| transferMethods     | [enum]         |                      | - Supported methods for moving files or objects to and from the system.              |
-|                     |                |                      | - Allowable entries are determined by *systemType*.                                  |
-|                     |                |                      | - Methods: SFTP, S3                                                                  |
+| execCodes           | [FileInput]    |                      | - Collection of binary executable and script files that must be in place.            |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| port                | int            | 22                   | - Port number used to access the system                                              |
+| maxJobs             | int            | 10                   | - Max number of jobs that can be running for this app on an exec system.             |
+|                     |                |                      | - Execution system may also limit the number of jobs on the system.                  |
+|                     |                |                      | - Set to -1 for unlimited. Default is unlimited.                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| useProxy            | boolean        | TRUE                 | - Indicates if system should be accessed through a proxy.                            |
+| maxJobsPerUser      | int            | 2                    | - Max number of jobs per job owner.                                                  |
+|                     |                |                      | - Execution system may also limit the number of jobs on the system.                  |
+|                     |                |                      | - Set to -1 for unlimited. Default is unlimited.                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| proxyHost           | String         |                      | - Name of proxy host.                                                                |
+| strictFileInputs    | boolean        | FALSE                | - Indicates if a job request is allowed to have unnamed file inputs.                 |
+|                     |                |                      | - If TRUE then a job request may only use named file inputs defined in the app.      |
+|                     |                |                      | - Default is FALSE.                                                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| proxyPort           | int            |                      | - Port number for *proxyHost*                                                        |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| dtnSystemId         | String         | default.corral.dtn   | - An alternate system to use as a Data Transfer Node (DTN).                          |
-|                     |                |                      | - This system and *dtnSystemId* must have shared storage.                            |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| dtnMountPoint       | String         | /gpfs/corral3/repl   | - Mount point (aka target) used when running the mount command on this system.       |
-|                     |                |                      | - Base location on this system for files transferred to *rootDir* on *dtnSystemId.*  |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| dtnMountSourcePath  | String         | /gpfs/corral3/repl   | - Relative path defining DTN source directory relative to rootDir on *dtnSystemId.*  |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| isDtn               | boolean        | FALSE                | - Indicates if system will be used as a data transfer node (DTN).                    |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| canExec             | boolean        |                      | - Indicates if system will be used to execute jobs.                                  |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| jobRuntimes         | [Runtime]      |                      | - List of runtime environments supported by the system.                              |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| jobWorkingDir       | String         | HOST_EVAL($SCRATCH)  | - Parent directory from which a job is run.                                          |
-|                     |                |                      | - Relative to the effective root directory *rootDir*.                                |
-|                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| jobEnvVariables     | [String]       |                      | - Environment variables added to the shell environment in which the job is running.  |
-|                     |                |                      | - Added to environment variables specified in job and application definitions.       |
-|                     |                |                      | - Will overwrite job and application variables with same names.                      |
-|                     |                |                      | - Each string in the list must have the format *<env_name>=<env_value>*              |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| jobMaxJobs          | int            |                      | - Max total number of jobs .                                                         |
-|                     |                |                      | - Set to -1 for unlimited.                                                           |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| jobMaxJobsPerUser   | int            |                      | - Max total number of jobs associated with a specific user.                          |
-|                     |                |                      | - Set to -1 for unlimited.                                                           |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| jobIsBatch          | boolean        |                      | - Indicates if system uses a batch scheduler to run jobs.                            |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| batchScheduler      | String         | SLURM                | - Type of scheduler used when running batch jobs.                                    |
-|                     |                |                      | - Schedulers: SLURM                                                                  |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| batchLogicalQueues  | [LogicalQueue] |                      | - List of logical queues available on the system.                                    |
-|                     |                |                      | - Each logical queue maps to a single HPC queue.                                     |
-|                     |                |                      | - Multiple logical queues may be defined for each HPC queue.                         |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-|batchDefaultLogical  | LogicalQueue   |                      | - Default logical batch queue for the system.                                        |
-|Queue                |                |                      |                                                                                      |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| jobCapabilities     | [Capability]   |                      | - List of additional job related capabilities supported by the system.               |
+| jobAttributes       | JobAttributes  |                      | - See table below.                                                                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | tags                | [String]       |                      | - List of tags as simple strings.                                                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -353,9 +319,9 @@ Table of Attributes
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | seqId               | int            | 20281                | - Auto-generated by service.                                                         |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| created             | Timestamp      | 2020-06-19T15:10:43Z | - When the system was created. Maintained by service.                                |
+| created             | Timestamp      | 2020-06-19T15:10:43Z | - When the app was created. Maintained by service.                                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| updated             | Timestamp      | 2020-07-04T23:21:22Z | - When the system was last updated. Maintained by service.                           |
+| updated             | Timestamp      | 2020-07-04T23:21:22Z | - When the app was last updated. Maintained by service.                              |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 
 -----------------------
