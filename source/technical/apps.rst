@@ -49,7 +49,8 @@ Max jobs per user
   system which may further restrict the total number of jobs. Set to -1 for unlimited. Default is unlimited.
 Strict file inputs flag
   Indicates if a job request is allowed to have unnamed file inputs. If value is true then a job request may only use
-  the named file inputs defined in the application. Default is false.
+  the named file inputs defined in the application. See attribute *fileInputs* in the JobAttributes table.
+  Default is false.
 Job related attributes
   Various attributes related to job execution such as *jobDescription*, *execSystemId*, *execSystemExecDir*,
   *execSystemInputDir*, *execSystemLogicalQueue* *appArgs*, *fileInputs*, etc.
@@ -298,6 +299,8 @@ Table of Attributes
 |                     |                |                      | - Must be available after staging of *execCodes*.                                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | execCodes           | [FileInput]    |                      | - Collection of binary executable and script files that must be in place.            |
+|                     |                |                      | - Must be available after staging of *execCodes*.                                    |
+|                     |                |                      | - See table below.                                                                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | maxJobs             | int            | 10                   | - Max number of jobs that can be running for this app on an exec system.             |
 |                     |                |                      | - Execution system may also limit the number of jobs on the system.                  |
@@ -311,7 +314,8 @@ Table of Attributes
 |                     |                |                      | - If TRUE then a job request may only use named file inputs defined in the app.      |
 |                     |                |                      | - Default is FALSE.                                                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| jobAttributes       | JobAttributes  |                      | - See table below.                                                                   |
+| jobAttributes       | JobAttributes  |                      | - Various attributes related to job execution.                                       |
+|                     |                |                      | - See table below.                                                                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | tags                | [String]       |                      | - List of tags as simple strings.                                                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -324,17 +328,161 @@ Table of Attributes
 | updated             | Timestamp      | 2020-07-04T23:21:22Z | - When the app was last updated. Maintained by service.                              |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 
+------------------------
+JobAttributes Table
+------------------------
+
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute           | Type           | Example              | Notes                                                                                |
++=====================+================+======================+======================================================================================+
+| description         | String         |                      | - Description to be filled in when this application is used to run a job.            |
+|                     |                |                      | - Macros allow this to act as a template to be filled in at job runtime.             |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| dynamicExecSystem   | boolean        |                      | - Indicates if constraints are to be used to select an execution system.             |
+|                     |                |                      | - The default is FALSE.                                                              |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| execSystem          | [String]       | ["A=aval AND",       | - Capability constraints to use when dynamically searching for an execution system.  |
+| Constraints         |                |   "B=bval"]          |                                                                                      |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| execSystemId        | String         |                      | - Specific system on which the application is to be run.                             |
+|                     |                |                      | - Ignored if dynamicExecSystem is true.                                              |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| execSystemExecDir   | String         |                      | - Directory where application assets are staged.                                     |
+|                     |                |                      | - Current working directory at application launch time.                              |
+|                     |                |                      | - Macro template variables such as ${jobWorkingDir} may be used.                     |
+|                     |                |                      | - Default is ${jobWorkingDir}/jobs/${jobId}                                          |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| execSystemInputDir  | String         |                      | - Directory where Tapis is to stage the inputs required by the application.          |
+|                     |                |                      | - Macro template variables such as ${jobWorkingDir} may be used.                     |
+|                     |                |                      | - Default is ${jobWorkingDir}/jobs/${jobId}                                          |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| execSystemOutputDir | String         |                      | - Directory where Tapis expects the application to store its final output results.   |
+|                     |                |                      | - Files here are candidates for archiving.                                           |
+|                     |                |                      | - Macro template variables such as ${jobWorkingDir} may be used.                     |
+|                     |                |                      | - Default is ${jobWorkingDir}/jobs/${jobId}/output                                   |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| execSystem          | String         | normal               | - LogicalQueue to use when running the job.                                          |
+| LogicalQueue        |                |                      |                                                                                      |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| archiveSystemId     | String         |                      | - System to use when archiving outputs.                                              |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| archiveSystemDir    | String         |                      | - Directory on *archiveSystemId* where outputs will be placed.                       |
+|                     |                |                      | - This will be relative to the effective root directory defined for archiveSystemId. |
+|                     |                |                      | - Default is ${jobWorkingDir}/jobs/${jobId}                                          |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| archiveOnAppError   | boolean        |                      | - Indicates if outputs should be archived if there is an error while running job.    |
+|                     |                |                      | - The default is TRUE.                                                               |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| parameterSet        | ParameterSet   |                      | - Various collections used during job execution.                                     |
+|                     |                |                      | - App arguments, container arguments, scheduler options, environment variables, etc. |
+|                     |                |                      | - See table below.                                                                   |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| fileInputs          | [FileInput]    |                      | - Collection of inputs for the application.                                          |
+|                     |                |                      | - Each input must have a name and may be defined as required or optional.            |
+|                     |                |                      | - *strictFileInputs*=TRUE means only inputs defined here may be specified for job.   |
+|                     |                |                      | - See table below.                                                                   |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| nodeCount           | int            |                      | - Number of nodes to request during job submission.                                  |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| coresPerNode        | int            |                      | - Number of cores per node to request during job submission.                         |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| memoryMB            | int            |                      | - Memory in megabytes to request during job submission.                              |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| maxMinutes          | int            |                      | -  Run time to request during job submission.                                        |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| subscriptions       |                |                      | - Notification subscriptions.                                                        |
+|                     |                |                      | - See table below.                                                                   |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| tags                | [String]       |                      | - List of tags as simple strings.                                                    |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+
+------------------------
+ParameterSet Table
+------------------------
+
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute           | Type           | Example              | Notes                                                                                |
++=====================+================+======================+======================================================================================+
+| appArgs             | [Arg]          |                      | - Command line arguments passed to the application.                                  |
+|                     |                |                      | - See table below.                                                                   |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| containerArgs       | [Arg]          |                      | - Command line arguments passed to the container runtime.                            |
+|                     |                |                      | - See table below.                                                                   |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| schedulerOptions    | [Arg]          |                      | - Scheduler options passed to the HPC batch scheduler.                               |
+|                     |                |                      | - See table below.                                                                   |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| envVariables        | [String]       |                      | - Environment variables placed into the runtime environment.                         |
+|                     |                |                      | - Specified in the form <key>=<value> where <value> is optional.                     |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| archiveFilter       | ArchiveFilter  |                      | - Sets of files to include or exclude when archiving.                                |
+|                     |                |                      | - Default is to include all files in *execSystemOutputDir*.                          |
+|                     |                |                      | - See table below.                                                                   |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+
+------------------------
+ArchiveFilter Table
+------------------------
+
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute           | Type           | Example              | Notes                                                                                |
++=====================+================+======================+======================================================================================+
+| includes            | [String]       |                      | - Files to include when archiving after execution of the application.                |
+|                     |                |                      | - excludes list has precedence.                                                      |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| excludes            | [String]       |                      | - Files to skip when archiving after execution of the application.                   |
+|                     |                |                      | - excludes list has precedence.                                                      |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+
+------------------------
+Arg Table
+------------------------
+
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute           | Type           | Example              | Notes                                                                                |
++=====================+================+======================+======================================================================================+
+| value               | String         |                      | - Value for the argument                                                             |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| metaName            | String         |                      | - Identifying label associated with the argument.                                    |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| metaRequired        | boolean        |                      | - Indicates if input must be present prior to execution of the application.          |
+|                     |                |                      | - Default is FALSE.                                                                  |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| metaKvPairs         | [String]       |                      | - Additional information as key-value pairs.                                         |
+|                     |                |                      | - Each pair must be in the form <key>=<value> where <value> is optional.             |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+
+------------------------
+FileInput Table
+------------------------
+
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute           | Type           | Example              | Notes                                                                                |
++=====================+================+======================+======================================================================================+
+| sourceUrl           | String         |                      | - Source used by the Jobs service when transferring files.                           |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| targetPath          | String         |                      | - Target path used by the Jobs service when transferring files.                      |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| metaName            | String         |                      | - Identifying label associated with the input. Typically used during a job request.  |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| metaRequired        | boolean        |                      | - Indicates if input must be present prior to execution of the application.          |
+|                     |                |                      | - Default is FALSE.                                                                  |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| metaKvPairs         | [String]       |                      | - Additional information as key-value pairs.                                         |
+|                     |                |                      | - Each pair must be in the form <key>=<value> where <value> is optional.             |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+
 -----------------------
 Searching
 -----------------------
-The service provides a way for users to search for systems based on a list of search conditions.
+The service provides a way for users to search for applications based on a list of search conditions.
 
-.. comment The service provides a way for users to search for systems based on a list of search conditions and to filter
+.. comment The service provides a way for users to search for applications based on a list of search conditions and to filter
 .. comment (i.e. select) which attributes are returned with the results. Searching and filtering can be combined.
 
 Search using GET
 ~~~~~~~~~~~~~~~~
-To search when using a GET request to the ``systems`` endpoint a list of search conditions may be specified
+To search when using a GET request to the ``apps`` endpoint a list of search conditions may be specified
 using a query parameter named ``search``. Each search condition must be surrounded with parentheses, have three parts
 separated by the character ``.`` and be joined using the character ``~``.
 All conditions are combined using logical AND. The general form for specifying the query parameter is as follows::
@@ -348,10 +496,10 @@ Supported operators: ``eq`` ``neq`` ``gt`` ``gte`` ``lt`` ``lte`` ``in`` ``nin``
 For more information on search operators, handling of timestamps, lists, quoting, escaping and other general information on
 search please see <TBD>.
 
-Example CURL command to search for systems that have ``Test`` in the id, are of type LINUX,
-are using a port less than ``1024`` and have a default authorization method of either ``PKI_KEYS`` or ``PASSWORD``::
+Example CURL command to search for applications that have ``Test`` in the id, are of type ``FORK`` and
+allow for *maxJobs* greater than ``5``::
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems?search="(id.like.*Test*)~(system_type.eq.LINUX)~(port.lt.1024)~(DefaultAuthnMethod.in.PKI_KEYS,PASSWORD)"
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps?search="(id.like.*Test*)~(app_type.eq.FORK)~(max_jobs.gt.5)"
 
 Notes:
 
@@ -361,19 +509,19 @@ Notes:
 * In a shell environment the character ``&`` separating query parameters must be escaped with a backslash.
 * In a shell environment the query value must be surrounded by double quotes and the following characters must be escaped with a backslash in order to be properly interpreted by the shell:  ``"`` ``\`` `````
 * Attribute names may be specified using Camel Case or Snake Case.
-* Following complex attributes not supported when searching: ``authnCredential`` ``transferMethods`` ``jobCapabilities`` ``tags``  ``notes``
+* TBD Following complex attributes not supported when searching: ``TBD1`` ``TBD2`` ``TBD3``
 
 
 Dedicated Search Endpoint
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-The service provides the dedicated search endpoint ``systems/search/systems`` for specifying complex queries. Using a GET
+The service provides the dedicated search endpoint ``apps/search/apps`` for specifying complex queries. Using a GET
 request to this endpoint provides functionality similar to above but with a different syntax. For more complex
 queries a POST request may be used with a request body specifying the search conditions using an SQL-like syntax.
 
 Search using GET on Dedicated Endpoint
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Sending a GET request to the search endpoint provides functionality very similar to that provided for the endpoint
-``systems`` described above. A list of search conditions may be specified using a series of query parameters, one for each attribute.
+``apps`` described above. A list of search conditions may be specified using a series of query parameters, one for each attribute.
 All conditions are combined using logical AND. The general form for specifying the query parameters is as follows::
 
   ?<attribute_1>.<op_1>=<value_1>&<attribute_2>.<op_2>=<value_2>)& ... &<attribute_N>.<op_N>=<value_N>
@@ -385,10 +533,10 @@ Supported operators: ``eq`` ``neq`` ``gt`` ``gte`` ``lt`` ``lte`` ``in`` ``nin``
 For more information on search operators, handling of timestamps, lists, quoting, escaping and other general information on
 search please see <TBD>.
 
-Example CURL command to search for systems that have ``Test`` in the name, are of type ``LINUX``,
-are using a port less than ``1024`` and have a default authorization method of either ``PKI_KEYS`` or ``PASSWORD``::
+Example CURL command to search for applications that have ``Test`` in the id, are of type ``FORK`` and
+allow for *maxJobs* greater than ``5``::
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/search/systems?name.like=*Test*\&enabled.eq=true\&system_type.eq=LINUX\&DefaultAuthnMethod.in=PKI_KEYS,PASSWORD
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps/search/apps?name.like=*Test*\&enabled.eq=true\&app_type.eq=FORK
 
 Notes:
 
@@ -396,31 +544,31 @@ Notes:
 * For the ``between`` and ``nbetween`` operators the value must be a two item comma separated list of unquoted values.
 * In a shell environment the character ``&`` separating query parameters must be escaped with a backslash.
 * Attribute names may be specified using Camel Case or Snake Case.
-* Following complex attributes not supported when searching: ``authnCredential`` ``transferMethods`` ``jobCapabilities`` ``tags``  ``notes``
+* TBD Following complex attributes not supported when searching: ``TBD1`` ``TBD2``
 
 Search using POST on Dedicated Endpoint
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-More complex search queries are supported when sending a POST request to the endpoint ``systems/search/systems``.
+More complex search queries are supported when sending a POST request to the endpoint ``apps/search/apps``.
 For these requests the request body must contain json with a top level property name of ``search``. The
 ``search`` property must contain an array of strings specifying the search criteria in
 an SQL-like syntax. The array of strings are concatenated to form the full search query.
 The full query must be in the form of an SQL-like ``WHERE`` clause. Note that not all SQL features are supported.
 
-For example, to search for systems that are owned by ``jdoe`` and of type ``LINUX`` or owned by
-``jsmith`` and using a port less than ``1024`` create a local file named ``system_search.json``
+For example, to search for applications that are owned by ``jdoe`` and of type ``BATCH`` or owned by
+``jsmith`` and allow for *maxJobs* greater than ``5`` create a local file named ``apps_search.json``
 with following json::
 
   {
     "search":
       [
-        "(owner = 'jdoe' AND system_type = 'LINUX') OR",
-        "(owner = 'jsmith' AND port < 1024)"
+        "(owner = 'jdoe' AND app_type = 'BATCH') OR",
+        "(owner = 'jsmith' AND max_jobs > 5)"
       ]
   }
 
 To execute the search use a CURL command similar to the following::
 
-   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/search/systems -d @system_search.json
+   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps/search/apps -d @apps_search.json
 
 Notes:
 
