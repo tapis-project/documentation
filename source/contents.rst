@@ -23,6 +23,7 @@ Welcome to Tapis's Documentation!
    technical/files
    technical/apps
    technical/meta
+   technical/pgrest
    technical/actors
    technical/security
    technical/streams
