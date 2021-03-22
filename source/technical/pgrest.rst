@@ -11,13 +11,60 @@ utilizes a REST architecture.
 Overview
 --------
 
-There are two primary collections in the PgREST API; the Management API, provided at the URL ``/v3/pgrest/manage``,
+There are two primary collections in the PgREST API. The Management API, provided at the URL ``/v3/pgrest/manage``,
 includes endpoints for managing the collection of tables, views, stored procedures, and other objects defined in the
 hosted Postgres database server. Each Tapis tenant has their own schema within PgREST's managed Postrgres database
 in which the tables and other objects are housed. When a table is created, endpoints are generated that allow users
 to interact with the data within a table. These endpoints comprise the Data API, available at the URL ``/v3/pgrest/data``.
 Each collection, ``/v3/pgrest/data/{collection}``, within the Data API corresponds to a table defined in the Management
 API. The Data API is used to create, update, and read the rows within the corresponding tables.
+
+
+Authentication and Tooling
+--------------------------
+PgREST currently recognizes Tapis v2 authentication tokens and uses these for determining access levels. A valid
+Tapis v2 OAuth token should be passes to all requests to PgREST using the header ``Tapis-v2-token``.
+
+For example, using curl:
+
+.. code-block:: bash
+
+  $ curl -H "Tapis-v2-token: 419465dg63h8e4782057degk20e3371" https://tacc.tapis.io/v3/pgrest/manage/tables
+
+Note that Tapis v3 tokens are not recognized by PgREST at this time, and as a result the official Tapis v3 Python SDK
+(tapipy) and other tooling will not work properly with PgREST. We are working on implementing v3 authentication in
+PgREST and expect to have support for it soon.
+
+
+Permissions and Roles
+---------------------
+PgREST currently implements a basic, role-based permissions system that leverages the Tapis v3 Security Kernel (SK). We
+plan to expand on this system in the future to provide more fine-grained authorization controls. For now, three roles
+are recognized:
+
+  * ``PGREST_ADMIN`` -- Grants user read and write access to all objects (e.g., tables) in the ``/manage`` API
+    as well as read and write access to all associated data in the ``/data`` API.
+  * ``PGREST_WRITE`` -- Grants user read and write access to all associated data in the ``/data`` API.
+  * ``PGREST_READ`` -- Grants user read access to all associated data in the ``/data`` API.
+
+Without any of the above roles, a user will not have access to any PgREST endpoints.
+
+Note that these roles are granted at the *tenant* level, so a user may be authorized at one level in one tenant and at a
+different level (or not at all) in another tenant. In PgREST, the base URLs for a given tenant follow the pattern
+``<tenant_id>.tapis.io``, just as they do for all other Tapis v3 services. Hence, this request:
+
+.. code-block:: bash
+
+  $ curl -H "Tapis-v2-token: $TOKEN" https://tacc.tapis.io/v3/pgrest/manage/tables
+
+would list tables in the TACC tenant, while
+
+.. code-block:: bash
+
+  $ curl -H "Tapis-v2-token: $TOKEN" https://cii.tapis.io/v3/pgrest/manage/tables
+
+would list tables in the CII tenant.
+
 
 Management API
 --------------
@@ -28,7 +75,7 @@ Tables
 ^^^^^^
 
 Table management is accomplished with the ``/v3/pgrest/manage/tables`` endpoint. Creating a table amounts to
-specifying the table name, the columns on the table, including the type of each column and any additional validation
+specifying the table name, the columns on the table, including the type of each column, and any additional validation
 to be performed when storing data in the column, the root URL where the associated collection will be available within
 the Data API, and, optionally, which HTTP verbs should not be available on the collection.
 
@@ -128,12 +175,12 @@ registering the table). The endpoints within the ``widgets`` can be described as
 |  X  |  X   |  X  |        | /v3/pgrest/data/widgets                       | List/create widgets; bulk update|
 |     |      |     |        |                                               | multiple widgets.               |
 +-----+------+-----+--------+-----------------------------------------------+---------------------------------+
-|  X  |      |  X  |   X    | /v3/pgrest/data/widgets/{name}                | Get/update/delete a widget by   |
-|     |      |     |        |                                               | name.                           |
+|  X  |      |  X  |   X    | /v3/pgrest/data/widgets/{id}                  | Get/update/delete a widget by   |
+|     |      |     |        |                                               | id.                             |
 +-----+------+-----+--------+-----------------------------------------------+---------------------------------+
 
-Note that the ``name`` column is used for referencing a specific row because it was marked as ``unique`` when the
-table was registered.
+Note that the ``id`` column is used for referencing a specific row. Currently, PgREST generates this column
+automatically for each table, but the semantics around this will be changed in a future release. 
 
 
 Creating a Row
@@ -160,7 +207,7 @@ The following curl command would create a row defined by the JSON document above
 
 .. code-block:: bash
 
-  $ curl -H "Content-type: application/json" -d "@new_row.json" https://<tenant>.tapis.io/v3/pgrest/data/widgets
+  $ curl -H "tapis-v2-token: $TOKEN" -H "Content-type: application/json" -d "@new_row.json" https://<tenant>.tapis.io/v3/pgrest/data/widgets
 
 
 
@@ -183,7 +230,7 @@ The following curl command would update the ``example-widget`` row using the JSO
 
 .. code-block:: bash
 
-  $ curl -H "Content-type: application/json" -d "@update_row.json" https://<tenant>.tapis.io/v3/pgrest/data/widgets/example-widget
+  $ curl -H "tapis-v2-token: $TOKEN" -H "Content-type: application/json" -d "@update_row.json" https://<tenant>.tapis.io/v3/pgrest/data/widgets/example-widget
 
 Note that since only the ``count`` field is provided in the PUT request body, that is the only column that will be
 modified.
@@ -213,7 +260,7 @@ This update_rows.json would be used in a PUT request to the root ``widgets`` col
 
 .. code-block:: bash
 
-  $ curl -H "Content-type: application/json" -d "@update_rows.json" https://<tenant>.tapis.io/v3/pgrest/data/widgets
+  $ curl -H "tapis-v2-token: $TOKEN" -H "Content-type: application/json" -d "@update_rows.json" https://<tenant>.tapis.io/v3/pgrest/data/widgets
 
 
 
@@ -268,3 +315,120 @@ PgREST recognizes the following operators for use in ``where`` stanzas.
 +-----------+---------------------+---------------------------------+
 
 *Todo... Full table coming soon*
+
+
+Retrieving Rows
+^^^^^^^^^^^^^^^
+
+To retrieve data from the ``/data`` API, make an HTTP GET request to the associated URL; an HTTP GET to
+``/v3/pgrest/data/{root_url}`` will retrieve all rows on the associated table, while an HTTP GET to
+``/v3/pgrest/data/{root_url}/{id}`` will retrieve the individual row.
+
+For example,
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" https://dev.tapis.io/v3/pgrest/data/init
+
+retrieves all rows of the table "init":
+
+.. code-block:: bash
+
+    [
+      {
+        "initial_table_id": 1,
+        "col_one": "col 1 value",
+        "col_two": 3,
+        "col_three": 8,
+        "col_four": false,
+        "col_five": null
+      },
+      {
+        "initial_table_id": 2,
+        "col_one": "val",
+        "col_two": 5,
+        "col_three": 9,
+        "col_four": true,
+        "col_five": "hi there"
+      },
+      {
+        "initial_table_id": 3,
+        "col_one": "value",
+        "col_two": 7,
+        "col_three": 9,
+        "col_four": true,
+        "col_five": "hi there again"
+      }
+    ]
+
+while the following curl:
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" https://dev.tapis.io/v3/pgrest/data/init/3
+
+retrieves just the row with id "3":
+
+.. code-block:: bash
+
+      {
+        "initial_table_id": 3,
+        "col_one": "value",
+        "col_two": 7,
+        "col_three": 9,
+        "col_four": true,
+        "col_five": "hi there again"
+      }
+
+We can also search for specific rows using a ``where`` query parameter appended to the ``/v3/pgrest/data/{root_url}``
+endpoint. The ``where`` query parameter takes the form ``where_<column>=<value>``. For instance with the above example,
+we can search for all records where "col_four" equals ``true`` with the following:
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" https://dev.tapis.io/v3/pgrest/data/init?where_col_four=true
+
+    [
+      {
+        "initial_table_id": 2,
+        "col_one": "val",
+        "col_two": 5,
+        "col_three": 9,
+        "col_four": true,
+        "col_five": "hi there"
+      },
+      {
+        "initial_table_id": 3,
+        "col_one": "value",
+        "col_two": 7,
+        "col_three": 9,
+        "col_four": true,
+        "col_five": "hi there again"
+      }
+    ]
+
+and similarly, we can search for records where "col_4" equals ``false``
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" https://dev.tapis.io/v3/pgrest/data/init?where_col_four=true
+
+    [
+      {
+        "initial_table_id": 1,
+        "col_one": "col 1 value",
+        "col_two": 3,
+        "col_three": 8,
+        "col_four": false,
+        "col_five": null
+      }
+    ]
+
+Note that the result is alywas a JSON list, even if zero or one record are found:
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" https://dev.tapis.io/v3/pgrest/data/init?where_col_two=2
+    []
+
+
