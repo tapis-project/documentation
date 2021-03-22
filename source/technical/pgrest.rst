@@ -180,7 +180,7 @@ registering the table). The endpoints within the ``widgets`` can be described as
 +-----+------+-----+--------+-----------------------------------------------+---------------------------------+
 
 Note that the ``id`` column is used for referencing a specific row. Currently, PgREST generates this column
-automatically for each table, but the semantics around this will be changed in a future release. 
+automatically for each table, but the semantics around this will be changed in a future release.
 
 
 Creating a Row
@@ -411,7 +411,7 @@ and similarly, we can search for records where "col_4" equals ``false``
 
 .. code-block:: bash
 
-  $ curl -H "tapis-v2-token: $TOKEN" https://dev.tapis.io/v3/pgrest/data/init?where_col_four=true
+  $ curl -H "tapis-v2-token: $TOKEN" https://dev.tapis.io/v3/pgrest/data/init?where_col_four=false
 
     [
       {
@@ -424,7 +424,7 @@ and similarly, we can search for records where "col_4" equals ``false``
       }
     ]
 
-Note that the result is alywas a JSON list, even if zero or one record are found:
+Note that the result is always a JSON list, even when one or zero records are returned:
 
 .. code-block:: bash
 
