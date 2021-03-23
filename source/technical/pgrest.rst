@@ -97,7 +97,6 @@ the following JSON document to the ``/v3/pgrest/manage/tables`` endpoint:
         "widget_type": {
           "data_type": "varchar",
           "char_len": 100,
-          "default": "sprocket",
           "null": true
         },
         "count": {
@@ -112,10 +111,41 @@ the following JSON document to the ``/v3/pgrest/manage/tables`` endpoint:
       }
     }
 
+
 The JSON describes a table with 4 columns, ``name``, ``widget_type``, ``count``, and ``is_prviate``. The fields within
 the JSON object describing each column include its type, defined in the ``data_type`` attribute (and supporting
 fields such as ``char_len`` for ``varchar`` columns), as well as optional constraints, such as the NOT NULL and
 UNIQUE constraint, and an optional ``default`` value. Only the ``data_type`` attribute is required.
+
+To create this table and the corresponding ``/data`` API, we can use curl like so:
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" -H "Content-type: application/json"
+    -d "@widgets.json" https://dev.develop.tapis.io/v3/pgrest/manage/tables
+
+If all works, the response should look something like this:
+
+.. code-block:: bash
+
+    {
+      "status": "success",
+      "message": "The request was successful.",
+      "version": "dev",
+      "result": {
+        "table_name": "widgets",
+        "table_id": 6,
+        "root_url": "widgets",
+        "endpoints": [
+          "GET_ONE",
+          "GET_ALL",
+          "CREATE",
+          "UPDATE",
+          "DELETE"
+        ]
+      }
+    }
+
 
 Since the ``root_url`` attribute has value ``widgets``, an associated collection at URL ``/v3/pgrest/data/widgets``
 is automatically made available for managing and retrieving the data (rows) on the table. See the `Data API`_ section
@@ -144,6 +174,152 @@ Currently, PgREST supports the following SQL constraints:
  * ``unique`` -- PgREST supports specifying a single column as unique.
  * ``null`` -- If a column description includes ``"null": false``, then the SQL ``NOT NULL`` constraint will be applied
 to the table.
+
+
+Retrieving Table Descriptions
+-----------------------------
+
+You can list all tables you have access to by making a GET request to ``/v3/pgrest/manage/tables``. For example
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $tok" https://dev.tapis.io/v3/pgrest/manage/tables
+
+returns a result like
+
+.. code-block:: bash
+
+    [
+       {
+          "table_name": "initial_table",
+          "table_id": 3,
+          "root_url": "init",
+          "tenant": "dev",
+          "endpoints": [
+            "GET_ONE",
+            "GET_ALL",
+            "CREATE",
+            "UPDATE",
+            "DELETE"
+          ],
+          "tenant_id": "dev"
+        },
+        {
+          "table_name": "widgets",
+          "table_id": 6,
+          "root_url": "widgets",
+          "tenant": "dev",
+          "endpoints": [
+            "GET_ONE",
+            "GET_ALL",
+            "CREATE",
+            "UPDATE",
+            "DELETE"
+          ],
+          "tenant_id": "dev"
+        }
+    ]
+
+We can also retrieve a single table by ``id``. For example
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $tok" https://dev.tapis.io/v3/pgrest/manage/tables/6
+
+    {
+        "table_name": "widgets",
+        "table_id": 6,
+        "root_url": "widgets",
+        "endpoints": [
+          "GET_ONE",
+          "GET_ALL",
+          "CREATE",
+          "UPDATE",
+          "DELETE"
+        ],
+        "tenant_id": "dev"
+    }
+
+We can also pass ``details=true`` query parameter to see the column definitions, validation schema, etc. For example:
+
+
+
+.. code-block:: bash
+
+    $ curl -H "tapis-v2-token: $tok" https://dev.tapis.io/v3/pgrest/manage/tables/6?details=true
+
+    {
+        "table_name": "widgets",
+        "table_id": 6,
+        "root_url": "widgets",
+        "endpoints": [
+          "GET_ONE",
+          "GET_ALL",
+          "CREATE",
+          "UPDATE",
+          "DELETE"
+        ],
+        "columns": {
+          "name": {
+            "null": false,
+            "unique": true,
+            "char_len": 255,
+            "data_type": "varchar"
+          },
+          "count": {
+            "null": true,
+            "data_type": "integer"
+          },
+          "is_private": {
+            "null": "true",
+            "default": "true",
+            "data_type": "boolean"
+          },
+          "widget_type": {
+            "null": true,
+            "char_len": 100,
+            "data_type": "varchar"
+          }
+        },
+        "tenant_id": "dev",
+        "update schema": {
+          "name": {
+            "type": "string",
+            "maxlength": 255
+          },
+          "count": {
+            "type": "integer"
+          },
+          "is_private": {
+            "type": "boolean"
+          },
+          "widget_type": {
+            "type": "string",
+            "maxlength": 100
+          }
+        },
+        "create schema": {
+          "name": {
+            "type": "string",
+            "required": true,
+            "maxlength": 255
+          },
+          "count": {
+            "type": "integer",
+            "required": false
+          },
+          "is_private": {
+            "type": "boolean",
+            "required": false
+          },
+          "widget_type": {
+            "type": "string",
+            "required": false,
+            "maxlength": 100
+          }
+        }
+      }
+    }
 
 
 Views
