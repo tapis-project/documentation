@@ -362,9 +362,10 @@ automatically for each table, but the semantics around this will be changed in a
 Creating a Row
 ^^^^^^^^^^^^^^
 Sending a POST request to the ``/v3/pgrest/data/{root_url}`` URL will create a new row on the corresponding table. The
-POST message body should be a JSON document providing values for each of the columns. The data will first be validated
-with the json schema generated from the columns data sent in on table creation. This will enforce data types, max
-lengths, and required fields. The data is added to the table using pure SQL format and is fully ATOMIC.
+POST message body should be a JSON document providing values for each of the columns inside a single ``data`` object.
+The values will first be validated with the json schema generated from the columns data sent in on table creation. This
+will enforce data types, max lengths, and required fields. The row is then added to the table using pure SQL format
+and is fully ATOMIC.
 
 For example, the following JSON body could be used to create a new row on the widgets example table:
 
@@ -373,10 +374,12 @@ new_row.json:
 .. code-block:: bash
 
     {
-      "name": "example-widget",
-      "widget_type": "gear",
-      "count": 0,
-      "is_private": false
+        "data": {
+          "name": "example-widget",
+          "widget_type": "gear",
+          "count": 0,
+          "is_private": false
+        }
     }
 
 The following curl command would create a row defined by the JSON document above
@@ -385,7 +388,26 @@ The following curl command would create a row defined by the JSON document above
 
   $ curl -H "tapis-v2-token: $TOKEN" -H "Content-type: application/json" -d "@new_row.json" https://<tenant>.tapis.io/v3/pgrest/data/widgets
 
+if all goes well, the response should look like
 
+.. code-block:: bash
+
+    {
+      "status": "success",
+      "message": "The request was successful.",
+      "version": "dev",
+      "result": [
+        {
+          "widgets_id": 1,
+          "name": "example-widget",
+          "widget_type": "gear",
+          "count": 0,
+          "is_private": false
+        }
+      ]
+    }
+
+Note that an ``id`` of ``1`` was generated for the new record.
 
 Updating a Row
 ^^^^^^^^^^^^^^
@@ -399,14 +421,16 @@ update_row.json
 .. code-block:: bash
 
     {
+      "data": {
         "count": 1
+      }
     }
 
-The following curl command would update the ``example-widget`` row using the JSON document above
+The following curl command would update the ``example-widget`` row (with ``id`` of ``i``) using the JSON document above
 
 .. code-block:: bash
 
-  $ curl -H "tapis-v2-token: $TOKEN" -H "Content-type: application/json" -d "@update_row.json" https://<tenant>.tapis.io/v3/pgrest/data/widgets/example-widget
+  $ curl -H "tapis-v2-token: $TOKEN" -H "Content-type: application/json" -d "@update_row.json" https://<tenant>.tapis.io/v3/pgrest/data/widgets/1
 
 Note that since only the ``count`` field is provided in the PUT request body, that is the only column that will be
 modified.
@@ -456,6 +480,7 @@ included in a single ``where`` stanza. For example, the following where stanza w
 was between ``0`` and ``100`` and whose ``is_private`` property was ``true``:
 
 .. code-block:: bash
+
     {
         "where": {
             "count": {
@@ -583,7 +608,7 @@ we can search for all records where "col_four" equals ``true`` with the followin
       }
     ]
 
-and similarly, we can search for records where "col_4" equals ``false``
+and similarly, we can search for records where "col_four" equals ``false``
 
 .. code-block:: bash
 
