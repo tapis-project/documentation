@@ -10,18 +10,50 @@ In order to run a job on a system you will need to create or have access to a Ta
 -----------------
 Overview
 -----------------
-A Tapis application represents all the information required to run a Tapis job on a Tapis system
-and produce useful results. Each application is versioned and is associated with a specific tenant and owned by a
-specific user who has special privileges for the application.
+A Tapis application represents all the information required to run a Tapis job on a Tapis system and produce useful
+results. Each application is versioned and is associated with a specific tenant and owned by a specific user who has
+special privileges for the application. In order to support this purpose an application definition includes information
+which allows the Jobs service to:
 
-At a high level an application contains the following information:
+* Stage input prior to launching the application
+* Launch the application
+* Monitor the application during execution
+* Archive output after application execution
+
+Dynamic Execution System Selection
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Tapis supports dynamic selection of an execution system at runtime. Each Tapis system has certain capabilities inherent
+in the definition of the system, such as the batch scheduler type, supported container runtimes, certain information
+about the HPC queues, etc. Additional job related capabilities may also be included in a system definition. A job
+request or an application may specify a list of constraints based on these capabilities. These are used for determining
+eligible systems at job execution time.
+
+Application Definition Creation and Validation in a Portal or Gateway
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+As discussed above most of the information in an application definition is in place in order to allow Tapis to stage
+input, execute and archive output for an application. In addition, an application definition may include information to
+facilitate portal and gateway developers. This information is in the form of metadata that can be associated with the
+file inputs and the various collections of arguments. The collections are contained in the ParameterSet, please see the
+table below. The collections include the appArgs, containerArgs and schedulerOptions. The metadata for each argument
+includes attributes for metaName, metaDescription, metaRequired, and metaKvPairs (a list of free form key-value pairs).
+The intent of the description is to allow the application designer to document the argument in detail. The free form
+key-value pairs allow for specifying various validation requirements, such as argument type, maximum value or length,
+minimum value or length, etc.
+
+-----------------
+Model
+-----------------
+At a high level an application contain some information that is independent of the version and some information that
+varies by version.
+
+Non-Versioned Attributes
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Id
   A short descriptive name for the application that is unique within the tenant.
-Version
-  Applications are expected to evolve over time. Id + version must be unique within a tenant.
-Description
-  An optional more verbose description for the application.
+Latest Version
+  Applications are expected to evolve over time. This is the latest version of the application. The value is
+  updated by the service as new versions are created.
 Type of application
   BATCH or FORK
 Owner
@@ -31,6 +63,14 @@ Enabled flag
   Indicates if application is currently considered active and available for use. Default is true.
 Containerized flag
   Indicates if application has been fully containerized. Default is true.
+
+Versioned Attributes
+~~~~~~~~~~~~~~~~~~~~
+
+Version
+  Applications are expected to evolve over time. Id + version must be unique within a tenant.
+Description
+  An optional more verbose description for the application.
 Runtime
   Runtime to be used when executing the application. DOCKER, SINGULARITY. Default is DOCKER.
 Runtime version
@@ -55,8 +95,17 @@ Job related attributes
   Various attributes related to job execution such as *jobDescription*, *execSystemId*, *execSystemExecDir*,
   *execSystemInputDir*, *execSystemLogicalQueue* *appArgs*, *fileInputs*, etc.
 
-When creating a application the required attributes are: *id*, *version* and *appType*.
+Required Attributes
+~~~~~~~~~~~~~~~~~~~
+
+When creating a application the required attributes are: *id*, *version*, *appType* and *containerImage*.
 Depending on the type of application and specific values for certain attributes there are other requirements.
+
+The restrictions are:
+
+* If *dynamicExecSystem* is true then *execSystemConstraints* must be specified.
+* If *dynamicExecSystem* is false then *execSystemId* must be specified.
+* If *archiveSystemId* is specified then *archiveSystemDir* must be specified.
 
 --------------------------------
 Getting Started
@@ -163,22 +212,12 @@ Using CURL::
 
 The response should contain a list of items similar to the single listing shown above.
 
------------------
+-----------------------------------
 Minimal Definition and Restrictions
------------------
-When creating an application the required attributes are: *id*, *version* and *appType*.
+-----------------------------------
+When creating an application the required attributes are: *id*, *version*, *appType* and *containerImage*.
 Depending on the type of application and specific values for certain attributes there are other requirements.
 The restrictions are:
-
-* If *containerized* is true then
-
-  * Must be specified: *containerImage*
-  * May not be specified: *command*, *execCodes*
-
-* If *containerized* is false then
-
-  * Must be specified: *command*, *execCodes*
-  * May not be specified: *containerImage*
 
 * If *dynamicExecSystem* is true then *execSystemConstraints* is required.
 * If *archiveSystemId* is specified then *archiveSystemDir* is required.
@@ -195,25 +234,25 @@ a hyphen to the name followed by the version string. For example, the first two 
 be myapp-0.0.1 and myapp-0.0.2. If a version is not specified when retrieving an application then by default the most
 recently created version of the application will be returned.
 
------------------
+-------------------------
 Containerized Application
------------------
+-------------------------
 An application that has been containerized is one that can be executed using a single container image. When the flag
 *containerized* is set to true then the attribute *containerImage* must be specified. Tapis will use the appropriate
 container runtime command and provide support for making the input and output directories available to the container
 when running the container image.
 
------------------
+-----------------------------
 Non-containerized Application
------------------
+-----------------------------
 An application that has not yet been containerized can still be run via Tapis but it will most likely be less portable.
 When the flag *containerized* is set to false then the *command* and *execCodes* attributes must be specified. Tapis
 will stage the *execCodes* files to *execSystemExecDir* and use *command* to launch the application. Note that command
 must be available after staging of *execCodes*.
 
------------------
+------------------------------
 Directory Semantics and Macros
------------------
+------------------------------
 At job submission time the Jobs service supports the use of macros based on template variables. These variables may be
 referenced when specifying directories in an application definition. For a full list of supported variables please see
 the Jobs Service. Here are some examples of variables that may be used when specifying directories for an application:
@@ -248,7 +287,7 @@ lower case is also allowed.
 -----------------
 Deletion
 -----------------
-An application may be soft deleted. Soft deletion means the application is marked as deleted and
+An application may be deleted. Deletion means the application is marked as deleted and
 is no longer available for use. It will no longer show up in searches and operations on
 the application will no longer be allowed. The application definition is retained for auditing
 purposes. Note this means that application IDs may not be re-used after deletion.
@@ -432,6 +471,8 @@ ArchiveFilter Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | excludes            | [String]       |                      | - Files to skip when archiving after execution of the application.                   |
 |                     |                |                      | - excludes list has precedence.                                                      |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| includeLaunchFiles  | boolean        |                      | - Indicates if Tapis generated launch scripts are to be included when archiving.     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 
 ------------------------

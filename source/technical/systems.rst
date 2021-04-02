@@ -204,8 +204,7 @@ Retrieving details for all systems
 
 To see the current list of systems that you are authorized to view:
 
-.. comment
-.. comment (NOTE: See the section below on searching and filtering to find out how to control the amount of information returned)
+(NOTE: See the section below on searching and filtering to find out how to control the amount of information returned)
 
 Using PySDK:
 
@@ -219,9 +218,9 @@ Using CURL::
 
 The response should contain a list of items similar to the single listing shown above.
 
------------------
+-----------------------------------
 Minimal Definition and Restrictions
------------------
+-----------------------------------
 When creating a system the required attributes are: *id*, *systemType*, *host*, *defaultAuthnMethod* and *canExec*.
 Depending on the type of system and specific values for certain attributes there are other requirements.
 The restrictions are:
@@ -252,9 +251,9 @@ Permissions are specified as either ``*`` for all permissions or some combinatio
 following specific permissions: ``("READ","MODIFY","EXECUTE")``. Specifying permissions in all
 lower case is also allowed.
 
-------------------
+-------------------------
 Authorization Credentials
-------------------
+-------------------------
 At system creation time the authorization credentials may be specified if the effective
 access user *effectiveUserId* is a specific user (such as a service account) and not
 a dynamic user, i.e. ``${apiUserId}``. If the effective access user is dynamic then
@@ -402,10 +401,8 @@ Table of Attributes
 -----------------------
 Searching
 -----------------------
-The service provides a way for users to search for systems based on a list of search conditions.
-
-.. comment The service provides a way for users to search for systems based on a list of search conditions and to filter
-.. comment (i.e. select) which attributes are returned with the results. Searching and filtering can be combined.
+The service provides a way for users to search for systems based on a list of search conditions and to filter
+(i.e. select) which fields (i.e. attributes) are returned with the results. Searching and filtering can be combined.
 
 Search using GET
 ~~~~~~~~~~~~~~~~
@@ -543,7 +540,37 @@ Map of SQL operators to Tapis operators
 
 Filter using GET
 ~~~~~~~~~~~~~~~~
-TBD
+When retrieving systems the fields (i.e. attributes) to be returned may be specified as a comma separated list using
+a query parameter named ``fields``. Attribute names may be given using Camel Case or Snake Case. By default all
+attributes are returned. Specifying nested attributes is not supported. The attribute ``id`` is always returned.
+
+For example, to return only the attributes ``host`` and ``effectiveUserId`` the
+CURL command would look like this::
+
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems?fields=host,effectiveUserId
+
+The response should look similar to the following::
+
+ {
+  "result": [
+        {
+            "effectiveUserId": "effUserCltSrchGet_011",
+            "host": "hostCltSrchGet_011",
+            "id": "CSys_CltSrchGet_011"
+        },
+        {
+            "effectiveUserId": "effUserCltSrchGet_012",
+            "host": "hostCltSrchGet_012",
+            "id": "CSys_CltSrchGet_012"
+        },
+        {
+            "effectiveUserId": "effUserCltSrchGet_013",
+            "host": "hostCltSrchGet_013",
+            "id": "CSys_CltSrchGet_013"
+        }
+    ],
+    "type": "respSystemArray"
+ }
 
 
 Heading 2
