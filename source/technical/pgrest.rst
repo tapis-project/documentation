@@ -22,8 +22,9 @@ API. The Data API is used to create, update, and read the rows within the corres
 
 Authentication and Tooling
 --------------------------
-PgREST currently recognizes Tapis v2 authentication tokens and uses these for determining access levels. A valid
-Tapis v2 OAuth token should be passes to all requests to PgREST using the header ``Tapis-v2-token``.
+PgREST currently recognizes Tapis v2 and v3 authentication tokens and uses these for determining access levels. 
+
+A valid Tapis v2 OAuth token should be passes to all requests to PgREST using the header ``Tapis-v2-token``.
 
 For example, using curl:
 
@@ -31,9 +32,15 @@ For example, using curl:
 
   $ curl -H "Tapis-v2-token: 419465dg63h8e4782057degk20e3371" https://tacc.tapis.io/v3/pgrest/manage/tables
 
-Note that Tapis v3 tokens are not recognized by PgREST at this time, and as a result the official Tapis v3 Python SDK
-(tapipy) and other tooling will not work properly with PgREST. We are working on implementing v3 authentication in
-PgREST and expect to have support for it soon.
+Tapis v3 OAuth authentication tokens should be passed to all requests to PgREST using the header ``X-Tapis-Token``.
+
+For example, using curl:
+
+.. code-block:: bash
+
+  $ curl -H "X-Tapis-Token: TOKEN_HERE" https://tacc.tapis.io/v3/pgrest/manage/tables
+
+Additionally, PgREST should be accessible from the Tapis v3 Python SDK (tapipy) now with the addition of v3 authentication.
 
 
 Permissions and Roles
@@ -112,10 +119,10 @@ the following JSON document to the ``/v3/pgrest/manage/tables`` endpoint:
     }
 
 
-The JSON describes a table with 4 columns, ``name``, ``widget_type``, ``count``, and ``is_prviate``. The fields within
+The JSON describes a table with 4 columns, ``name``, ``widget_type``, ``count``, and ``is_private``. The fields within
 the JSON object describing each column include its type, defined in the ``data_type`` attribute (and supporting
 fields such as ``char_len`` for ``varchar`` columns), as well as optional constraints, such as the NOT NULL and
-UNIQUE constraint, and an optional ``default`` value. Only the ``data_type`` attribute is required.
+UNIQUE constraint, an optional ``default`` value, and an optional ``primary_key`` value. Only the ``data_type`` attribute is required.
 
 To create this table and the corresponding ``/data`` API, we can use curl like so:
 
@@ -172,8 +179,11 @@ Supported Constraints
 Currently, PgREST supports the following SQL constraints:
 
  * ``unique`` -- PgREST supports specifying a single column as unique.
- * ``null`` -- If a column description includes ``"null": false``, then the SQL ``NOT NULL`` constraint will be applied
-to the table.
+ * ``null`` -- If a column description includes ``"null": false``, then the SQL ``NOT NULL`` constraint will be applied to the table.
+ * ``primary_key`` -- A unique and not null column that acts as the primary key in order to access a specific row. If it
+   is not set, a field named ``{table_name}_id`` will be created and used by default, it is an integer and increases by one. 
+   This field allows the user to instead use their own key in matters such as how to call a row, ``/v3/pgrest/data/my_table/my_row_name``,
+   rather than than being assigned a primary_key id which is just a random integer. 
 
 
 Retrieving Table Descriptions
@@ -356,7 +366,15 @@ registering the table). The endpoints within the ``widgets`` can be described as
 +-----+------+-----+--------+-----------------------------------------------+---------------------------------+
 
 Note that the ``id`` column is used for referencing a specific row. Currently, PgREST generates this column
-automatically for each table, but the semantics around this will be changed in a future release.
+automatically for each table and calls it `{table_name}_id`. It is a sql serial data type. To override this
+generic ``id`` column, you may assign a key of your choice the ``primary_key`` constraint. We'll then use the
+values in this field to get a specified rows. ``primary_key`` columns, must be integers or varchars which are
+not null and unique.
+
+Additionally, to find the ``id`` to use for your row, the data endpoints return a ``_pkid`` field in the results
+for each row for ease of use. ``_pkid`` is not currently kept in the database, but is added to the result object
+between retrieving the database result and returning the result to the user. As such, ``where`` queries will NOT
+work on the ``_pkid`` field.
 
 
 Creating a Row
@@ -537,6 +555,7 @@ retrieves all rows of the table "init":
 
     [
       {
+        "_pkid": 1,
         "initial_table_id": 1,
         "col_one": "col 1 value",
         "col_two": 3,
@@ -545,6 +564,7 @@ retrieves all rows of the table "init":
         "col_five": null
       },
       {
+        "_pkid": 2,
         "initial_table_id": 2,
         "col_one": "val",
         "col_two": 5,
@@ -553,6 +573,7 @@ retrieves all rows of the table "init":
         "col_five": "hi there"
       },
       {
+        "_pkid": 3,
         "initial_table_id": 3,
         "col_one": "value",
         "col_two": 7,
@@ -573,6 +594,7 @@ retrieves just the row with id "3":
 .. code-block:: bash
 
       {
+        "_pkid": 3,
         "initial_table_id": 3,
         "col_one": "value",
         "col_two": 7,
@@ -591,6 +613,7 @@ we can search for all records where "col_four" equals ``true`` with the followin
 
     [
       {
+        "_pkid": 2,
         "initial_table_id": 2,
         "col_one": "val",
         "col_two": 5,
@@ -599,6 +622,7 @@ we can search for all records where "col_four" equals ``true`` with the followin
         "col_five": "hi there"
       },
       {
+        "_pkid": 3,
         "initial_table_id": 3,
         "col_one": "value",
         "col_two": 7,
@@ -616,6 +640,7 @@ and similarly, we can search for records where "col_four" equals ``false``
 
     [
       {
+        "_pkid": 1,
         "initial_table_id": 1,
         "col_one": "col 1 value",
         "col_two": 3,
@@ -631,5 +656,3 @@ Note that the result is always a JSON list, even when one or zero records are re
 
   $ curl -H "tapis-v2-token: $TOKEN" https://dev.tapis.io/v3/pgrest/data/init?where_col_two=2
     []
-
-
