@@ -13,6 +13,7 @@ Welcome to Tapis's Documentation!
    index
    getting-started/index
 
+
 .. toctree::
    :maxdepth: 2
    :caption: Technical Guide:
@@ -22,6 +23,7 @@ Welcome to Tapis's Documentation!
    technical/systems
    technical/files
    technical/apps
+   technical/jobs
    technical/meta
    technical/pgrest
    technical/actors

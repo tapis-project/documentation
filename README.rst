@@ -6,6 +6,7 @@ Quickstart
 ----------
 
 1. Create a Python 3 environment
+2. Install pip; upgrade to latest using ``pip install --upgrade pip``
 2. Install dependencies ``pip install -r requirements.txt``
 3. Build using ``make html`` (Mac/Linux) or ``make.bat html`` (Windows)
 
