@@ -30,13 +30,19 @@ Using the official Tapis Python SDK:
 
 .. code-block:: python
 
- t.files.listing("/")
+ t.files.listing(systemId="my-system", path="/")
 
 Using CURL::
 
  $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/files/ops/my-system/
 
 And to list a sub-directory in the system, just add the path to the request:
+
+
+.. code-block:: python
+
+ t.files.listing(systemId="my-system", path="/subDir1/subDir2/subDir3/")
+
 
 Using CURL::
 
@@ -76,3 +82,53 @@ Query Parameters
 
 :startByte: integer - Start at byte N of the file
 :count: integer - Return this number of bytes after startByte
+
+----------
+Permissions
+----------
+The permissions API allows owners of systems to allow other Tapis users to have varying levels of access to the underlying file system resources. Owners can grant either `READ` or `MODIFY`
+permissions to a single resource such as a file, or a path to a directory. Any permissions granted to a user on a folder also allow them access to all subpaths.
+Only the **owners** of systems are allowed to create, delete or modify permissions on a storage system.
+
+Here are some common scenarios:
+
+    A "shared" storage system in which the data is owned by a single account, and each user gets a directory of their own
+
+    Community data
+
+    Sharing with a single colleague
+
+        Also show how to get the contents after sharing with colleague
+
+
+
+----------
+Transfers
+----------
+
+The Transfers API allows Tapis users to initiated asynchronous tasks to transfer data between systems.
+
+
+
+
+
+^^^^^^^^^^^^^^^^^^^^^^^
+Creating a transfer
+^^^^^^^^^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^^^^^^^^^
+Get Transfer info
+^^^^^^^^^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^^^^^^^^^
+Get Transfer details
+^^^^^^^^^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^^^^^^^^^
+Cancel / Stop a transfer
+^^^^^^^^^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^^^^^^^^^
+File Uploads
+^^^^^^^^^^^^^^^^^^^^^^^
+
