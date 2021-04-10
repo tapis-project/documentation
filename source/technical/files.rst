@@ -14,12 +14,20 @@ Overview
 All file operations act upon *Storage* systems. If you are unfamiliar with the Systems service, please refer to the
 :ref:`systems` section.
 
+RootDir as the base of the listing
+
 
 -----------------
 Getting Started
 -----------------
 
 Let's assume that you have a system defined in your tenant with an ID of **my-system**
+
+The files API URLs are structured as such:
+
+    https://{tenantBaseUrl}/v3/files/ops/{systemId}/{path}
+
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 File Listings
@@ -108,9 +116,12 @@ Transfers
 
 The Transfers API allows Tapis users to initiated asynchronous tasks to transfer data between systems.
 
+http inputs -- ingesting data
 
+Example:
+    S3 -- SSH transfer
 
-
+Job submission and File transfers
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Creating a transfer
@@ -128,7 +139,5 @@ Get Transfer details
 Cancel / Stop a transfer
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-^^^^^^^^^^^^^^^^^^^^^^^
-File Uploads
-^^^^^^^^^^^^^^^^^^^^^^^
+
 
