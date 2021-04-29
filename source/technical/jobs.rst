@@ -92,56 +92,60 @@ An archive system can also be specified in the application or job request; the d
 The Job Submission Request
 ==========================
 
-The job submission request must contain the three fields shown in the `Simple Job Submission Example`_.  The full complement of possible values in a request body are listed here.
+A job submission request must contain the name, appId and appVersion values as shown in the `Simple Job Submission Example`_.  Those values are marked *Required* in the list below, a list of all possible values allowed in a submission request.  If a parameter has a default value, that value is also shown.  
+
+In addition, some parameters can inherit their values from the application or system definitions as discussed in `Parameter Precedence`_.  These parameters are marked *Inherit*.  Parameters that merge inherited values (rather than override them) are marked *InheritMerge*.  
+
+Parameters that do not need to be set are marked *Not Required*.  Finally, parameters that allow macro substitution are marked *MacroEnabled* (see `Macro Substitution`_ for details).
 
 **name**
-  The user chosen name of the job.
+  The user chosen name of the job.  *MacroEnabled*, *Required.* 
 **appId**
-  The Tapis application to execute.
+  The Tapis application to execute. *Required.*
 **appVersion**
-  The version of the application to execute.
+  The version of the application to execute. *Required.*
 **owner**
-  User ID under which the job runs.
+  User ID under which the job runs.  Administrators can designate a user other than themselves.
 **tenant**
-  Tenant of job owner. 
+  Tenant of job owner.  Default is job owner's tenant.
 **description**
-  Human readable job description.
+  Human readable job description.  *MacroEnabled*, *Not Required*
 **archiveOnAppError**
-  Whether archiving should proceed even when the application reports an error.
+  Whether archiving should proceed even when the application reports an error.  Default is *true*.
 **dynamicExecSystem**
-  Whether the best fit execution system should be chosen using *execSystemConstraints*.
+  Whether the best fit execution system should be chosen using *execSystemConstraints*.  Default is *false*.
 **execSystemId**
-  Tapis execution system ID.
+  Tapis execution system ID.  *Inherit*.
 **execSystemExecDir**
-  Directory into which application assets are staged.
+  Directory into which application assets are staged.  *Inherit*, see `Directories`_ for default.
 **execSystemInputDir**
-  Directory into which input files are staged.
+  Directory into which input files are staged.  *Inherit*, see `Directories`_ for default.
 **execSystemOutputDir**
-  Directory into which the application writes its output.
+  Directory into which the application writes its output.  *Inherit*, see `Directories`_ for default.
 **execSystemLogicalQueue**
-  Tapis-defined queue that corresponds to a batch queue on the execution system.
+  Tapis-defined queue that corresponds to a batch queue on the execution system.  *Inherit* when applicable.
 **archiveSystemId**
-  Tapis archive system ID.
+  Tapis archive system ID.  *Inherit*, defaults to *execSystemId*.
 **archiveSystemDir**
-  Directory into which output files are archived after application execution.
+  Directory into which output files are archived after application execution.  *Inherit*, see `Directories`_ for default.
 **nodeCount**
-  Number of nodes required for application execution.
+  Number of nodes required for application execution.  *Inherit*, default is 1.
 **coresPerNode**
-  Number of cores to use on each node.
+  Number of cores to use on each node.  *Inherit*, default is 1.
 **memoryMB**
-  Megabytes of memory to use on each node.
+  Megabytes of memory to use on each node.  *Inherit*, default is 100.
 **maxMinutes**
-  Maximum number of minutes allowed for job execution.
+  Maximum number of minutes allowed for job execution.  *Inherit*, default is 10.
 **fileInputs**
-  Input files that need to be staged for the application.
+  Input files that need to be staged for the application.  *InheritMerge*.
 **parameterSet**
-  Runtime parameters organized by category.
+  Runtime parameters organized by category.  *Inherit*.
 **execSystemConstraints**
-  Constraints applied against execution system capabilities to validate application/system compatibility.
+  Constraints applied against execution system capabilities to validate application/system compatibility. *InheritMerge*.
 **subscriptions**
-  Subscribe to the job's events.
+  Subscribe to the job's events.  *InheritMerge*.
 **tags**
-  An array of user-chosen strings that are associated with a job.
+  An array of user-chosen strings that are associated with a job.  *InheritMerge*.
 
 The following subsections discuss the meaning and usage of each of the parameters available in a job request.  The schema_ and its referenced library_ comprise the actual JSON schema definition for job requests.
 
@@ -152,11 +156,19 @@ The following subsections discuss the meaning and usage of each of the parameter
 Parameter Precedence
 --------------------
 
-The runtime environment of a Tapis job is determined by values in system definitions, in the app definition and in the job request, in low to high precedence order.  Generally speaking, for values that can be assigned in multiple definitions, the values in job requests override those in app definitions, which override those in system definitions.  There are special cases, however, where the values from different definitions are merged.
+The runtime environment of a Tapis job is determined by values in system definitions, the app definition and the job request, in low to high precedence order as listed.  Generally speaking, for values that can be assigned in multiple definitions, the values in job requests override those in app definitions, which override those in system definitions.  There are special cases, however, where the values from different definitions are merged.
+
+See the jobs/apps/systems parameter matrix_ for a detailed description of how each parameter is handled.
+
+.. _matrix: https://drive.google.com/file/d/1cPwZl9V0u0FvuQTBrPK6TA5sNYs2fsfB/view?usp=sharing
 
 
-Top Level Request Parameters
-----------------------------
+Directories
+-----------
+
+The execution and archive system directories are calculated before the submission response is sent.
+
+
 
 FileInputs
 ----------
@@ -210,7 +222,7 @@ The following standard environment variables are passed into each application co
 Macro Substitution
 ------------------
 
-Certain fields in the 
+Certain fields in the job request and
 
 
 Job Status
