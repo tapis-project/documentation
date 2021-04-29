@@ -4,8 +4,6 @@
 Systems
 =======================================
 
-**WORK IN PROGRESS**
-
 Once you are authorized to make calls to the various services, one of first
 things you may want to do is view storage and execution resources available
 to you or create your own. In Tapis a storage or execution resource is referred
@@ -40,7 +38,7 @@ Id
 Description
   An optional more verbose description for the system.
 Type of system
-  LINUX or OBJECT_STORE
+  LINUX or S3
 Owner
   A specific user set at system creation. By default this is ``${apiUserId}``, the user making the request to
   create the system.
@@ -56,12 +54,9 @@ Default authorization method
   specified as part of a request.
   Supported methods: PASSWORD, PKI_KEYS, ACCESS_KEY.
 Bucket name
-  For an object storage system this is the name of the bucket.
+  For an S3 system this is the name of the bucket.
 Effective root directory
   Directory to be used when listing files or moving files to and from the system.
-Transfer methods
-  Supported methods for moving files or objects to and from the system. Allowable entries are determined by the system
-  type. Initially supported: SFTP, S3.
 DTN system Id
   An alternate system to use as a Data Transfer Node (DTN).
 DTN mount point
@@ -98,13 +93,12 @@ Create a local file named ``system_s3.json`` with json similar to the following:
     "id":"tacc-bucket-sample-<userid>",
     "description":"My Bucket",
     "host":"https://tapis-sample-test-<userid>.s3.us-east-1.amazonaws.com/",
-    "systemType":"OBJECT_STORE",
+    "systemType":"S3",
     "defaultAuthnMethod":"ACCESS_KEY",
     "effectiveUserId":"${owner}",
     "bucketName":"tapis-tacc-bucket-<userid>",
     "rootDir":"/",
     "canExec": false,
-    "transferMethods":["S3"],
     "authnCredential":
     {
       "accessKey":"***",
@@ -147,54 +141,54 @@ Using PySDK:
 
 Using CURL::
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/tacc-bucket-sample-<userid>?pretty=true
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/tacc-bucket-sample-<userid>
 
 The response should look similar to the following::
 
  {
-    "message": "TAPIS_FOUND System found: tacc-bucket-sample-<userid>",
     "result": {
-        "authnCredential": null,
-        "batchDefaultLogicalQueue": null,
-        "batchLogicalQueues": [],
-        "batchScheduler": null,
-        "bucketName": "tapis-tacc-bucket-<userid>",
-        "canExec": false,
-        "defaultAuthnMethod": "ACCESS_KEY",
-        "description": "My Bucket",
-        "dtnMountPoint": null,
-        "dtnMountSourcePath": null,
-        "dtnSystemId": null,
-        "effectiveUserId": "<userid>",
-        "enabled": true,
-        "host": "https://tapis-sample-test-<userid>.s3.us-east-1.amazonaws.com/",
+        "tenant": "dev",
         "id": "tacc-bucket-sample-<userid>",
-        "isDtn": false,
-        "jobCapabilities": [],
-        "jobEnvVariables": [],
-        "jobIsBatch": false,
-        "jobMaxJobs": -1,
-        "jobMaxJobsPerUser": -1,
-        "jobRuntimes": [],
-        "jobWorkingDir": null,
-        "notes": {},
+        "description": "My Bucket",
+        "systemType": "S3",
         "owner": "<userid>",
-        "port": -1,
+        "host": "tapis-sample-test-<userid>.s3.us-east-1.amazonaws.com",
+        "enabled": true,
+        "effectiveUserId": "<userid>",
+        "defaultAuthnMethod": "ACCESS_KEY",
+        "authnCredential": null,
+        "bucketName": "tapis-tacc-bucket-<userid>",
+        "rootDir": "/",
+        "port": 9000,
+        "useProxy": false,
         "proxyHost": "",
         "proxyPort": -1,
-        "refImportId": null,
-        "rootDir": "/",
-        "seqId": 2,
-        "systemType": "OBJECT_STORE",
+        "dtnSystemId": null,
+        "dtnMountPoint": null,
+        "dtnMountSourcePath": null,
+        "isDtn": false,
+        "canExec": false,
+        "jobRuntimes": [],
+        "jobWorkingDir": null,
+        "jobEnvVariables": [],
+        "jobMaxJobs": 2147483647,
+        "jobMaxJobsPerUser": 2147483647,
+        "jobIsBatch": false,
+        "batchScheduler": null,
+        "batchLogicalQueues": [],
+        "batchDefaultLogicalQueue": null,
+        "jobCapabilities": [],
         "tags": [],
-        "tenant": "dev",
-        "transferMethods": [
-            "S3"
-        ],
-        "useProxy": false
+        "notes": {},
+        "uuid": "f83606bf-7a1a-4ff0-9953-dd732cc07ac0",
+        "deleted": false,
+        "created": "2021-04-26T18:45:40.771Z",
+        "updated": "2021-04-26T18:45:40.771Z"
     },
     "status": "success",
-    "version": "0.0.1"
+    "message": "TAPIS_FOUND System found: tacc-bucket-sample-<userid>",
+    "version": "0.0.1",
+    "metadata": null
  }
 
 Note that authnCredential is null. Only specific Tapis services are authorized to retrieve credentials.
@@ -214,7 +208,7 @@ Using PySDK:
 
 Using CURL::
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems?pretty=true
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems?select=allAttributes
 
 The response should contain a list of items similar to the single listing shown above.
 
@@ -225,14 +219,16 @@ When creating a system the required attributes are: *id*, *systemType*, *host*, 
 Depending on the type of system and specific values for certain attributes there are other requirements.
 The restrictions are:
 
-* If *systemType* is OBJECT_STORE then *bucketName* is required and *canExec* must be false.
+* If *systemType* is S3 then *bucketName* is required, *canExec* and *isDtn* must be false.
 * If *systemType* is LINUX then *rootDir* is required.
 * If *effectiveUserId* is ``${apiUserId}`` (i.e. it is not static) then *authnCredential* may not be specified.
 * If *isDtn* is true then *canExec* must be false and following may not be specified: *dtnSystemId*, *dtnMountSourcePath*, *dtnMountPoint*, all job execution related attributes.
-* Allowable entries for transferMethods vary by the *systemType*.
 * If *canExec* is true then *jobWorkingDir* is required and *jobRuntimes* must have at least one entry.
 * If *jobIsBatch* is true then *batchScheduler* must be specified.
-* If *jobIsBatch* is true and the *batchLogicalQueues* list is not empty then *batchLogicalDefaultQueue* must be specified.
+* If *jobIsBatch* is true then *batchLogicalQueues* must have at least one item.
+
+  * If *batchLogicalQueues* has more than one item then *batchLogicalDefaultQueue* must be specified.
+  * If *batchLogicalQueues* has exactly one item then *batchLogicalDefaultQueue* is set to that item.
 
 -----------------
 Permissions
@@ -249,7 +245,7 @@ still be listed. This indicates access has been granted via another role.
 
 Permissions are specified as either ``*`` for all permissions or some combination of the
 following specific permissions: ``("READ","MODIFY","EXECUTE")``. Specifying permissions in all
-lower case is also allowed.
+lower case is also allowed. Having ``MODIFY`` implies ``READ``.
 
 -------------------------
 Authorization Credentials
@@ -273,7 +269,7 @@ used for determining eligible systems for running an application or job.
 -----------------
 Deletion
 -----------------
-A system may be soft deleted. Soft deletion means the system is marked as deleted and
+A system may be deleted. Deletion means the system is marked as deleted and
 is no longer available for use. It will no longer show up in searches and operations on
 the system will no longer be allowed. The system definition is retained for auditing
 purposes. Note this means that system IDs may not be re-used after deletion.
@@ -286,17 +282,17 @@ Table of Attributes
 | Attribute           | Type           | Example              | Notes                                                                                |
 +=====================+================+======================+======================================================================================+
 | tenant              | String         | designsafe           | - Name of the tenant for which the system is defined.                                |
-|                     |                |                      | - *tenant* + *name* must be unique.                                                  |
+|                     |                |                      | - *tenant* + *id* must be unique.                                                    |
 |                     |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| id                  | String         | ds1.storage.default  | - Name of the system. URI safe, see RFC 3986.                                        |
+| id                  | String         | ds1.storage.default  | - Identifier for the system. URI safe, see RFC 3986.                                 |
 |                     |                |                      | - *tenant* + *id* must be unique.                                                    |
 |                     |                |                      | - Allowed characters: Alphanumeric [0-9a-zA-Z] and special characters [-._~].        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | description         | String         | Default storage      | - Description                                                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | systemType          | enum           | LINUX                | - Type of system.                                                                    |
-|                     |                |                      | - Types: LINUX, OBJECT_STORE                                                         |
+|                     |                |                      | - Types: LINUX, S3                                                                   |
 |                     |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | owner               | String         | jdoe                 | - User name of *owner*.                                                              |
@@ -306,6 +302,7 @@ Table of Attributes
 | host                | String         | data.tacc.utexas.edu | - Host name or ip address of the system                                              |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | enabled             | boolean        | FALSE                | - Indicates if system currently enabled for use.                                     |
+|                     |                |                      | - May be updated using the enable/disable endpoints.                                 |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | effectiveUserId     | String         | tg869834             | - User to use when accessing the system.                                             |
 |                     |                |                      | - May be a static string or a variable reference.                                    |
@@ -321,20 +318,17 @@ Table of Attributes
 |                     |                |                      | - May not be specified if *effectiveUserId* is dynamic, i.e. *${apiUserId}*.         |
 |                     |                |                      | - On output contains credentials for *effectiveUserId*.                              |
 |                     |                |                      | - Returned credentials contain relevant information based on *systemType*.           |
+|                     |                |                      | - Credentials may be updated using the systems credentials endpoint.                 |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| bucketName          | String         | tapis-ds1-jdoe       | - Name of bucket for OBJECT_STORAGE system.                                          |
-|                     |                |                      | - Required if *systemType* is OBJECT_STORAGE.                                        |
+| bucketName          | String         | tapis-ds1-jdoe       | - Name of bucket for an S3 system.                                                   |
+|                     |                |                      | - Required if *systemType* is S3.                                                    |
 |                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | rootDir             | String         | $HOME                | - Required if *systemType* is LINUX or *isDtn* = true. Must be an absolute path.     |
 |                     |                |                      | - Serves as effective root directory when listing or moving files.                   |
 |                     |                |                      | - For DTN must be source location used in mount command.                             |
-|                     |                |                      | - Optional for an OBJECT_STORE system but may be used for a similar purpose.         |
+|                     |                |                      | - Optional for an S3 system but may be used for a similar purpose.                   |
 |                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| transferMethods     | [enum]         |                      | - Supported methods for moving files or objects to and from the system.              |
-|                     |                |                      | - Allowable entries are determined by *systemType*.                                  |
-|                     |                |                      | - Methods: SFTP, S3                                                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | port                | int            | 22                   | - Port number used to access the system                                              |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -391,7 +385,7 @@ Table of Attributes
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | notes               | String         | "{}"                 | - Simple metadata in the form of a Json object.                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| seqId               | int            | 20281                | - Auto-generated by service.                                                         |
+| uuid                | UUID           |                      | - Auto-generated by service.                                                         |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | created             | Timestamp      | 2020-06-19T15:10:43Z | - When the system was created. Maintained by service.                                |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -401,8 +395,8 @@ Table of Attributes
 -----------------------
 Searching
 -----------------------
-The service provides a way for users to search for systems based on a list of search conditions and to filter
-(i.e. select) which fields (i.e. attributes) are returned with the results. Searching and filtering can be combined.
+The service provides a way for users to search for systems based on a list of search conditions provided either as query
+parameters for a GET call or a list of conditions in a request body for a POST call to a dedicated search endpoint.
 
 Search using GET
 ~~~~~~~~~~~~~~~~
@@ -431,9 +425,14 @@ Notes:
 * For the ``between`` and ``nbetween`` operators the value must be a two item comma separated list of unquoted values.
 * If there is only one condition the surrounding parentheses are optional.
 * In a shell environment the character ``&`` separating query parameters must be escaped with a backslash.
-* In a shell environment the query value must be surrounded by double quotes and the following characters must be escaped with a backslash in order to be properly interpreted by the shell:  ``"`` ``\`` `````
+* In a shell environment the query value must be surrounded by double quotes and the following characters must be escaped with a backslash in order to be properly interpreted by the shell:
+
+  * ``"`` ``\`` `````
+
 * Attribute names may be specified using Camel Case or Snake Case.
-* Following complex attributes not supported when searching: ``authnCredential`` ``transferMethods`` ``jobCapabilities`` ``tags``  ``notes``
+* Following complex attributes not supported when searching:
+
+  * ``authnCredential`` ``jobRuntimes`` ``jobEnvVariables`` ``jobCapabilities`` ``batchLogicalQueues``  ``tags``  ``notes``
 
 
 Dedicated Search Endpoint
@@ -468,7 +467,9 @@ Notes:
 * For the ``between`` and ``nbetween`` operators the value must be a two item comma separated list of unquoted values.
 * In a shell environment the character ``&`` separating query parameters must be escaped with a backslash.
 * Attribute names may be specified using Camel Case or Snake Case.
-* Following complex attributes not supported when searching: ``authnCredential`` ``transferMethods`` ``jobCapabilities`` ``tags``  ``notes``
+* Following complex attributes not supported when searching:
+
+  * ``authnCredential`` ``jobRuntimes`` ``jobEnvVariables`` ``jobCapabilities`` ``batchLogicalQueues``  ``tags``  ``notes``
 
 Search using POST on Dedicated Endpoint
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -537,41 +538,129 @@ Map of SQL operators to Tapis operators
 | NOT IN         | nin            |
 +----------------+----------------+
 
+-----------------------
+Sort, Limit and Select
+-----------------------
+When a list of Systems is being retrieved the service provides for sorting and limiting the results. When retrieving
+either a list of resources or a single resource the service also provides a way to *select* which fields (i.e.
+attributes) are included in the results. Sorting, limiting and attribute selection are supported using query parameters.
 
-Filter using GET
-~~~~~~~~~~~~~~~~
+Selecting
+~~~~~~~~~
 When retrieving systems the fields (i.e. attributes) to be returned may be specified as a comma separated list using
-a query parameter named ``fields``. Attribute names may be given using Camel Case or Snake Case. By default all
-attributes are returned. Specifying nested attributes is not supported. The attribute ``id`` is always returned.
+a query parameter named ``select``. Attribute names may be given using Camel Case or Snake Case.
+
+Notes:
+
+ * Special select keywords are supported: ``allAttributes`` and ``summaryAttributes``
+ * Summary attributes include:
+
+   * ``id``, ``systemType``, ``owner``, ``host``, ``effectiveUserId``, ``defaultAuthnMethod``, ``canExec``
+
+ * By default all attributes are returned when retrieving a single resource via the endpoint systems/<system_id>.
+ * By default summary attributes are returned when retrieving a list of systems.
+ * Specifying nested attributes is not supported.
+ * The attribute ``id`` is always returned.
 
 For example, to return only the attributes ``host`` and ``effectiveUserId`` the
 CURL command would look like this::
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems?fields=host,effectiveUserId
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems?select=host,effectiveUserId
 
 The response should look similar to the following::
 
  {
   "result": [
         {
-            "effectiveUserId": "effUserCltSrchGet_011",
+            "id": "CSys_CltSrchGet_011",
             "host": "hostCltSrchGet_011",
-            "id": "CSys_CltSrchGet_011"
+            "effectiveUserId": "effUserCltSrchGet_011"
         },
         {
-            "effectiveUserId": "effUserCltSrchGet_012",
+            "id": "CSys_CltSrchGet_012",
             "host": "hostCltSrchGet_012",
-            "id": "CSys_CltSrchGet_012"
+            "effectiveUserId": "effUserCltSrchGet_012"
         },
         {
-            "effectiveUserId": "effUserCltSrchGet_013",
+            "id": "CSys_CltSrchGet_013",
             "host": "hostCltSrchGet_013",
-            "id": "CSys_CltSrchGet_013"
+            "effectiveUserId": "effUserCltSrchGet_013"
         }
     ],
-    "type": "respSystemArray"
+    "status": "success",
+    "message": "TAPIS_FOUND Systems found: 12 systems",
+    "version": "0.0.1-SNAPSHOT",
+    "metadata": {
+        "recordCount": 3,
+        "recordLimit": 100,
+        "recordsSkipped": 0,
+        "orderBy": null,
+        "startAfter": null,
+        "totalCount": -1
+    }
  }
 
+
+Sorting
+~~~~~~~
+The query parameter for sorting is named ``orderBy`` and the value is the attribute name to sort on with an optional
+sort direction. The general format is ``<attribute_name>(<dir>)``. The direction may be ``asc`` for ascending or
+``desc`` for descending. The default direction is ascending.
+
+Examples:
+
+ * orderBy=id
+ * orderBy=id(asc)
+ * orderBy=name(desc),created
+ * orderBy=id(asc),created(desc)
+
+Limiting
+~~~~~~~~
+Additional query parameters may be used in order to limit the number and starting point for results. This is useful for
+implementing paging. The query parameters are:
+
+ * ``limit`` - Limit number of items returned. For example limit=10.
+
+   * Use 0 or less for unlimited.
+   * Default is service dependent.
+
+ * ``skip`` - Number of items to skip. For example skip=10.
+
+   * May not be used with startAfter.
+   * Default is 0.
+
+ * ``startAfter`` - Where to start when sorting. For example limit=10&orderBy=id(asc),created(desc)&startAfter=101
+
+   * May not be used with ``skip``.
+   * Must also specify ``orderBy``.
+   * The value of ``startAfter`` applies to the major ``orderBy`` field.
+   * Condition is context dependent. For ascending the condition is value > ``startAfter`` and for descending the condition is value < ``startAfter``.
+
+When implementing paging it is recommend to always use ``orderBy`` and when possible use ``limit+startAfter`` rather
+than ``limit+skip``. Sorting should always be included since returned results are not guaranteed to be in the same order
+for each call. The combination of ``limit+startAfter`` is preferred because ``limit+skip`` is more likely to result in
+inconsistent results as records are added and removed. Using ``limit+startAfter`` works best when the attribute has a
+natural sequential ordering such as when an attribute represents a timestamp or a sequential ID.
+
+---------------
+Tapis Responses
+---------------
+For requests that return a list of resources the response result object will contain the list of resource records that
+match the user's query and the response metadata object will contain information related to sorting and limiting.
+
+The metadata object will contain the following information:
+
+ * ``recordCount`` - Actual number of records returned.
+ * ``recordLimit`` - The limit query parameter specified in the request. -1 if query parameter was not specified.
+ * ``recordsSkipped`` - The skip query parameter specified in the request. -1 if query parameter was not specified.
+ * ``orderBy`` - The orderBy query parameter specified in the request. Empty string if query parameter was not specified.
+ * ``startAfter`` - The startAfter query parameter specified in the request. Empty string if query parameter was not specified.
+ * ``totalCount`` - Total number of records that would have been returned without a limit query parameter being imposed. -1 if total count was not computed.
+
+For performance reasons computation of ``totalCount`` is only determined on demand. This is controlled by the boolean
+query parameter ``computeTotal``. By default ``computeTotal`` is false.
+
+Example query and response.
 
 Heading 2
 ~~~~~~~~~

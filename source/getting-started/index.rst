@@ -74,13 +74,12 @@ With PySDK
       "name":"my.test.bucket",
       "description":"Test Tapis Bucket",
       "host":"https://<your_bucket_id>.s3.us-east-1.amazonaws.com/",
-      "systemType":"OBJECT_STORE",
+      "systemType":"S3",
       "defaultAccessMethod":"ACCESS_KEY",
       "effectiveUserId":"<your_tacc_username>",
       "bucketName":"tapis-files-bucket",
       "rootDir":"/",
-      "jobCanExec": False,
-      "transferMethods":["S3"],
+      "canExec": False,
       "accessCredential":
       {
         "accessKey":"***",
@@ -105,7 +104,7 @@ The output should look similar to the following; it describes the System that wa
     enabled: False
     host: https://tapis-demo.s3.us-east-1.amazonaws.com/
     id: 2
-    jobCanExec: False
+    canExec: False
     jobCapabilities: []
     jobLocalArchiveDir: None
     jobLocalWorkingDir: None
@@ -119,10 +118,9 @@ The output should look similar to the following; it describes the System that wa
     proxyHost:
     proxyPort: 0
     rootDir: /
-    systemType: OBJECT_STORE
+    systemType: S3
     tags: []
     tenant: dev
-    transferMethods: ['S3']
     updated: 2020-06-25T16:11:52.543Z
     useProxy: False
 
