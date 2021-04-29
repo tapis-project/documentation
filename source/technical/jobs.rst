@@ -223,9 +223,12 @@ ParameterSet
 ExecSystemConstraints
 ---------------------
 
+Not implementated yet.
+
 Subscriptions
 -------------
 
+Not implementated yet.
 
 Job Execution
 =============
@@ -233,7 +236,7 @@ Job Execution
 Environment Variables
 ---------------------
 
-The following standard environment variables are passed into each application container run by Tapis.
+The following standard environment variables are passed into each application container run by Tapis as long as they have been assigned a value.
 
 ::
 
@@ -243,11 +246,16 @@ The following standard environment variables are passed into each application co
     _tapisArchiveSystemDir - the archive system directory on which app output is archived    
     _tapisArchiveSystemId - Tapis system used for archiving app output
     _tapisCoresPerNode - number of cores used per node by app
+    _tapisDtnMountPoint - the mount point on the execution system for the source DTN directory
+    _tapisDtnMountSourcePath - the directory exported by the DTN and mounted on the execution system
+    _tapisDtnSystemId - the Data Transfer Node system ID
     _tapisDynamicExecSystem - true if dynamic system selection was used
     _tapisEffeciveUserId - the user ID under which the app runs
     _tapisExecSystemExecDir - the exec system directory where app artifacts are staged
+    _tapisExecSystemHPCQueue - the actual batch queue name on an HPC host
     _tapisExecSystemId - the Tapis system where the app runs
     _tapisExecSystemInputDir - the exec system directory where input files are staged
+    _tapisExecSystemLogicalQueue - the Tapis queue definition that specifies an HPC queue
     _tapisExecSystemOutputDir - the exec system directory where the app writes its output
     _tapisJobCreateDate - ISO 8601 date, example: 2021-04-26Z
     _tapisJobCreateTime - ISO 8601 time, example: 18:44:55.544145884Z
@@ -259,6 +267,8 @@ The following standard environment variables are passed into each application co
     _tapisMaxMinutes - the maximum number of minutes allowed for the job to run
     _tapisMemoryMB - the memory required per node by the app
     _tapisNodes - the number of nodes on which the app runs
+    _tapisSysBatchScheduler - the HPC scheduler on the execution system
+    _tapisSysBucketName - an object store bucket name
     _tapisSysHost - the IP address or DNS name of the exec system 
     _tapisSysRootDir - the root directory on the exec system
     _tapisTenant - the tenant in which the job runs
@@ -266,7 +276,28 @@ The following standard environment variables are passed into each application co
 Macro Substitution
 ------------------
 
-Certain fields in the job request and
+Tapis defines macros or template variables that get replaced with actual values at well-defined points during job creation.  The act of replacing a macro with a value is often called macro substitution or macro expansion.  The complete list of Tapis macros can be found at JobTemplateVariables_.  
+
+There is a close relationship between these macro definitions and the Tapis environment variables just discussed:  Macros that have values assigned are passed as environment variables into application containers.  This makes macros used during job creation available to applications at runtime.
+
+Most macro definitions are *ground* definitions because their values do not depend on any other macros.  On the other hand, *derived* macro definitions can include other macro definitions.  For example, in `Directory Assignments`_ we that that the default input file directory is constructed with two macro definitions:
+
+::
+
+   execSystemInputDir = ${jobWorkingDir}/jobs/${jobUUID}
+
+Macro values are referenced using the ${macro-name} notation.  Since derived macro definitions reference other macros, there is the possibility of circular references.  Tapis detects these errors and aborts job creation.  
+
+Below is the complete, ordered list of derived macros.  Each macro in the list can be defined using any ground macro and any macro that preceeds it in the list.  Result are undefined if a derived macro references a macro that follows it in the derived list.
+
+#. JobName
+#. JobWorkingDir
+#. ExecSystemInputDir
+#. ExecSystemExecDir
+#. ExecSystemOutputDir
+#. ArchiveSystemDir 
+
+.. _JobTemplateVariables: https://github.com/tapis-project/tapis-java/blob/dev/tapis-jobslib/src/main/java/edu/utexas/tacc/tapis/jobs/model/enumerations/JobTemplateVariables.java
 
 
 Job Status
