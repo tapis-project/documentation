@@ -207,12 +207,12 @@ When a job request is submitted, each of the job's four execution and archive sy
      execSystemExecDir:    ${jobWorkingDir}/jobs/${jobUUID}
      execSystemInputDir:   ${jobWorkingDir}/jobs/${jobUUID}
      execSystemOutputDir:  ${jobWorkingDir}/jobs/${jobUUID}/output
-     archiveSystemDir:     /jobs/${JobUUID}/archive
+     archiveSystemDir:     /jobs/${JobUUID}/archive                 (if archiveSystemId is set)
    DTN defined:
      execSystemExecDir:    ${dtnMountPoint}/jobs/${jobUUID}
      execSystemInputDir:   ${dtnMountPoint}/jobs/${jobUUID}
      execSystemOutputDir:  ${dtnMountPoint}/jobs/${jobUUID}/output
-     archiveSystemDir:     ${dtnMountPoint}/jobs/${JobUUID}/archive
+     archiveSystemDir:     ${dtnMountPoint}/jobs/${JobUUID}/archive (if archiveSystemId is set)
 
 FileInputs
 ----------
