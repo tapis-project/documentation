@@ -166,9 +166,53 @@ See the jobs/apps/systems parameter matrix_ for a detailed description of how ea
 Directories
 -----------
 
-The execution and archive system directories are calculated before the submission response is sent.
+The execution and archive system directories are calculated before the submission response is sent.  This calculation can include the use of macro definitions that get replaced by values at submission request time.  The `Macro Substitution`_ section discusses what macro defintions are available and how substitution works.  In this section, we document the default directory assignments which may include macro definitions.
 
+Directory Definitions
+^^^^^^^^^^^^^^^^^^^^^
 
+The directories assigned when a system is defined:
+
+::
+
+  rootDir - the root of the file system that is accessible through this Tapis system.
+  jobWorkingDir - the default directory for temporary files used or created during job execution.
+  dtnMountPoint - the path relative to the execution system's rootDir where the DTN file system is mounted.
+
+An execution system may define a *Data Transfer Node* (DTN).  A DTN is a high throughput node used to stage job inputs and to archive job outputs.  The goal is to improve transfer performance.  The execution system mounts the DTN's file system at the *dtnMountPoint* so that executing jobs have access to its data, but Tapis will connect to the DTN rather than the execution system during transfers. 
+
+The directories assigned in application definitions and/or in a job submission requests: 
+
+::
+
+   execSystemExecDir
+   execSystemInputDir
+   execSystemOutputDir
+   archiveSystemDir
+
+Directory Assignments
+^^^^^^^^^^^^^^^^^^^^^
+
+The rootDir and jobWorkingDir are always assigned on system creation, so they are always available for use as macros when assigning directories in applications or job submission requests.  
+
+When a job request is submitted, each of the job's four execution and archive system directories are assigned as follows: 
+
+#. If the job submission request assigns the directory, that value is used.  Otherwise,
+#. If the application definition assigns the directory, that value is used.  Otherwise,
+#. The default values shown below are assigned:  
+
+::
+
+   No DTN defined:
+     execSystemExecDir:    ${jobWorkingDir}/jobs/${jobUUID}
+     execSystemInputDir:   ${jobWorkingDir}/jobs/${jobUUID}
+     execSystemOutputDir:  ${jobWorkingDir}/jobs/${jobUUID}/output
+     archiveSystemDir:     /jobs/${JobUUID}/archive                 (if archiveSystemId is set)
+   DTN defined:
+     execSystemExecDir:    ${dtnMountPoint}/jobs/${jobUUID}
+     execSystemInputDir:   ${dtnMountPoint}/jobs/${jobUUID}
+     execSystemOutputDir:  ${dtnMountPoint}/jobs/${jobUUID}/output
+     archiveSystemDir:     ${dtnMountPoint}/jobs/${JobUUID}/archive (if archiveSystemId is set)
 
 FileInputs
 ----------
