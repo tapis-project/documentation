@@ -217,8 +217,55 @@ When a job request is submitted, each of the job's four execution and archive sy
 FileInputs
 ----------
 
+The *fileInputs* in application definitions are merged with those in job submission requests to produce a complete list of input files that need to be staged for a job.  The fileInputs array contains elements that conform to the following JSON schema.
+
+::
+  
+   "InputSpec": {
+       "$comment": "Used to specify file inputs on Jobs submission requests",
+       "type": "object",
+           "properties": {
+               "sourceUrl":  {"type": "string", "minLength": 1, "format": "uri"},
+               "targetPath": {"type": "string", "minLength": 0},
+               "inPlace":    {"type": "boolean"},
+               "meta":       {"type": "object", "$ref": "#/$defs/ArgMetaSpec"}             
+           },
+       "required": ["sourceUrl"],
+       "additionalProperties": false
+   }   
+
+Since all input directories or files are staged to the *execSystemInputDir*, the only required field is the *sourceUrl*.  Any URL protocol accepted by the Tapis Files_ service can be used here.  The most common protocols used are tapis, http, and https; please see the Files_ service for the complete list of supported protocols.
+
+If provided, the *targetPath* indicates a path relative to the *execSystemInputDir* into which the input is copied.  When not provided, the  directory or file named in *sourceUrl* is copied directly into *execSystemInputDir*. 
+
+The *inPlace* value defaults to false when not provided.  When true, it instructs the Jobs service to **not** copy the input.  This setting is used to indicate that the input has already been put in place in the *execSystemInputDir* subtree by some means outside of Tapis, so no copying is needed.  The use of *inPlace* documents all inputs, even those that do not need to be transferred. 
+
+See the `ArgMetaSpec`_ for a discussion of the *meta* field, which allows one to name the input, designate the input as optional, and attach arbitrary key/value pairs.
+
+
+.. _Files: https://tapis.readthedocs.io/en/latest/technical/files.html
+
 ParameterSet
 ------------
+
+The job *parameterSet* argument is comprised of these objects:
+
+================    ==================    ===================================================
+Name                JSON Schema Type      Description
+================    ==================    =================================================== 
+appArgs             ArgSpec array         Arguments passed to user's application
+containerArgs       ArgSpec array         Arguments passed to container runtime
+schedulerOptions    ArgSpec array         Arguments passed to HPC batch scheduler
+envVariables        KeyValuePair array    Environment variables injected into application container
+archiveFilter       object                File archiving selector
+================    ==================    ===================================================
+
+
+
+
+
+
+
 
 ExecSystemConstraints
 ---------------------
@@ -229,6 +276,75 @@ Subscriptions
 -------------
 
 Not implementated yet.
+
+Shared Components
+-----------------
+
+ArgSpec
+^^^^^^^
+
+The JSON schema for defining elements in various `ParameterSet`_ components is below.
+
+::
+
+   "ArgSpec": {
+       "$comment": "Used to specify parameters on Jobs submission requests",
+       "type": "object",
+           "properties": {
+               "arg":  {"type": "string", "minLength": 1},
+               "meta": {"type": "object", "$ref": "#/$defs/ArgMetaSpec"}
+           },
+       "required": ["arg"],
+       "additionalProperties": false
+   }
+
+The required *arg* value is an arbitrary string and is used as-is.  See the `ArgMetaSpec`_ for a discussion of the *meta* field, which allows one to name arguments, designate them as optional, and attach arbitrary key/value pairs to them.
+
+
+ArgMetaSpec
+^^^^^^^^^^^
+
+The JSON schema for metadata objects used in `FileInputs`_ and other job parameters is below.
+
+::
+ 
+   "ArgMetaSpec": {
+       "$comment": "An open-ended way to name and annotate arguments",
+       "type": "object",
+           "properties": {
+               "description": {"type": "string", "minLength": 1, "maxLength": 8096},
+               "name":        {"type": "string", "minLength": 1},
+               "required":    {"type": "boolean"},
+               "kv":          {"type": "array",
+                               "items": {"$ref": "#/$defs/KeyValuePair"},
+                               "uniqueItems": true}
+           },
+        "required": ["name", "required"],
+        "additionalProperties": false
+   }
+   
+The *ArgMetaSpec* is always a child its enclosing job parameter.  The *ArgMetaSpec* requires that a name be assigned it parent and that whether the parent parameter is required or not.  Optionally, a description and a map of key/value strings can be included.  The complete *ArgMetaSpec* object is saved in the job, so the key/value pairs can be used to pass arbitrary information to any program that queries the job.  For example, a web application might submit a job request and embed display information in the metadata for use whenever the job is queried. 
+
+KeyValuePair
+^^^^^^^^^^^^
+
+The JSON schema for defining key/value pairs of strings in various `ParameterSet`_ components is below.
+
+::
+
+   "KeyValuePair": {
+       "$comment": "A simple key/value pair",
+       "type": "object",
+           "properties": {
+               "key":   {"type": "string", "minLength": 1},
+               "value": {"type": "string", "minLength": 0}
+           },
+        "required": ["key", "value"],
+        "additionalProperties": false
+   }
+
+Both the *key* and *value* are required, though the *value* can be an empty string.
+
 
 Job Execution
 =============
@@ -296,6 +412,8 @@ Below is the complete, ordered list of derived macros.  Each macro in the list c
 #. ExecSystemExecDir
 #. ExecSystemOutputDir
 #. ArchiveSystemDir 
+
+Finally, macro substitution is applied to the job *description* field, whether the description is specified in an application or a submission request.   
 
 .. _JobTemplateVariables: https://github.com/tapis-project/tapis-java/blob/dev/tapis-jobslib/src/main/java/edu/utexas/tacc/tapis/jobs/model/enumerations/JobTemplateVariables.java
 
