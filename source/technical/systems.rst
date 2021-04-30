@@ -7,7 +7,7 @@ Systems
 Once you are authorized to make calls to the various services, one of first
 things you may want to do is view storage and execution resources available
 to you or create your own. In Tapis a storage or execution resource is referred
-to as a *system*.
+to as a **system**.
 
 -----------------
 Overview
@@ -660,7 +660,44 @@ The metadata object will contain the following information:
 For performance reasons computation of ``totalCount`` is only determined on demand. This is controlled by the boolean
 query parameter ``computeTotal``. By default ``computeTotal`` is false.
 
-Example query and response.
+Example query and response:
+
+Query::
+
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems?limit=2&orderBy=id(desc)
+
+Response::
+
+ {
+  "result": [
+    {
+      "id": "testMin0",
+      "systemType": "S3",
+      "owner": "testuser",
+      "host": "my.example.host",
+      "defaultAccessMethod": "ACCESS_KEY",
+      "canExec": false
+    },
+    {
+      "id": "MinSystem1c",
+      "systemType": "LINUX",
+      "owner": "testuser",
+      "defaultAccessMethod": "PASSWORD",
+      "host": "data.tacc.utexas.edu",
+      "canExec": true
+    }
+  ],
+  "status": "success",
+  "message": "TAPIS_FOUND Systems found: 2 systems",
+  "version": "0.0.1-SNAPSHOT",
+  "metadata": {
+    "recordCount": 2,
+    "recordLimit": 2,
+    "recordsSkipped": 0,
+    "orderBy": "id(desc)",
+    "startAfter": null,
+    "totalCount": -1
+  }
 
 Heading 2
 ~~~~~~~~~
