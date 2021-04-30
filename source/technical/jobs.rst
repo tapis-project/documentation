@@ -18,7 +18,6 @@ Jobs
 
 .. role:: red
 
-:red:`*** WORK IN PROGRESS ***`
 
 ----
 
@@ -250,22 +249,75 @@ ParameterSet
 
 The job *parameterSet* argument is comprised of these objects:
 
-================    ==================    ===================================================
-Name                JSON Schema Type      Description
-================    ==================    =================================================== 
-appArgs             ArgSpec array         Arguments passed to user's application
-containerArgs       ArgSpec array         Arguments passed to container runtime
-schedulerOptions    ArgSpec array         Arguments passed to HPC batch scheduler
-envVariables        KeyValuePair array    Environment variables injected into application container
-archiveFilter       object                File archiving selector
-================    ==================    ===================================================
+================    =====================   ===================================================
+Name                JSON Schema Type        Description
+================    =====================   =================================================== 
+appArgs             `ArgSpec`_ array        Arguments passed to user's application
+containerArgs       `ArgSpec`_ array        Arguments passed to container runtime
+schedulerOptions    `ArgSpec`_ array        Arguments passed to HPC batch scheduler
+envVariables        `KeyValuePair`_ array   Environment variables injected into application container
+archiveFilter       object                  File archiving selector
+================    =====================   ===================================================
 
+Each of these objects can be specifed in Tapis application definitions and/or in job submission requests.  In addition, the execution system can also specify environment variable settings.
 
+appArgs
+^^^^^^^
 
+Specify one or more command line arguments for the user application using the *appArgs* parameter.  Arguments specified in the application definition are appended to those in the submission request.  Metadata can be attached to any argument.
 
+containerArgs
+^^^^^^^^^^^^^
 
+Specify one or more command line arguments for the container runtime using the *containerArgs* parameter.  Arguments specified in the application definition are appended to those in the submission request.  Metadata can be attached to any argument.
 
+schedulerOptions
+^^^^^^^^^^^^^^^^
 
+Specify HPC batch scheduler arguments for the container runtime using the *schedulerOptions* parameter.  Arguments specified in the application definition are appended to those in the submission request.  The arguments for each scheduler are passed using that scheduler's conventions.  Metadata can be attached to any argument.
+
+envVariables
+^^^^^^^^^^^^
+
+Specify key/value pairs that will be injected as environment variables into the application's container when it's launched.  Key/value pairs specified in the execution system definition, application definition, and job submission request are aggregated using precedence ordering (system < app < request) to resolve conflicts.  
+
+archiveFilter
+^^^^^^^^^^^^^
+
+The *archiveFilter* conforms to this JSON schema:
+
+::
+
+   "archiveFilter": {
+      "type": "object",
+      "properties": {
+         "includes": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+         "excludes": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+         "includeLaunchFiles": {"type": "boolean"}
+      },
+      "additionalProperties": false 
+   }
+
+An *archiveFilter* can be specified in the application definition and/or the job submission request.  The *includes* and *excludes* arrays are merged by appending entries from the application definition to those in the submission request.  
+
+The *excludes* filter is applied first, so it takes precedence over *includes*.  If *excludes* is empty, then no output file or directory will be explicitly excluded from archiving.  If *includes* is empty, then all files in *execSystemOutputDir* will be archived unless explicitly excluded.  If *includes* is not empty, then only files and directories that match an entry and not explicitly excluded will be archived.
+ 
+Each *includes* and *excludes* entry is a string, a string with wildcards or a regular expression.  Entries represent directories or files.  The wildcard semantics are that of glob (*), which is commonly used on the command line.  Tapis implements Java glob_ semantics.  To filter using a regular expression, construct the pattern using Java regex_ semantics and then preface it with **REGEX:** (case sensitive).  Here are examples of globs and regular expressions that could appear in a filter: 
+
+::
+
+                  "myfile.*"
+                  "*2021-*-events.log"
+                  "REGEX:^[\\p{IsAlphabetic}\\p{IsDigit}_\\.\\-]+$"
+                  "REGEX:\\s+"
+
+When *includeLaunchFiles* is true (the default), then the script (*tapisjob.sh*) and environment (*tapisjob.env*) files that Tapis generates in the *execSystemExecDir* are also archived.  These launch files provide valuable information about how a job was configured and launched, so archiving them can help with debugging and improve reproducibility.  Since these files may contain application secrets, such database passwords or other credentials, care must be taken to not expose private data through archiving.  
+
+If no filtering is specified at all, then all files in *execSystemOutputDir* and the launch files are archived.
+
+.. _regex: https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/util/regex/Pattern.html
+
+.. _glob: https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob
 
 ExecSystemConstraints
 ---------------------
@@ -457,8 +509,14 @@ Dynamic Execution System Selection
 Not implementated yet.
 
 
+Container Runtimes
+==================
 
+Docker
+------
 
+Singularity
+-----------
 
 Querying Jobs
 =============
