@@ -27,7 +27,7 @@ Introduction to Jobs
 The Tapis v3 Jobs service is specialized to run containerized applications on any host that supports container runtimes.  Currently, Docker and Singularity containers are supported.  The Jobs service uses the Systems, Apps, Files and Security Kernel services to process jobs.  
 
 Implementation Status
-=====================
+---------------------
 The following table describes the current state of the Beta release of Jobs.  All UrlPaths shown start with /v3/jobs.  The unauthenticated health check, ready and hello APIs do not require a Tapis JWT in the request header.
 
 ============     ======   ====================   ===========
@@ -45,7 +45,7 @@ Hello            GET      /hello                 Implemented
 
 
 Job Processing Overview
-=======================
+-----------------------
 
 Before discussing the details of how to construct a job request, we take this opportunity to describe overall lifecycle of a job.  When a job request is recieved as the payload of an POST call, the following steps are taken:
 
@@ -72,7 +72,7 @@ Once a response to the submission request is sent to the caller, job processing 
 
 
 Simple Job Submission Example
-=============================
+-----------------------------
 
 The POST payload for the simplest job submission request looks like this:
 
@@ -87,6 +87,8 @@ The POST payload for the simplest job submission request looks like this:
 In this example, all input and output directories are either specified in the *myApp* definition or are assigned their default values.  Currently, the execution system on which an application runs must be specified in either the application definition or job request.  Our example assumes that *myApp* assigns the execution system.  Future versions of the Jobs service will support dynamic execution system selection.
 
 An archive system can also be specified in the application or job request; the default is to be the same as the execution system.
+
+-----------------------
 
 The Job Submission Request
 ==========================
@@ -178,7 +180,7 @@ The directories assigned when a system is defined:
   jobWorkingDir - the default directory for temporary files used or created during job execution.
   dtnMountPoint - the path relative to the execution system's rootDir where the DTN file system is mounted.
 
-An execution system may define a *Data Transfer Node* (DTN).  A DTN is a high throughput node used to stage job inputs and to archive job outputs.  The goal is to improve transfer performance.  The execution system mounts the DTN's file system at the *dtnMountPoint* so that executing jobs have access to its data, but Tapis will connect to the DTN rather than the execution system during transfers. 
+An execution system may define a *Data Transfer Node* (DTN).  A DTN is a high throughput node used to stage job inputs and to archive job outputs.  The goal is to improve transfer performance.  The execution system mounts the DTN's file system at the *dtnMountPoint* so that executing jobs have access to its data, but Tapis will connect to the DTN rather than the execution system during transfers.  See `Data Transfer Nodes`_ for details. 
 
 The directories assigned in application definitions and/or in a job submission requests: 
 
@@ -192,7 +194,7 @@ The directories assigned in application definitions and/or in a job submission r
 Directory Assignments
 ^^^^^^^^^^^^^^^^^^^^^
 
-The rootDir and jobWorkingDir are always assigned on system creation, so they are always available for use as macros when assigning directories in applications or job submission requests.  
+The rootDir and jobWorkingDir are always assigned upon system creation, so they are available for use as macros when assigning directories in applications or job submission requests.  
 
 When a job request is submitted, each of the job's four execution and archive system directories are assigned as follows: 
 
@@ -233,7 +235,7 @@ The *fileInputs* in application definitions are merged with those in job submiss
        "additionalProperties": false
    }   
 
-Since all input directories or files are staged to the *execSystemInputDir*, the only required field is the *sourceUrl*.  Any URL protocol accepted by the Tapis Files_ service can be used here.  The most common protocols used are tapis, http, and https; please see the Files_ service for the complete list of supported protocols.
+Since all input directories or files are staged to the *execSystemInputDir*, the only required field is the *sourceUrl*.  Any URL protocol accepted by the Tapis Files_ service can be used here.  The most common protocols used are tapis, http, and https.  The standard tapis URL format is *tapis://<tapis-system>/<path>*; please see the Files_ service for the complete list of supported protocols.
 
 If provided, the *targetPath* indicates a path relative to the *execSystemInputDir* into which the input is copied.  When not provided, the  directory or file named in *sourceUrl* is copied directly into *execSystemInputDir*. 
 
@@ -398,6 +400,8 @@ The JSON schema for defining key/value pairs of strings in various `ParameterSet
 Both the *key* and *value* are required, though the *value* can be an empty string.
 
 
+-------------------------------------------------
+
 Job Execution
 =============
 
@@ -414,7 +418,7 @@ The following standard environment variables are passed into each application co
     _tapisArchiveSystemDir - the archive system directory on which app output is archived    
     _tapisArchiveSystemId - Tapis system used for archiving app output
     _tapisCoresPerNode - number of cores used per node by app
-    _tapisDtnMountPoint - the mount point on the execution system for the source DTN directory
+    _tapisDtnMountPoint - the mountpoint on the execution system for the source DTN directory
     _tapisDtnMountSourcePath - the directory exported by the DTN and mounted on the execution system
     _tapisDtnSystemId - the Data Transfer Node system ID
     _tapisDynamicExecSystem - true if dynamic system selection was used
@@ -467,6 +471,18 @@ Below is the complete, ordered list of derived macros.  Each macro in the list c
 
 Finally, macro substitution is applied to the job *description* field, whether the description is specified in an application or a submission request.   
 
+Macro Functions
+^^^^^^^^^^^^^^^
+
+Directory assignments in systems, applications and job requests can also use the **HOST_EVAL($var)** function at the beginning of their path assignments.  This function dynamically extracts the named environment variable's value from an execution or archive host *at the time the job request is made*.  Specifically, the environment variable's value is retrieved by logging into the host as the Job owner and issuing "echo $var".  The example in `Data Transfer Nodes`_ uses this function.
+
+To increase application portability, an optional default value can be passed into the **HOST_EVAL** function.  The function's complete signature with the optional path parameter is:
+
+        **HOST_EVAL($VAR, path)** 
+
+If the environment variable VAR does not exist on the host, then the literal path parameter is returned by the function.  This added flexibility allows applications to run in different environments, such as on TACC HPC systems that automatically expose certain environment variables and VMs that might not.  If the environment variable does not exist and no optional path parameter is provided, the job fails due to invalid input. 
+
+
 .. _JobTemplateVariables: https://github.com/tapis-project/tapis-java/blob/dev/tapis-jobslib/src/main/java/edu/utexas/tacc/tapis/jobs/model/enumerations/JobTemplateVariables.java
 
 
@@ -508,6 +524,65 @@ Dynamic Execution System Selection
 
 Not implementated yet.
 
+Data Transfer Nodes
+-------------------
+
+A Tapis system can be designated as a Data Transfer Node (DTN) as part of its definition.  When an execution system specifies DTN usage in its definition, then the Jobs service will use the DTN to stage input files and archive output files.
+
+The DTN usage pattern is effective when (1) the DTN has high performance network and storage capabilities, and (2) an execution system can mount the DTN's file system.  In this situation, bulk data transfers performed by Jobs benefit from the DTN's high performance capabilities, while applications continue to access their execution system's files as usual.  From an application's point of view, its data are simply where they are expected to be, though they may have gotten there in a more expeditious manner.
+
+DTN usage requires the coordinated configuration of a DTN, an execution system and a job.  In addition, outside of Tapis, a system administrator must mount the exported DTN file system at the expected mountpoint on an execution system.  We use the example below to illustrate DTN configuration and usage.
+
+::
+
+   System: ds-exec
+     rootDir: /execRoot
+     dtnMountSourcePath: tapis://corral-dtn/
+     dtnMountPoint: /corral-repl
+     jobWorkingDir: HOST_EVAL($SCRATCH)
+
+   System: corral-dtn
+     host: cic-dtn01
+     isDtn: true
+     rootDir: /gpfs/corral3/repl
+
+   Job Request effective values:
+     execSystemId:         ds-exec
+     execSystemExecDir:    ${jobWorkingDir}/jobs/${jobUUID} 
+     execSystemInputDir:   ${dtnMountPoint}/projects/NHERI/shared/{$jobOwner}/jobs/${jobUUID} 
+     execSystemOutputDir:  ${dtnMountPoint}/projects/NHERI/shared/{$jobOwner}/jobs/${jobUUID}/output
+
+   NFS Mount on ds-exec (done outside of Tapis):
+     mount -t nfs cic-dtn01:/gpfs/corral3/repl /execRoot/corral-repl
+
+The example execution system, **ds-exec**, defines two DTN related values (both required to configure DTN usage):
+
+**dtnMountSourcePath** 
+  The tapis URL specifying the exported DTN path; the path is relative to the DTN system's rootDir (which is just "/" in this example).
+**dtnMountPoint**
+  The path relative to the execution system's rootDir where the DtnMountSourcePath is mounted.
+
+The execution system's jobWorkingDir is defined to be the runtime value of the $SCRATCH environment variable; its rootDir is defined at /execRoot.
+
+The Tapis DTN system, **corral-dtn**, host machine is cic-dtn01.  The DTN's rootDir (/gpfs/corral3/repl) is the directory prefix used on all mounts.  Mounting takes place outside of Tapis by system administrators.  The actual NFS mount command has this general format:
+
+::
+
+     mount -t nfs <dtn_host>:/<dtn_root_dir>/<path> <exec_system_mount_point>
+
+The Job Request effective values depend on the DTN configuration are also shown.  These values could have been set in the application definition, the job request or in both.  Values set in the job request are given priority.  The execSystemId refers to the **ds-exec** system, which in this case specifies a DTN.
+
+Continuing with the above example, let's say user *Bud* issues an Opensees job request that creates a job with id 123.  The Jobs service will stage the application's input files using the DTN.  The transfer request to the Files_ service will write to this target URL:
+
+          tapis://corral-dtn/gpfs/corral3/repl/projects/NHERI/shared/Bud/jobs/123
+
+This is the standard tapis URL format:  tapis://<tapis-system>/<path>.  After inputs are staged, the Job service will inject this environment variable value (among others) into the launched job's container:
+
+          execSystemInputDir=/corral-repl/projects/NHERI/shared/Bud/jobs/123
+
+Since **ds-exec** mounts the corral root directory, the files staged to corral /gpfs/corral3/repl are accessible at execSystemInputDir on **ds-exec**, relative to rootDir /execRoot. A similar approach would be used to transfer files to an archive system using the DTN, except this time **corral-dtn** is the source of the file transfers rather than the target. 
+
+------------------------------------------------------------
 
 Container Runtimes
 ==================
@@ -518,8 +593,16 @@ Docker
 Singularity
 -----------
 
+tbd
+
+------------------------------------------------------------
+
 Querying Jobs
 =============
+
+tbd
+
+------------------------------------------------------------
 
 Job Actions
 ===========
