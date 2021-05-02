@@ -22,8 +22,15 @@ Getting Started
 Let's assume that you have a system defined in your tenant with an ID of **my-system**
 
 ^^^^^^^^^^^^^^^^^^^^^^^
-File Listings
+Basic File Operations
 ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+++++++++++++++++++
+File Listings
+++++++++++++++++++
+
 To list the files in the root directory of that system:
 
 Using the official Tapis Python SDK:
@@ -48,9 +55,9 @@ Query Parameters
 :offset: integer - Skip the first N listings
 
 
-^^^^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++
 File Uploads
-^^^^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++
 
 To upload a new file to the files service, just POST a file to the service. The file will be placed at
 the location specified in the `{path}` parameter in the request. For example, given the system `my-system`, and you want to
@@ -62,9 +69,9 @@ Using CURL::
 
 Any folders that do not exist in the specified path will automatically be created.
 
-^^^^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++
 File Contents - Serving files
-^^^^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++
 
 To return the actual contents (raw bytes) of a file (Only files can be served, not folders):
 
@@ -76,3 +83,49 @@ Query Parameters
 
 :startByte: integer - Start at byte N of the file
 :count: integer - Return this number of bytes after startByte
+:zip: boolean - Zip the contents of the folder
+
+Header Parameters
+
+:more: integer - Return 1 KB chunks of UTF-8 encoded text from a file starting after page *more*.  This call can be used to
+page through a text based file. Note that if the contents of the file are not textual (such as an image file or other binary
+format) the output will be bizarre.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^
+File Permissions
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Permissions model - Only the system *owner* may grant or revoke permissions on a storage system. The
+Tapis
+
+
+++++++++++++++++++
+Grant permissions
+++++++++++++++++++
+
+
+^^^^^^^^^^^^^^^^^^^^^^^
+Transfers
+^^^^^^^^^^^^^^^^^^^^^^^
+
+File transfers are used to move data between different storage systems, and also for bulk data operations that are too
+large for the REST api to perform. Transfers occur *asynchronously*, and are parallelized where possible to increase
+performance. As such, the order in which the files are transferred to the target system is somewhat arbitrary.
+
+When a transfer is initiated, a "Bill of materials" is created that creates a record of all the files on the target
+system that are to be transferred. Unless otherwise specified, all files in the bill of materials must successfully transfer
+for the overall transfer to be completed successfully. A transfer task has a STATUS which is updated as the transfer
+progresses. The states possible for a transfer are:
+
+ACCEPTED - The initial request has been processed and saved.
+IN_PROGRESS - The bill of materials has been created and transfers are either in flight or awaiting resources to begin
+FAILED - The transfer failed. There are many reasons
+COMPLETED
+
+++++++++++++++++++
+Create a transfer
+++++++++++++++++++
+
+
+
