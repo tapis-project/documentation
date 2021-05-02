@@ -3,9 +3,8 @@
 =======================================
 Applications
 =======================================
-**WORK IN PROGRESS**
 
-In order to run a job on a system you will need to create or have access to a Tapis *application*.
+In order to run a job on a system you will need to create or have access to a Tapis **application**.
 
 -----------------
 Overview
@@ -13,7 +12,7 @@ Overview
 A Tapis application represents all the information required to run a Tapis job on a Tapis system and produce useful
 results. Each application is versioned and is associated with a specific tenant and owned by a specific user who has
 special privileges for the application. In order to support this purpose an application definition includes information
-which allows the Jobs service to:
+which allows the *Jobs* service to:
 
 * Stage input prior to launching the application
 * Launch the application
@@ -33,12 +32,12 @@ Application Definition Creation and Validation in a Portal or Gateway
 As discussed above most of the information in an application definition is in place in order to allow Tapis to stage
 input, execute and archive output for an application. In addition, an application definition may include information to
 facilitate portal and gateway developers. This information is in the form of metadata that can be associated with the
-file inputs and the various collections of arguments. The collections are contained in the ParameterSet, please see the
-table below. The collections include the appArgs, containerArgs and schedulerOptions. The metadata for each argument
-includes attributes for metaName, metaDescription, metaRequired, and metaKvPairs (a list of free form key-value pairs).
-The intent of the description is to allow the application designer to document the argument in detail. The free form
-key-value pairs allow for specifying various validation requirements, such as argument type, maximum value or length,
-minimum value or length, etc.
+file inputs and the various collections of arguments. The collections are contained in the ``ParameterSet``, please see
+the table below. The collections include the ``appArgs``, ``containerArgs`` and ``schedulerOptions``. The metadata for
+each argument includes attributes for ``metaName``, ``metaDescription``, ``metaRequired``, and ``metaKvPairs`` (a list
+of free form key-value pairs). The intent of the ``metaDescription`` is to allow the application designer to document
+the argument in detail. The free form key-value pairs allow for specifying various validation requirements, such as
+argument type, maximum value or length, minimum value or length, etc.
 
 -----------------
 Model
@@ -62,13 +61,15 @@ Owner
 Enabled flag
   Indicates if application is currently considered active and available for use. Default is true.
 Containerized flag
-  Indicates if application has been fully containerized. Default is true.
+  Indicates if application has been fully containerized.
+.. note::
+  NOTE: Currently only containerized applications are supported
 
 Versioned Attributes
 ~~~~~~~~~~~~~~~~~~~~
 
 Version
-  Applications are expected to evolve over time. Id + version must be unique within a tenant.
+  Applications are expected to evolve over time. ``Id`` + ``version`` must be unique within a tenant.
 Description
   An optional more verbose description for the application.
 Runtime
@@ -76,7 +77,7 @@ Runtime
 Runtime version
   Runtime version to be used when executing the application.
 Container image
-  Reference to be used when running the container image. Required if *containerized* is true.
+  Reference to be used when running the container image. Required if ``containerized`` is true.
 Interactive flag
   Indicates if the application is interactive. Default is false.
 Max jobs
@@ -98,14 +99,14 @@ Job related attributes
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-When creating a application the required attributes are: *id*, *version*, *appType* and *containerImage*.
+When creating a application the required attributes are: ``id``, ``version``, ``appType`` and ``containerImage``.
 Depending on the type of application and specific values for certain attributes there are other requirements.
 
 The restrictions are:
 
-* If *dynamicExecSystem* is true then *execSystemConstraints* must be specified.
-* If *dynamicExecSystem* is false then *execSystemId* must be specified.
-* If *archiveSystemId* is specified then *archiveSystemDir* must be specified.
+* If ``dynamicExecSystem`` is true then ``execSystemConstraints`` must be specified.
+* If ``dynamicExecSystem`` is false then ``execSystemId`` must be specified.
+* If ``archiveSystemId`` is specified then ``archiveSystemDir`` must be specified.
 
 --------------------------------
 Getting Started
@@ -134,7 +135,10 @@ Create a local file named ``app_sample.json`` with json similar to the following
     }
   }
 
-where <userid> is replaced with your user name and *execSystemId* must already exist.
+where <userid> is replaced with your user name.
+
+.. note::
+  ``execSystemId`` must reference a system that exists and has ``canExec`` set to true.
 
 Using PySDK:
 
@@ -167,30 +171,70 @@ Using PySDK:
 
 Using CURL::
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps/tacc-sample-app-<userid>?pretty=true
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps/tacc-sample-app-<userid>
 
 The response should look similar to the following::
 
  {
-    "message": "TAPIS_FOUND App found: tacc-sample-app-<userid>",
     "result": {
-        "?????????????????????": "???????",
-        "description": "??????????",
-        "enabled": true,
+        "tenant": "dev",
         "id": "tacc-sample-app-<userid>",
-        "notes": {},
-        "owner": "<userid>",
-        "refImportId": null,
-        "seqId": 2,
+        "version": "0.1",
+        "description": "My sample application",
         "appType": "FORK",
+        "owner": "<userid>",
+        "enabled": true,
+        "containerized": true,
+        "runtime": "DOCKER",
+        "runtimeVersion": null,
+        "runtimeOptions": [],
+        "containerImage": "docker.io/hello-world:latest",
+        "maxJobs": 0,
+        "maxJobsPerUser": 0,
+        "strictFileInputs": false,
+        "jobAttributes": {
+            "description": "default job description",
+            "dynamicExecSystem": false,
+            "execSystemConstraints": [],
+            "execSystemId": "execsystem1",
+            "execSystemExecDir": null,
+            "execSystemInputDir": null,
+            "execSystemOutputDir": null,
+            "execSystemLogicalQueue": null,
+            "archiveSystemId": null,
+            "archiveSystemDir": null,
+            "archiveOnAppError": false,
+            "parameterSet": {
+                "appArgs": [],
+                "containerArgs": [],
+                "schedulerOptions": [],
+                "envVariables": [],
+                "archiveFilter": {
+                    "includes": [],
+                    "excludes": [],
+                    "includeLaunchFiles": true
+                }
+            },
+            "fileInputDefinitions": [],
+            "nodeCount": 1,
+            "coresPerNode": 1,
+            "memoryMB": 100,
+            "maxMinutes": 10,
+            "subscriptions": [],
+            "tags": []
+        },
         "tags": [],
-        "tenant": "dev"
+        "notes": {},
+        "uuid": "40a60a11-41fe-45ea-8674-d2cfe04992f6",
+        "deleted": false,
+        "created": "2021-04-22T21:30:10.590999Z",
+        "updated": "2021-04-22T21:30:10.590999Z"
     },
     "status": "success",
-    "version": "0.0.1"
+    "message": "TAPIS_FOUND App found: tacc-sample-app-<userid>",
+    "version": "0.0.1-SNAPSHOT",
+    "metadata": null
  }
-
-TBD Note that TBD .
 
 Retrieving details for all applications
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -208,7 +252,7 @@ Using PySDK:
 
 Using CURL::
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps?pretty=true
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps?select=allAttributes
 
 The response should contain a list of items similar to the single listing shown above.
 
@@ -220,6 +264,7 @@ Depending on the type of application and specific values for certain attributes 
 The restrictions are:
 
 * If *dynamicExecSystem* is true then *execSystemConstraints* is required.
+* If *dynamicExecSystem* is false then *execSystemId* is required.
 * If *archiveSystemId* is specified then *archiveSystemDir* is required.
 * If *appType* is FORK then the following attributes may not be specified: *maxJobs*, *maxJobsPerUser*, *nodeCount*,
   *coresPerNode*, *memoryMB*, *maxMinutes*.
@@ -227,7 +272,7 @@ The restrictions are:
 ------------------
 Version
 ------------------
-Versioning scheme is at the discretion of the application author. The combination of tenant+id+version uniquely
+Versioning scheme is at the discretion of the application author. The combination of ``tenant+id+version`` uniquely
 identifies an application in the Tapis environment. It is recommended that a two or three level form of
 semantic versioning be used. The fully qualified application reference within a tenant is constructed by appending
 a hyphen to the name followed by the version string. For example, the first two versions of an application might
@@ -242,13 +287,8 @@ An application that has been containerized is one that can be executed using a s
 container runtime command and provide support for making the input and output directories available to the container
 when running the container image.
 
------------------------------
-Non-containerized Application
------------------------------
-An application that has not yet been containerized can still be run via Tapis but it will most likely be less portable.
-When the flag *containerized* is set to false then the *command* and *execCodes* attributes must be specified. Tapis
-will stage the *execCodes* files to *execSystemExecDir* and use *command* to launch the application. Note that command
-must be available after staging of *execCodes*.
+.. note::
+  NOTE: Currently only containerized applications are supported
 
 ------------------------------
 Directory Semantics and Macros
@@ -282,7 +322,7 @@ still be listed. This indicates access has been granted via another role.
 
 Permissions are specified as either ``*`` for all permissions or some combination of the
 following specific permissions: ``("READ","MODIFY","EXECUTE")``. Specifying permissions in all
-lower case is also allowed.
+lower case is also allowed. Having ``MODIFY`` implies ``READ``.
 
 -----------------
 Deletion
@@ -334,13 +374,6 @@ Table of Attributes
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | isInteractive       | boolean        | FALSE                | - Indicates if application is interactive. Default is FALSE.                         |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| command             | String         | runMyApp.sh          | - Primary command to execute when running a non-containerized application.           |
-|                     |                |                      | - Must be available after staging of *execCodes*.                                    |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| execCodes           | [FileInput]    |                      | - Collection of binary executable and script files that must be in place.            |
-|                     |                |                      | - Must be available after staging of *execCodes*.                                    |
-|                     |                |                      | - See table below.                                                                   |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | maxJobs             | int            | 10                   | - Max number of jobs that can be running for this app on an exec system.             |
 |                     |                |                      | - Execution system may also limit the number of jobs on the system.                  |
 |                     |                |                      | - Set to -1 for unlimited. Default is unlimited.                                     |
@@ -358,9 +391,9 @@ Table of Attributes
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | tags                | [String]       |                      | - List of tags as simple strings.                                                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| notes               | String         | "{}"                 | - Simple metadata in the form of a Json object.                                      |
+| notes               | String         |{"project": "myproj"} | - Simple metadata in the form of a Json object.                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| seqId               | int            | 20281                | - Auto-generated by service.                                                         |
+| uuid                | UUID           | 20281                | - Auto-generated by service.                                                         |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | created             | Timestamp      | 2020-06-19T15:10:43Z | - When the app was created. Maintained by service.                                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -486,6 +519,8 @@ Arg Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | metaName            | String         |                      | - Identifying label associated with the argument.                                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| metaDescription     | String         |                      | -                                                                                    |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | metaRequired        | boolean        |                      | - Indicates if input must be present prior to execution of the application.          |
 |                     |                |                      | - Default is FALSE.                                                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -504,7 +539,11 @@ FileInput Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | targetPath          | String         |                      | - Target path used by the Jobs service when transferring files.                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| inPlace             | boolean        |                      | - Default is FALSE.                                                                  |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | metaName            | String         |                      | - Identifying label associated with the input. Typically used during a job request.  |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| metaDescription     | String         |                      | -                                                                                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | metaRequired        | boolean        |                      | - Indicates if input must be present prior to execution of the application.          |
 |                     |                |                      | - Default is FALSE.                                                                  |
@@ -516,10 +555,8 @@ FileInput Table
 -----------------------
 Searching
 -----------------------
-The service provides a way for users to search for applications based on a list of search conditions.
-
-.. comment The service provides a way for users to search for applications based on a list of search conditions and to filter
-.. comment (i.e. select) which attributes are returned with the results. Searching and filtering can be combined.
+The service provides a way for users to search for applications based on a list of search conditions provided either as query
+parameters for a GET call or a list of conditions in a request body for a POST call to a dedicated search endpoint.
 
 Search using GET
 ~~~~~~~~~~~~~~~~
@@ -537,8 +574,8 @@ Supported operators: ``eq`` ``neq`` ``gt`` ``gte`` ``lt`` ``lte`` ``in`` ``nin``
 For more information on search operators, handling of timestamps, lists, quoting, escaping and other general information on
 search please see <TBD>.
 
-Example CURL command to search for applications that have ``Test`` in the id, are of type ``FORK`` and
-allow for *maxJobs* greater than ``5``::
+Example CURL command to search for applications that have ``Test`` in the id, are of type FORK and allow for *maxJobs*
+greater than ``5``::
 
  $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps?search="(id.like.*Test*)~(app_type.eq.FORK)~(max_jobs.gt.5)"
 
@@ -548,9 +585,14 @@ Notes:
 * For the ``between`` and ``nbetween`` operators the value must be a two item comma separated list of unquoted values.
 * If there is only one condition the surrounding parentheses are optional.
 * In a shell environment the character ``&`` separating query parameters must be escaped with a backslash.
-* In a shell environment the query value must be surrounded by double quotes and the following characters must be escaped with a backslash in order to be properly interpreted by the shell:  ``"`` ``\`` `````
+* In a shell environment the query value must be surrounded by double quotes and the following characters must be escaped with a backslash in order to be properly interpreted by the shell:
+
+  * ``"`` ``\`` `````
+
 * Attribute names may be specified using Camel Case or Snake Case.
-* TBD Following complex attributes not supported when searching: ``TBD1`` ``TBD2`` ``TBD3``
+* Following complex attributes not supported when searching:
+
+  * ``jobAttributes`` ``tags``  ``notes``
 
 
 Dedicated Search Endpoint
@@ -574,10 +616,10 @@ Supported operators: ``eq`` ``neq`` ``gt`` ``gte`` ``lt`` ``lte`` ``in`` ``nin``
 For more information on search operators, handling of timestamps, lists, quoting, escaping and other general information on
 search please see <TBD>.
 
-Example CURL command to search for applications that have ``Test`` in the id, are of type ``FORK`` and
-allow for *maxJobs* greater than ``5``::
+Example CURL command to search for applications that have ``Test`` in the id, are of type FORK and allow for *maxJobs*
+greater than ``5``::
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps/search/apps?name.like=*Test*\&enabled.eq=true\&app_type.eq=FORK
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps/search/apps?id.like=*Test*\&app_type.eq=FORK\&max_jobs.gt=5
 
 Notes:
 
@@ -585,7 +627,9 @@ Notes:
 * For the ``between`` and ``nbetween`` operators the value must be a two item comma separated list of unquoted values.
 * In a shell environment the character ``&`` separating query parameters must be escaped with a backslash.
 * Attribute names may be specified using Camel Case or Snake Case.
-* TBD Following complex attributes not supported when searching: ``TBD1`` ``TBD2``
+* Following complex attributes not supported when searching:
+
+  * ``jobAttributes`` ``tags``  ``notes``
 
 Search using POST on Dedicated Endpoint
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -595,21 +639,21 @@ For these requests the request body must contain json with a top level property 
 an SQL-like syntax. The array of strings are concatenated to form the full search query.
 The full query must be in the form of an SQL-like ``WHERE`` clause. Note that not all SQL features are supported.
 
-For example, to search for applications that are owned by ``jdoe`` and of type ``BATCH`` or owned by
-``jsmith`` and allow for *maxJobs* greater than ``5`` create a local file named ``apps_search.json``
+For example, to search for apps that are owned by ``jdoe`` and of type ``FORK`` or owned by
+``jsmith`` and allow for *maxJobs* less than ``5`` create a local file named ``app_search.json``
 with following json::
 
   {
     "search":
       [
-        "(owner = 'jdoe' AND app_type = 'BATCH') OR",
-        "(owner = 'jsmith' AND max_jobs > 5)"
+        "(owner = 'jdoe' AND app_type = 'FORK') OR",
+        "(owner = 'jsmith' AND max_jobs < 5)"
       ]
   }
 
 To execute the search use a CURL command similar to the following::
 
-   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps/search/apps -d @apps_search.json
+   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps/search/apps -d @app_search.json
 
 Notes:
 
@@ -654,11 +698,168 @@ Map of SQL operators to Tapis operators
 | NOT IN         | nin            |
 +----------------+----------------+
 
+-----------------------
+Sort, Limit and Select
+-----------------------
+When a list of applications is being retrieved the service provides for sorting and limiting the results. When retrieving
+either a list of resources or a single resource the service also provides a way to *select* which fields (i.e.
+attributes) are included in the results. Sorting, limiting and attribute selection are supported using query parameters.
 
-Filter using GET
-~~~~~~~~~~~~~~~~
-TBD
+Selecting
+~~~~~~~~~
+When retrieving applications the fields (i.e. attributes) to be returned may be specified as a comma separated list using
+a query parameter named ``select``. Attribute names may be given using Camel Case or Snake Case.
 
+Notes:
+
+ * Special select keywords are supported: ``allAttributes`` and ``summaryAttributes``
+ * Summary attributes include:
+
+   * ``id``, ``version``, ``appType``, ``owner``
+
+ * By default all attributes are returned when retrieving a single resource via the endpoint apps/<app_id>.
+ * By default summary attributes are returned when retrieving a list of applications.
+ * Specifying nested attributes is not supported.
+ * The attribute ``id`` is always returned.
+
+For example, to return only the attributes ``version`` and ``containerImage`` the
+CURL command would look like this::
+
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps?select=version,containerImage
+
+The response should look similar to the following::
+
+ {
+    "result": [
+        {
+            "id": "TestApp1",
+            "version": "0.0.1",
+            "containerImage": "containterimage1"
+        },
+        {
+            "id": "JobApp1",
+            "version": "0.0.1",
+            "containerImage": "containterimage1"
+        },
+        {
+            "id": "JobAppWithInput",
+            "version": "0.0.1",
+            "containerImage": "containterimage1"
+        },
+        {
+            "id": "SleepSeconds",
+            "version": "0.0.1",
+            "containerImage": "tapis/testapps:main"
+        }
+    ],
+    "status": "success",
+    "message": "TAPIS_FOUND Apps found: 11 applications",
+    "version": "0.0.1-SNAPSHOT",
+    "metadata": {
+        "recordCount": 4,
+        "recordLimit": 100,
+        "recordsSkipped": 0,
+        "orderBy": null,
+        "startAfter": null,
+        "totalCount": -1
+    }
+ }
+
+
+Sorting
+~~~~~~~
+The query parameter for sorting is named ``orderBy`` and the value is the attribute name to sort on with an optional
+sort direction. The general format is ``<attribute_name>(<dir>)``. The direction may be ``asc`` for ascending or
+``desc`` for descending. The default direction is ascending.
+
+Examples:
+
+ * orderBy=id
+ * orderBy=id(asc)
+ * orderBy=name(desc),created
+ * orderBy=id(asc),created(desc)
+
+Limiting
+~~~~~~~~
+Additional query parameters may be used in order to limit the number and starting point for results. This is useful for
+implementing paging. The query parameters are:
+
+ * ``limit`` - Limit number of items returned. For example limit=10.
+
+   * Use 0 or less for unlimited.
+   * Default is service dependent.
+
+ * ``skip`` - Number of items to skip. For example skip=10.
+
+   * May not be used with startAfter.
+   * Default is 0.
+
+ * ``startAfter`` - Where to start when sorting. For example limit=10&orderBy=id(asc),created(desc)&startAfter=101
+
+   * May not be used with ``skip``.
+   * Must also specify ``orderBy``.
+   * The value of ``startAfter`` applies to the major ``orderBy`` field.
+   * Condition is context dependent. For ascending the condition is value > ``startAfter`` and for descending the condition is value < ``startAfter``.
+
+When implementing paging it is recommend to always use ``orderBy`` and when possible use ``limit+startAfter`` rather
+than ``limit+skip``. Sorting should always be included since returned results are not guaranteed to be in the same order
+for each call. The combination of ``limit+startAfter`` is preferred because ``limit+skip`` is more likely to result in
+inconsistent results as records are added and removed. Using ``limit+startAfter`` works best when the attribute has a
+natural sequential ordering such as when an attribute represents a timestamp or a sequential ID.
+
+---------------
+Tapis Responses
+---------------
+For requests that return a list of resources the response result object will contain the list of resource records that
+match the user's query and the response metadata object will contain information related to sorting and limiting.
+
+The metadata object will contain the following information:
+
+ * ``recordCount`` - Actual number of records returned.
+ * ``recordLimit`` - The limit query parameter specified in the request. -1 if query parameter was not specified.
+ * ``recordsSkipped`` - The skip query parameter specified in the request. -1 if query parameter was not specified.
+ * ``orderBy`` - The orderBy query parameter specified in the request. Empty string if query parameter was not specified.
+ * ``startAfter`` - The startAfter query parameter specified in the request. Empty string if query parameter was not specified.
+ * ``totalCount`` - Total number of records that would have been returned without a limit query parameter being imposed. -1 if total count was not computed.
+
+For performance reasons computation of ``totalCount`` is only determined on demand. This is controlled by the boolean
+query parameter ``computeTotal``. By default ``computeTotal`` is false.
+
+Example query and response:
+
+Query::
+
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps?limit=2&orderBy=id(desc)
+
+Response::
+
+ {
+    "result": [
+        {
+            "id": "TestApp1",
+            "version": "0.0.1",
+            "appType": "BATCH",
+            "owner": "testuser2"
+        },
+        {
+            "id": "tacc-sample-app",
+            "version": "0.1",
+            "appType": "FORK",
+            "owner": "testuser2"
+        }
+    ],
+    "status": "success",
+    "message": "TAPIS_FOUND Apps found: 2 applications",
+    "version": "0.0.1-SNAPSHOT",
+    "metadata": {
+        "recordCount": 2,
+        "recordLimit": 2,
+        "recordsSkipped": 0,
+        "orderBy": "id(desc)",
+        "startAfter": null,
+        "totalCount": -1
+    }
+  }
 
 Heading 2
 ~~~~~~~~~
