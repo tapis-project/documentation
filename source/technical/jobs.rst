@@ -604,11 +604,11 @@ To launch a Docker container, the Jobs service will SSH to the target host and i
 #. image:  (required) user-specified docker application image  
 #. application arguments:  (optional) user-specified command line arguments passed to the application
 
-The docker run-command_ options *--cidfile*, *-d*, *-e*, *--env*, *--name*, *--rm*, and *--user* are reserved for use by Tapis.  The Jobs service implements these calling conventions:
+The docker run-command_ options *--cidfile*, *-d*, *-e*, *--env*, *--name*, *--rm*, and *--user* are reserved for use by Tapis.  Most other Docker options are available to the user.  The Jobs service implements these calling conventions:
 
-#. The container name is set to the job uuid.
+#. The container name is set to the job UUID.
 #. The container's user is set to the user ID used to establish the SSH session.
-#. The container ID file is specified as <jobUUID>.cid in the execSystemExecDir, i.e., the directory from which the container is launched.
+#. The container ID file is specified as *<jobUUID>.cid* in the execSystemExecDir, i.e., the directory from which the container is launched.
 #. The *-rm* option is always set to remove the container after execution. 
 
 Volume Mounts
@@ -646,7 +646,7 @@ where:
 #. application arguments:  (optional) user-specified command line arguments passed to the application
 #. job uuid:  the job uuid used to name the instance (always set by Jobs)
 
-The singularity options *--pidfile*, *--env* and *--name* are reserved for use by Tapis.  Users specify the environment variables to be injected into their application containers via the `envVariables`_ parameter.  ost other singularity options are available to users.
+The singularity options *--pidfile*, *--env* and *--name* are reserved for use by Tapis.  Users specify the environment variables to be injected into their application containers via the `envVariables`_ parameter.  Most other singularity options are available to users.
 
 Jobs will then issue *singularity instance list* to obtain the container's process id (PID).  Jobs determines that the application has terminated when the PID is no longer in use by the operating system. 
 
