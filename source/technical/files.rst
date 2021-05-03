@@ -5,7 +5,8 @@ Files
 =====
 
 The files service is the central point of interaction for doing all file operations in the Tapis ecosystem. Users can preform
-file listing, uploading, operations such as move/copy/delete and also transfer files between systems.
+file listing, uploading, operations such as move/copy/delete and also transfer files between systems. All
+Tapis files APIs accept JSON as inputs.
 
 ----------
 Overview
@@ -63,15 +64,42 @@ To upload a new file to the files service, just POST a file to the service. The 
 the location specified in the `{path}` parameter in the request. For example, given the system `my-system`, and you want to
 insert the file in a folder located at `/folderA/folderB/folderC`:
 
+Using the official Tapis Python SDK:
+
+.. code-block:: python
+
+    with open("experiment-results.hd5", "r") as f:
+        t.files.upload("my-system", "/path/to/file", f)
+
+
 Using CURL::
 
  $ curl -H "X-Tapis-Token: $JWT" -F "file=@someFile.txt" https://tacc.tapis.io/v3/files/content/my-system/folderA/folderB/folderC/someFile.txt
 
 Any folders that do not exist in the specified path will automatically be created.
 
-++++++++++++++++++
+++++++++++++++++++++++++
+Create a new directory
+++++++++++++++++++++++++
+
+For S3 storage systems, an empty key is created ending in `/`
+
+Using CURL::
+
+    $ curl -H "X-Tapis-Token: $JWT" -X POST https://tacc.tapis.io/v3/files/content/my-system/
+
+with a JSON body of
+
+::
+
+    {
+        "path": "/path/to/new/directory/"
+    }
+
+
++++++++++++++++++++++++++++++++
 File Contents - Serving files
-++++++++++++++++++
++++++++++++++++++++++++++++++++
 
 To return the actual contents (raw bytes) of a file (Only files can be served, not folders):
 
@@ -97,12 +125,30 @@ File Permissions
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Permissions model - Only the system *owner* may grant or revoke permissions on a storage system. The
-Tapis
+Tapis permissions are also *not* duplicated or otherwise implemented in the underlying storage system.
 
 
 ++++++++++++++++++
 Grant permissions
 ++++++++++++++++++
+
+Lets say our user :code:`aturing` has a storage system with ID :code:`aturing-storage`. Alan wishes to allow his collaborator
+:code:`aeinstein` to view the results of an experiment located at :code:`/experiment1`
+
+.. code-block:: shell
+
+    $ curl -H "X-Tapis-Token: $JWT" -X POST https://tacc.tapis.io/v3/files/perms/aturing-storage/experiment1/
+
+with a JSON body with the following shape:
+
+.. code-block:: json
+
+    {
+        "username": "aeinstein",
+        "permission": "READ"
+    }
+
+
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -121,11 +167,27 @@ progresses. The states possible for a transfer are:
 ACCEPTED - The initial request has been processed and saved.
 IN_PROGRESS - The bill of materials has been created and transfers are either in flight or awaiting resources to begin
 FAILED - The transfer failed. There are many reasons
-COMPLETED
+COMPLETED - The transfer completed successfully, all files have been transferred to the target system
+
+Unauthenticated HTTP endpoints are also possible to use as a source for transfers.
+
+
+
 
 ++++++++++++++++++
 Create a transfer
 ++++++++++++++++++
 
 
+.. code-block:: json
+
+    {
+        "tag": "An optional identifier",
+        "elements": [
+            {
+                "sourceUri": "tapis://source-system/path/to/target/"
+                "destinationUri": "tapis://dest-system/path/to/destination/"
+            }
+        ]
+    }
 
