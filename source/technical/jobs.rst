@@ -587,13 +587,123 @@ Since **ds-exec** mounts the corral root directory, the files staged to corral /
 Container Runtimes
 ==================
 
+The Tapis v3 Jobs service currently supports Docker and Singularity containers run natively (i.e., not run using a batch scheduler like Slurm).  In general, Jobs launches an application's container on a remote system, monitors the container's execution, and captures the application's exit code after it terminates.  Jobs uses SSH to connect to the execution system to issue Docker, Singularity or native operating system commands.
+
+To launch a job, the Jobs service creates a bash script, **tapisjob.sh**, with the runtime-specific commands needed to execute the container.  This script references **tapisjob.env**, a file Jobs creates to pass environment variables to application containers.  Both files are staged in the job's execSystemExecDir and, by default, are archived with job output on the archive system.  See `archiveFilter`_ to override this default behavior, especially if archives will be shared and the scripts pass sensitive information into containers.  
+
 Docker
 ------
+
+To launch a Docker container, the Jobs service will SSH to the target host and issue a command using this template: 
+
+::
+
+   docker run [docker options] image[:tag|@digest] [application args]
+
+#. docker options:  (optional) user-specified arguments passed to docker
+#. image:  (required) user-specified docker application image  
+#. application arguments:  (optional) user-specified command line arguments passed to the application
+
+The docker run-command_ options *--cidfile*, *-d*, *-e*, *--env*, *--name*, *--rm*, and *--user* are reserved for use by Tapis.  Most other Docker options are available to the user.  The Jobs service implements these calling conventions:
+
+#. The container name is set to the job UUID.
+#. The container's user is set to the user ID used to establish the SSH session.
+#. The container ID file is specified as *<jobUUID>.cid* in the execSystemExecDir, i.e., the directory from which the container is launched.
+#. The *-rm* option is always set to remove the container after execution. 
+
+Volume Mounts
+^^^^^^^^^^^^^
+
+In addition to the above conventions, bind_ mounts are used to mount the execution system's standard Tapis directories at the same locations in every application container.
+
+::
+
+   execSystemExecDir   on host is mounted at /TapisExec in the container.  
+   execSystemInputDir  on host is mounted at /TapisInput in the container. 
+   execSystemOutputDir on host is mounted at /TapisOutput in the container.
+
+.. _bind: https://docs.docker.com/storage/bind-mounts/
+.. _run-command: https://docs.docker.com/engine/reference/commandline/run/
 
 Singularity
 -----------
 
-tbd
+Tapis provides two distinct ways to launch a Singularity containers, using *singluarity instance start* or *singularity run*.      
+
+Singularity Start
+^^^^^^^^^^^^^^^^^
+
+Singularity's support for detached processes and services is implemented natively by its instance start_, stop_ and list_ commands.  To launch a container, the Jobs service will SSH to the target host and issue a command using this template:
+
+::
+
+   singularity instance start [singularity options] <image id> [application arguments] <job uuid>
+
+where:
+
+#. singularity options:  (optional) user-specified argument passed to singularity start
+#. image id:  (required) user-specified singularity application image  
+#. application arguments:  (optional) user-specified command line arguments passed to the application
+#. job uuid:  the job uuid used to name the instance (always set by Jobs)
+
+The singularity options *--pidfile*, *--env* and *--name* are reserved for use by Tapis.  Users specify the environment variables to be injected into their application containers via the `envVariables`_ parameter.  Most other singularity options are available to users.
+
+Jobs will then issue *singularity instance list* to obtain the container's process id (PID).  Jobs determines that the application has terminated when the PID is no longer in use by the operating system. 
+
+By convention, Jobs will look for a **tapisjob.exitcode** file in the Job's output directory after containers terminate.  If found, the file should contain only the integer code the application reported when it exited.  If not found, Jobs assumes the application exited normally with a zero exit code.
+
+Finally, Jobs issues a *singularity instance stop <job uuid>* to clean up the singularity runtime environment and terminate all processes associated with the container.  
+
+.. _start: https://sylabs.io/guides/3.7/user-guide/cli/singularity_instance_start.html
+.. _stop: https://sylabs.io/guides/3.7/user-guide/cli/singularity_instance_stop.html
+.. _list: https://sylabs.io/guides/3.7/user-guide/cli/singularity_instance_list.html
+
+Singularity Run
+^^^^^^^^^^^^^^^
+
+Jobs also supports a more do-it-yourself approach to running containers on remote system using singularity run_.  To launch a container, the Jobs service will SSH to the target host and issue a command using this template:
+
+::
+
+   nohup singularity run [singularity options.] <image id> [application arguments] > tapisjob.out 2>&1 &
+
+where:
+
+#. nohup_:  allows the background process to continue running even if the SSH session ends.
+#. singularity options:  (optional) user-specified arguments passed to singularity run.
+#. image id:  (required) user-specified singularity application image.
+#. application arguments:  (optional) user-specified command line arguments passed to the application.
+#. redirection:  stdout and stderr are redirected to **tapisjob.out** in the job's output directory.
+
+The singularity *--env* option is reserved for use by Tapis.  Users specify the environment variables to be injected into their application containers via the `envVariables`_ parameter.  Most other singularity options are available to users.
+
+Jobs will use the PID returned when issuing the background command to monitor the container's execution.  Jobs determines that the application has terminated when the PID is no longer in use by the operating system. 
+
+Jobs uses the same **TapisJob.exitcode** file convention introduced above to attain the application's exit code (if the file exists).
+
+.. _run: https://sylabs.io/guides/3.7/user-guide/cli/singularity_run.html
+.. _nohup: https://en.wikipedia.org/wiki/Nohup
+
+Required Scripts
+^^^^^^^^^^^^^^^^
+
+The Singularity Start and Singularity Run approaches boath allow SSH sessions between Jobs and execution hosts to end without interrupting container execution.  Each approach, however, requires that the application image be appropriately constructed.  Specifically,
+
+::
+
+   Singularity start requires the startscript to be defined in the image.
+   Singularity run requires the runscript to be defined in the image.
+
+Required Termination Order
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Since Jobs monitors container execution by querying the operating system using the PID obtained at launch time, the initially launched program should be the last part of the application to terminate.  The program specified in the image script can spawn any number of processes (and threads), but it should not exit before those processes complete.  
+
+Optional Exit Code Convention
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Applications are not required to support the **TapisJob.exitcode** file convention as described above, but it is the only way in which Jobs can report the application specified exit status to the user.  
+
 
 ------------------------------------------------------------
 
