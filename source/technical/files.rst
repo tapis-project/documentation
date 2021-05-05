@@ -8,25 +8,21 @@ The files service is the central point of interaction for doing all file operati
 file listing, uploading, operations such as move/copy/delete and also transfer files between systems. All
 Tapis files APIs accept JSON as inputs.
 
+Currently the files service includes support for S3 and SSH type file systems. Other storage
+systems like IRODS will be included in future releases.
+
 ----------
 Overview
 ----------
 
 All file operations act upon *Storage* systems. If you are unfamiliar with the Systems service, please refer to the
-:ref:`systems` section.
+systems_ section
 
-
------------------
-Getting Started
------------------
-
-Let's assume that you have a system defined in your tenant with an ID of **my-system**
+.. _systems:
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Basic File Operations
 ^^^^^^^^^^^^^^^^^^^^^^^
-
-
 
 ++++++++++++++++++
 File Listings
@@ -38,25 +34,101 @@ Using the official Tapis Python SDK:
 
 .. code-block:: python
 
- t.files.listing("/")
+    t.files.listing("/")
 
-Using CURL::
+Or using curl:
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/files/ops/my-system/
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/files/ops/my-system/
 
 And to list a sub-directory in the system, just add the path to the request:
 
-Using CURL::
+Using CURL
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/files/ops/my-system/subDir1/subDir2/subDir3/
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/files/ops/aturing-storage/subDir1/subDir2/subDir3/
 
 Query Parameters
 
 :limit: integer - Max number of results to return, default of 1000
 :offset: integer - Skip the first N listings
 
+The JSON response of the API will look something like this:
 
+.. code-block:: json
+
+  {
+    "status": "success",
+    "message": "ok",
+    "result": [
+        {
+            "mimeType": "text/plain",
+            "type": "file",
+            "owner": "1003",
+            "group": "1003",
+            "nativePermissions": "drwxrwxr-x",
+            "uri": "tapis://dev/aturing-storage/file1.txt",
+            "lastModified": "2021-04-29T16:55:57Z",
+            "name": "file1.txt",
+            "path": "file1.txt",
+            "size": 313
+        },
+        {
+            "mimeType": "text/plain",
+            "type": "file",
+            "owner": "1003",
+            "group": "1003",
+            "nativePermissions": "-rw-rw-r--",
+            "uri": "tapis://dev/aturing-storage/file2.txt",
+            "lastModified": "2020-12-17T22:46:29Z",
+            "name": "file2.txt",
+            "path": "file2.txt",
+            "size": 21
+        }
+    ],
+    "version": "1.1-84a31617",
+    "metadata": {}
+}
+
+
+Move/Copy
 ++++++++++++++++++
+
+To move or copy a file or directory using the files service, make a PUT request with
+the path to the current location of the file or folder.
+
+For example, to copy a file located at `/file1.txt` to `/subdir/file1.txt`
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" -X PUT -d @body.json "https://tacc.tapis.io/v3/files/content/aturing-storage/file1.txt"
+
+with a JSON body of
+
+.. code-block:: json
+
+    {
+        "operation": "COPY",
+        "newPath": "/subdir/file1.txt"
+    }
+
+
+Delete
+++++++++++++++++++
+
+To delete a file or folder, just iss a DELETE request on the path to the resource
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" -X DELETE "https://tacc.tapis.io/v3/files/ops/aturing-storage/file1.txt"
+
+The request above would delete :code:`file1.txt`
+
+
+
+
 File Uploads
 ++++++++++++++++++
 
@@ -69,28 +141,28 @@ Using the official Tapis Python SDK:
 .. code-block:: python
 
     with open("experiment-results.hd5", "r") as f:
-        t.files.upload("my-system", "/path/to/file", f)
+        t.files.upload("my-system", "/folderA/folderB/folderC/someFile.txt", f)
 
 
-Using CURL::
 
- $ curl -H "X-Tapis-Token: $JWT" -F "file=@someFile.txt" https://tacc.tapis.io/v3/files/content/my-system/folderA/folderB/folderC/someFile.txt
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" -F "file=@someFile.txt" https://tacc.tapis.io/v3/files/content/my-system/folderA/folderB/folderC/someFile.txt
 
 Any folders that do not exist in the specified path will automatically be created.
 
-++++++++++++++++++++++++
 Create a new directory
 ++++++++++++++++++++++++
 
 For S3 storage systems, an empty key is created ending in `/`
 
-Using CURL::
+.. code-block:: shell
 
-    $ curl -H "X-Tapis-Token: $JWT" -X POST https://tacc.tapis.io/v3/files/content/my-system/
+    $ curl -H "X-Tapis-Token: $JWT" -d @body.json -X POST https://tacc.tapis.io/v3/files/content/my-system/
 
 with a JSON body of
 
-::
+.. code-block:: json
 
     {
         "path": "/path/to/new/directory/"
@@ -103,9 +175,9 @@ File Contents - Serving files
 
 To return the actual contents (raw bytes) of a file (Only files can be served, not folders):
 
-Using CURL::
+.. code-block:: shell
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/files/content/my-system/image.jpg > image.jpg
+    $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/files/content/my-system/image.jpg > image.jpg
 
 Query Parameters
 
@@ -135,9 +207,10 @@ Grant permissions
 Lets say our user :code:`aturing` has a storage system with ID :code:`aturing-storage`. Alan wishes to allow his collaborator
 :code:`aeinstein` to view the results of an experiment located at :code:`/experiment1`
 
+
 .. code-block:: shell
 
-    $ curl -H "X-Tapis-Token: $JWT" -X POST https://tacc.tapis.io/v3/files/perms/aturing-storage/experiment1/
+    curl -H "X-Tapis-Token: $JWT" -d @body.json -X POST https://tacc.tapis.io/v3/files/perms/aturing-storage/experiment1/
 
 with a JSON body with the following shape:
 
@@ -147,6 +220,32 @@ with a JSON body with the following shape:
         "username": "aeinstein",
         "permission": "READ"
     }
+
+Other users can also be granted permission to write to the system by granting the :code:`MODIFY` permission. The JSON body would then
+be:
+
+.. code-block:: json
+
+    {
+        "username": "aeinstein",
+        "permission": "MODIFY"
+    }
+
+
+
+
+++++++++++++++++++
+Revoke permissions
+++++++++++++++++++
+
+Our user :code:`aturing` now wished to revoke his former collaborators access to the folder he shared above. He can just
+issue a DELETE request on the path that was shared and specify the username to revoke access:
+
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" -X DELETE https://tacc.tapis.io/v3/files/perms/aturing-storage/experiment1?username=aeinstein
+
 
 
 
@@ -159,6 +258,11 @@ File transfers are used to move data between different storage systems, and also
 large for the REST api to perform. Transfers occur *asynchronously*, and are parallelized where possible to increase
 performance. As such, the order in which the files are transferred to the target system is somewhat arbitrary.
 
+Notice in the above examples that the Files services works identically regardless of whether
+the source is a file or directory. If the source is a file, it will copy the file.
+If the source is a directory, it will recursively process the contents until
+everything has been copied.
+
 When a transfer is initiated, a "Bill of materials" is created that creates a record of all the files on the target
 system that are to be transferred. Unless otherwise specified, all files in the bill of materials must successfully transfer
 for the overall transfer to be completed successfully. A transfer task has a STATUS which is updated as the transfer
@@ -169,15 +273,21 @@ IN_PROGRESS - The bill of materials has been created and transfers are either in
 FAILED - The transfer failed. There are many reasons
 COMPLETED - The transfer completed successfully, all files have been transferred to the target system
 
-Unauthenticated HTTP endpoints are also possible to use as a source for transfers.
-
-
+Unauthenticated HTTP endpoints are also possible to use as a source for transfers. This
+method can be utilized to include outputs from other APIs into Tapis jobs.
 
 
 ++++++++++++++++++
-Create a transfer
+Creating Transfers
 ++++++++++++++++++
 
+Lets say our user :code:`aturing` needs to transfer data between two systems that are registered in tapis. The source system
+has an id of :code:`aturing-storage` with the results of an experiment located in directory :code:`/experiments/experiment-1/`
+that should be transferred to a system with id :code:`aturing-compute`
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" -X POST -d @body.json https://tacc.tapis.io/v3/files/tranfers
 
 .. code-block:: json
 
@@ -185,9 +295,96 @@ Create a transfer
         "tag": "An optional identifier",
         "elements": [
             {
-                "sourceUri": "tapis://source-system/path/to/target/"
-                "destinationUri": "tapis://dest-system/path/to/destination/"
+                "sourceUri": "tapis://aturing-storage/experiments/experiment-1/",
+                "destinationUri": "tapis://aturing-compute/"
             }
         ]
+    }
+
+The request above will initiate a transfer that copies all files and folders in the :code:`experiment-1` folder on the source
+system to the root directory of the destination system :code:`aturing-compute`
+
+HTTP Inputs
+++++++++++++++++++++++++++
+
+Unauthenticated HTTP endpoints can also be used as a source to a file transfer. This can be useful when, for instance, the inputs for
+a job to run are from a separate web service, or perhaps stored in an S3 bucket on AWS.
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" -X POST -d @body.json https://tacc.tapis.io/v3/files/tranfers
+
+.. code-block:: json
+
+    {
+        "tag": "An optional identifier",
+        "elements": [
+            {
+                "sourceUri": "https://some-web-application.io/calculations/12345/",
+                "destinationUri": "tapis://aturing-compute/inputs.csv"
+            }
+        ]
+    }
+
+The request above will place the output of the source URI into a file called  :code:`inputs.csv` in the
+:code:`aturing-compute` storage system.
+
+
+++++++++++++++++++++++++++
+Get transfer information
+++++++++++++++++++++++++++
+
+To retrieve information about a transfer such as its status, bytes transferred, etc
+just make a GET request to the transfers API with the UUID of the transfer.
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT"  https://tacc.tapis.io/v3/files/tranfers/{UUID}
+
+
+The JSON response should look something like :
+
+.. code-block:: json
+
+    {
+        "status": "success",
+        "message": "ok",
+        "result": {
+            "id": 1,
+            "username": "aturing",
+            "tenantId": "tacc",
+            "tag": "some tag",
+            "uuid": "b2dcf71a-bb7b-409a-8c01-1bbs97e749fb",
+            "status": "COMPLETED",
+            "parentTasks": [
+                {
+                    "id": 1,
+                    "tenantId": "tacc",
+                    "username": "aturing",
+                    "sourceURI": "tapis://sourceSystem/file1.txt",
+                    "destinationURI": "tapis://destSystem/folderA/",
+                    "totalBytes": 100000,
+                    "bytesTransferred": 100000,
+                    "taskId": 1,
+                    "children": null,
+                    "errorMessage": null,
+                    "uuid": "8fdccda6-a504-4ddf-9464-7b22sa66bcc4",
+                    "status": "COMPLETED",
+                    "created": "2021-04-22T14:21:58.933851Z",
+                    "startTime": "2021-04-22T14:21:59.862356Z",
+                    "endTime": "2021-04-22T14:22:09.389847Z"
+                }
+            ],
+            "estimatedTotalBytes": 100000,
+            "totalBytesTransferred": 100000,
+            "totalTransfers": 1,
+            "completeTransfers": 1,
+            "errorMessage": null,
+            "created": "2021-04-22T14:21:58.933851Z",
+            "startTime": "2021-04-22T14:21:59.838928Z",
+            "endTime": "2021-04-22T14:22:09.376740Z"
+        },
+        "version": "1.1-094fd38d",
+        "metadata": {}
     }
 
