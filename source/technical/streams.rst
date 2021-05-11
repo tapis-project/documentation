@@ -1213,7 +1213,7 @@ The response will look something like the following:
 Alerts
 -----------
 
-**List Alerts**:
+**List Alerts**
 ^^^^^^^^^^^^^^^^^^^^^
 
 With PySDK
@@ -1260,3 +1260,254 @@ The response will look something like the following:
                 num_of_alerts: 3
             ]
 |
+
+Roles
+-----------
+Streams service uses roles to manage permissions on the streams resources. CRUD operations on Streams resources such as Sites, Instruments and  Variables can be performed by authorized users having a specific role on the project. Streams service supports three roles: *admin*, *manager* and *user*.
+
+**Admin** has elevated privileges. An *admin* can create, update, or delete any of the Streams resources.
+**Manager** can perform all read and write operations on Streams resources, with an exception of deleting them.
+**User** can only perform read operations on the resources and are not authorized to write or delete them.
+
+Table 1 below summarizes the authorized actions with respect to user roles.
+
++---------------------+-------------------------------------+
+| Role                |   Request permitted                 |
++=====================+================+====================+
+| admin               |  GET, PUT, POST, DELETE             |
+|                     |                                     |
++---------------------+-------------------------------------+
+| manager             |  GET, PUT, POST                     |
+|                     |                                     |
++---------------------+-------------------------------------+
+| user                |  GET                                |
+|                     |                                     |
++---------------------+-------------------------------------+
+
+When a user creates project, channel or template, an admin role of the form: streams_projects_$project-oid_admin, streams_channels_$channel-oid_admin or streams_templates_$template-oid_admin respectively is created in the Security Kernel and is assigned to the requesting user.
+Admins can further grant roles such as **manager** or **user** for other users listed on the project. To perform CRUD operations on Projects, Sites, Instruments and Variables, users must have appropriate role on the Project.
+To perform CRUD operation on either Channels and Templates, users must have role associated with each of the resources.
+
+
+**List Roles**
+^^^^^^^^^^^^^^^^^^^^^
+To get the list of user roles on project, channel or template, the requesting user(jwt user) must provide following three parameters:
+
+ 1) **resource_type** : project/channel/template
+
+ 2) **resource_id**: project_id/channel_id/template_id
+
+ 3) **user**: list role for this user is checked, the requesting user
+
+
+With PySDK
+
+.. code-block:: plaintext
+
+        $ t.streams.list_roles(resource_id='', user='',resource_type='project')
+        $ t.streams.list_roles(resource_id='', user='',resource_type='channel')
+        $ t.streams.list_roles(resource_id='', user='',resource_type='template')
+
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -H "X-Tapis-Token:$jwt" {BASE_URL}/v3/streams/roles?user={userid}&resource_type={project/channel/template}&resource_id={project_id/channel_id/template_id}
+
+
+The response will look something like the following:
+
+.. container:: foldable
+
+     .. code-block:: json
+
+            result: ['admin']
+|
+
+There are three possible responses depending on if the requesting user (jwt user) and user specified in query parameters are same or different.
+
+Case I: When requesting(jwt) user and user specified in the query paramters are same and have role on the project/channel/template
+
+.. container:: foldable
+
+     .. code-block:: json
+
+            {
+             "message": "Roles found",
+             "result": [
+                "admin"
+            ],
+            "status": "success",
+            "version": "dev"
+            }
+
+Case II: When requesting(jwt) user and user specified in the query parameters are different and jwt user does not have role on the project/channel/template
+
+.. container:: foldable
+
+     .. code-block:: json
+
+        {
+           "message": "User not authorized to access roles",
+           "result": "",
+           "status": "success",
+           "version": "dev"
+        }
+
+
+Case III: When requesting(jwt) user and user specified in the query parameters are different. Jwt user has role on the project and user in query parameter does not have role on the project/channel/template
+
+.. container:: foldable
+
+     .. code-block:: json
+
+            {
+               "message": "Roles not found",
+               "result": "",
+               "status": "success",
+               "version": "dev"
+            }
+
+
+**Grant Roles**
+^^^^^^^^^^^^^^^^^^^^^
+Roles can be granted by Project/Channel/Template “admins” or “managers” so that users can perform CRUD operations on Streams resources.
+
+
+Table 2 below shows that *admin* can grant any of the three roles to other users. Same or lower level permissions can be granted by “admins” and “managers”. Self role granting/revoking is not permitted.
+
+Managers can only grant *manager* and *user* to other users.
+
+Users do **not** have privileges to grant roles.
+
+- Roles of the requesting user (jwt user) are first checked by querying  SK.
+
+- If the username provided in the request body is the same as the jwt user, then self role granting is not permitted.
+
+- If the jwt user and username provided in the request body are different, then existing roles for the username provided in the request body are retrieved and if the user already has the role jwt user user is asking for, no action is taken.
+
+- If the role does not exist then jwt user roles are retrieved and compared with the rolename provided in the request body. Role is granted only if the jwt user has **same** or **higher*** roles than the role name specified in the request body. Otherwise an error message saying, “User not authorized to grant role” is given in the response.
+
+
++---------------------+------------------------+
+| Role                | Grant                  |
++=====================+========================+
+| admin               |  admin, manager, user  |
+|                     |                        |
++---------------------+------------------------+
+| manager             |  manager, user         |
+|                     |                        |
++---------------------+------------------------+
+| user                |  cannot grant roles    |
+|                     |                        |
++---------------------+------------------------+
+
+With PySDK
+
+.. code-block:: plaintext
+
+        $ t.streams.list_roles(resource_id='', user='',resource_type='project/channel/template',role_name='admin/manager/user')
+
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -X POST -H “X-Tapis-Token:$jwt” {BASE_URL}/v3/streams/roles
+
+        Request body: { "user":"user_id",
+                       "resource_type":"project/channel/template",
+                       "resource_id":"project_uuid/channel_id/template_id",
+                       "role_name": "admin/manager/user"
+                      }
+
+
+The response will vary based on following cases
+
+Case I: If the username provided in the request body is the same as the jwt user, then self role granting is not permitted.
+
+With PySDK
+
+.. code-block:: plaintext
+
+        $ t.streams.grant_role(resource_id='test_proj', user='testuser2',resource_type='project',role_name='manager')
+
+
+.. container:: foldable
+
+     .. code-block:: json
+
+        {'message': 'Cannot grant role for self',
+         'metadata': {},
+         'result': '',
+         'status': 'error',
+         'version': 'dev'}
+
+Case II: If the jwt user and username provided in the request body are different, then existing roles for the username provided in the request body are retrieved and if the user already has the role jwt user user is asking for, no action is taken.
+
+With PySDK
+
+.. code-block:: plaintext
+
+        $ t.streams.grant_role(resource_id='test_proj', user='testuser6',resource_type='project',role_name='manager')
+
+.. container:: foldable
+
+     .. code-block:: json
+
+        {
+            "message": "Role already exists",
+            "metadata": {},
+            "result": [
+                "manager"
+            ],
+            "status": "success",
+            "version": "dev"
+        }
+
+Case III: If the role does not exist then jwt user roles are retrieved and compared with the rolename provided in the request body. Role is granted only if the jwt user has **same** or **higher*** roles than the role name specified in the request body. Otherwise an error message saying, “User not authorized to grant role” is given in the response.
+
+For example testuser4 has ***manager** role on the project and the request is to grant testuser5 **admin*** role, the request will not be fulfilled.
+
+.. code-block:: plaintext
+
+        $ t.streams.grant_role(resource_id='test_proj', user='testuser5',resource_type='project',role_name='admin')
+
+.. container:: foldable
+
+     .. code-block:: json
+
+        {
+           "message": "Role admin cannot be granted",
+           "result": "",
+           "status": "error",
+           "version": "dev"
+        }
+
+If the requesting (jwt) user only has a **user*** role, then no role can be granted to other users, and the response will be following
+
+.. container:: foldable
+
+     .. code-block:: json
+
+        {
+           "message": "Role manager cannot be granted",
+           "result": "",
+           "status": "error",
+           "version": "dev"
+        }
+
+
+Case IV: If the requesting (jwt) user has no role on the project/channel/template, then the user is not authorized to grant any roles
+
+.. container:: foldable
+
+     .. code-block:: json
+
+            {
+               "message": "User not authorized to grant role",
+               "result": "",
+               "status": "error",
+               "version": "dev"
+            }
