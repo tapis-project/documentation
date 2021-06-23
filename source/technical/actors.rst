@@ -104,7 +104,7 @@ username and password. Do so by typing the following in a Python shell:
 .. code-block:: python
 
     # Import the Tapis object
-    from tapipy import Tapis
+    from tapipy.tapis import Tapis
 
     # Log into you the Tapis service by providing user/pass and url.
     t = Tapis(base_url='https://tacc.tapis.io',
@@ -481,6 +481,10 @@ available to all users and their descriptions.
 +---------------------+----------------------------------------------------------------------------------+
 | use_container_uid   | Run the actor using the UID/GID set in the Docker image. *Note*: Setting         |
 |                     | this parameter to True requires elevated permissions.                            |
++---------------------+----------------------------------------------------------------------------------+
+| run_as_executor     | Run the actor using the UID/GID of the executor rather than the owner            |
+|                     | *Note* this parameter is only available to certain tennants                      |
+|                     | *Note* that this cannot be on while the use_container_uid is also on             |
 +---------------------+----------------------------------------------------------------------------------+
 | webhook             | URL to publish this actor's events to.                                           |
 |                     | (see :ref:`complex`).                                                            |
