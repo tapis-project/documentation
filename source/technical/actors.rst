@@ -483,8 +483,8 @@ available to all users and their descriptions.
 |                     | this parameter to True requires elevated permissions.                            |
 +---------------------+----------------------------------------------------------------------------------+
 | run_as_executor     | Run the actor using the UID/GID of the executor rather than the owner            |
-|                     | *Note* this parameter is only available to certain tennants                      |
-|                     | *Note* that this cannot be on while the use_container_uid is also on             |
+|                     | *Note*: this parameter is only available to certain tenants                      |
+|                     | *Note*: that this cannot be on while the use_container_uid is also on            |
 +---------------------+----------------------------------------------------------------------------------+
 | webhook             | URL to publish this actor's events to.                                           |
 |                     | (see :ref:`complex`).                                                            |
