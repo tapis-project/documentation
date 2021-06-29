@@ -49,8 +49,8 @@ Enabled flag
 Effective User
   The user name to use when accessing the system. Referred to as *effectiveUserId.*
   A specific user (such as a service account) or the dynamic user ``${apiUserId}``
-Default authorization method
-  How access authorization is handled by default. Authorization method can also be
+Default authentication method
+  How access authentication is handled by default. Authentication method can also be
   specified as part of a request.
   Supported methods: PASSWORD, PKI_KEYS, ACCESS_KEY.
 Bucket name
@@ -248,12 +248,12 @@ following specific permissions: ``("READ","MODIFY","EXECUTE")``. Specifying perm
 lower case is also allowed. Having ``MODIFY`` implies ``READ``.
 
 -------------------------
-Authorization Credentials
+Authentication Credentials
 -------------------------
-At system creation time the authorization credentials may be specified if the effective
+At system creation time the authentication credentials may be specified if the effective
 access user *effectiveUserId* is a specific user (such as a service account) and not
 a dynamic user, i.e. ``${apiUserId}``. If the effective access user is dynamic then
-authorization credentials for any user allowed to access the system must be registered in
+authentication credentials for any user allowed to access the system must be registered in
 separate API calls. Note that the Systems service does not store credentials.
 Credentials are persisted by the Security Kernel service and only specific Tapis services
 are authorized to retrieve credentials.
@@ -269,13 +269,13 @@ used for determining eligible systems for running an application or job.
 -----------------
 Deletion
 -----------------
-A system may be deleted. Deletion means the system is marked as deleted and
-is no longer available for use. It will no longer show up in searches and operations on
-the system will no longer be allowed. The system definition is retained for auditing
-purposes. Note this means that system IDs may not be re-used after deletion.
+A system may be deleted and undeleted. Deletion means the system is marked as deleted and
+is no longer available for use. By default deleted systems will not be included in searches and operations on
+deleted systems will not be allowed. When listing systems the query parameter *showDeleted* may be used in order
+to include deleted systems in the results.
 
 ------------------------
-Table of Attributes
+System Attributes Table
 ------------------------
 
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -283,7 +283,7 @@ Table of Attributes
 +=====================+================+======================+======================================================================================+
 | tenant              | String         | designsafe           | - Name of the tenant for which the system is defined.                                |
 |                     |                |                      | - *tenant* + *id* must be unique.                                                    |
-|                     |                |                      |                                                                                      |
+|                     |                |                      | - Determined by the service at system creation time.                                 |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | id                  | String         | ds1.storage.default  | - Identifier for the system. URI safe, see RFC 3986.                                 |
 |                     |                |                      | - *tenant* + *id* must be unique.                                                    |
@@ -309,22 +309,22 @@ Table of Attributes
 |                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*                                    |
 |                     |                |                      | - On output variable reference will be resolved.                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| defaultAuthnMethod  | enum           | PKI_KEYS             | - How access authorization is handled by default.                                    |
-|                     |                |                      | - Can be overridden as part of a request to get a system or credentials.             |
+| defaultAuthnMethod  | enum           | PKI_KEYS             | - How access authentication is handled by default.                                   |
+|                     |                |                      | - Can be overridden as part of a request to get a system or credential.              |
 |                     |                |                      | - Methods: PASSWORD, PKI_KEYS, ACCESS_KEY                                            |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | authnCredential     | Credential     |                      | - On input credentials to be stored in Security Kernel.                              |
 |                     |                |                      | - *effectiveUserId* must be static, either a string constant or ${owner}.            |
 |                     |                |                      | - May not be specified if *effectiveUserId* is dynamic, i.e. *${apiUserId}*.         |
-|                     |                |                      | - On output contains credentials for *effectiveUserId*.                              |
-|                     |                |                      | - Returned credentials contain relevant information based on *systemType*.           |
+|                     |                |                      | - On output contains credential for *effectiveUserId* and requested *authnMethod*.   |
+|                     |                |                      | - Returned credential contains relevant information based on *systemType*.           |
 |                     |                |                      | - Credentials may be updated using the systems credentials endpoint.                 |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | bucketName          | String         | tapis-ds1-jdoe       | - Name of bucket for an S3 system.                                                   |
 |                     |                |                      | - Required if *systemType* is S3.                                                    |
 |                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| rootDir             | String         | $HOME                | - Required if *systemType* is LINUX or *isDtn* = true. Must be an absolute path.     |
+| rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or *isDtn* = true. Must be an absolute path.     |
 |                     |                |                      | - Serves as effective root directory when listing or moving files.                   |
 |                     |                |                      | - For DTN must be source location used in mount command.                             |
 |                     |                |                      | - Optional for an S3 system but may be used for a similar purpose.                   |
@@ -387,9 +387,35 @@ Table of Attributes
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | uuid                | UUID           |                      | - Auto-generated by service.                                                         |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| deleted             | boolean        | FALSE                | - Indicates if system has been deleted.                                              |
+|                     |                |                      | - May be updated using the delete/undelete endpoints.                                |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | created             | Timestamp      | 2020-06-19T15:10:43Z | - When the system was created. Maintained by service.                                |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | updated             | Timestamp      | 2020-07-04T23:21:22Z | - When the system was last updated. Maintained by service.                           |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+
+---------------------------
+Credential Attributes Table
+---------------------------
+
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute           | Type           | Example              | Notes                                                                                |
++=====================+================+======================+======================================================================================+
+| user                | String         | jsmith               | - User name associated with the credential.                                          |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| authnMethod         | String         | PKI_KEYS             | - Indicates the authentication method associated with a retrieved credential.        |
+|                     |                |                      | - When a credential is retrieved it is for a specific authentication method.         |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| password            | String         |                      | - Password for when authnMethod is PASSWORD.                                         |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| privateKey          | String         |                      | - Private key for when authnMethod is PKI_KEYS.                                      |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| publicKey           | String         |                      | - Public key for when authnMethod is PKI_KEYS.                                       |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| accessKey           | String         |                      | - Access key used to authenticate to an S3 system.                                   |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| accessSecret        | String         |                      | - Access secret used to authenticate to an S3 system.                                |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 
 -----------------------
@@ -415,7 +441,7 @@ For more information on search operators, handling of timestamps, lists, quoting
 search please see <TBD>.
 
 Example CURL command to search for systems that have ``Test`` in the id, are of type LINUX,
-are using a port less than ``1024`` and have a default authorization method of either ``PKI_KEYS`` or ``PASSWORD``::
+are using a port less than ``1024`` and have a default authentication method of either ``PKI_KEYS`` or ``PASSWORD``::
 
  $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems?search="(id.like.*Test*)~(system_type.eq.LINUX)~(port.lt.1024)~(DefaultAuthnMethod.in.PKI_KEYS,PASSWORD)"
 
@@ -457,7 +483,7 @@ For more information on search operators, handling of timestamps, lists, quoting
 search please see <TBD>.
 
 Example CURL command to search for systems that have ``Test`` in the name, are of type ``LINUX``,
-are using a port less than ``1024`` and have a default authorization method of either ``PKI_KEYS`` or ``PASSWORD``::
+are using a port less than ``1024`` and have a default authentication method of either ``PKI_KEYS`` or ``PASSWORD``::
 
  $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/search/systems?name.like=*Test*\&enabled.eq=true\&system_type.eq=LINUX\&DefaultAuthnMethod.in=PKI_KEYS,PASSWORD
 
@@ -622,7 +648,7 @@ implementing paging. The query parameters are:
  * ``limit`` - Limit number of items returned. For example limit=10.
 
    * Use 0 or less for unlimited.
-   * Default is service dependent.
+   * Default is 100.
 
  * ``skip`` - Number of items to skip. For example skip=10.
 
