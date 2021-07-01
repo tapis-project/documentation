@@ -42,7 +42,7 @@ argument type, maximum value or length, minimum value or length, etc.
 -----------------
 Model
 -----------------
-At a high level an application contain some information that is independent of the version and some information that
+At a high level an application contains some information that is independent of the version and some information that
 varies by version.
 
 Non-Versioned Attributes
@@ -177,7 +177,6 @@ The response should look similar to the following::
 
  {
     "result": {
-        "tenant": "dev",
         "id": "tacc-sample-app-<userid>",
         "version": "0.1",
         "description": "My sample application",
