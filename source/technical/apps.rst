@@ -177,6 +177,7 @@ The response should look similar to the following::
 
  {
     "result": {
+        "tenant": "tacc",
         "id": "tacc-sample-app-<userid>",
         "version": "0.1",
         "description": "My sample application",
