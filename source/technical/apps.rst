@@ -19,13 +19,14 @@ which allows the *Jobs* service to:
 * Monitor the application during execution
 * Archive output after application execution
 
-Dynamic Execution System Selection
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Tapis supports dynamic selection of an execution system at runtime. Each Tapis system has certain capabilities inherent
-in the definition of the system, such as the batch scheduler type, supported container runtimes, certain information
-about the HPC queues, etc. Additional job related capabilities may also be included in a system definition. A job
-request or an application may specify a list of constraints based on these capabilities. These are used for determining
-eligible systems at job execution time.
+..
+    Dynamic Execution System Selection
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Tapis supports dynamic selection of an execution system at runtime. Each Tapis system has certain capabilities inherent
+    in the definition of the system, such as the batch scheduler type, supported container runtimes, certain information
+    about the HPC queues, etc. Additional job related capabilities may also be included in a system definition. A job
+    request or an application may specify a list of constraints based on these capabilities. These are used for determining
+    eligible systems at job execution time.
 
 Application Definition Creation and Validation in a Portal or Gateway
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -346,22 +347,23 @@ Application Attributes Table
 | id                  | String         | my-ds-app            | - Name of the application. URI safe, see RFC 3986.                                   |
 |                     |                |                      | - *tenant* + $version* + *id* must be unique.                                        |
 |                     |                |                      | - Allowed characters: Alphanumeric [0-9a-zA-Z] and special characters [-._~].        |
+|                     |                |                      | - **Required** at creation time.                                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | version             | String         | 0.0.1                | - Version of the application. URI safe, see RFC 3986.                                |
 |                     |                |                      | - *tenant* + $version* + *id* must be unique.                                        |
 |                     |                |                      | - Allowed characters: Alphanumeric [0-9a-zA-Z] and special characters [-._~].        |
+|                     |                |                      | - **Required** at creation time.                                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | description         | String         | A sample application | - Description                                                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | appType             | enum           | BATCH                | - Type of application.                                                               |
 |                     |                |                      | - Types: BATCH, FORK                                                                 |
+|                     |                |                      | - **Required** at creation time.                                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | owner               | String         | jdoe                 | - User name of *owner*. Default is *${apiUserId}*.                                   |
 |                     |                |                      | - Variable references: *${apiUserId}*                                                |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | enabled             | boolean        | FALSE                | - Indicates if application currently enabled for use. Default is TRUE.               |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| containerized       | boolean        | TRUE                 | - Indicates if application has been fully containerized. Default is TRUE.            |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | runtime             | enum           | SINGULARITY          | - Runtime to be used when executing the application. Default is DOCKER.              |
 |                     |                |                      | - Runtimes: DOCKER, SINGULARITY                                                      |
@@ -371,6 +373,7 @@ Application Attributes Table
 | containerImage      | String         |docker.io/hello-world | - Reference for the container image. Other examples:                                 |
 |                     |                |                      | - Singularity: shub://GodloveD/lolcow                                                |
 |                     |                |                      | - Docker: tapis/hello-tapis:0.0.1                                                    |
+|                     |                |                      | - **Required** at creation time.                                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | isInteractive       | boolean        | FALSE                | - Indicates if application is interactive. Default is FALSE.                         |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -388,6 +391,7 @@ Application Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobAttributes       | JobAttributes  |                      | - Various attributes related to job execution.                                       |
 |                     |                |                      | - See table below.                                                                   |
+|                     |                |                      | - **Required** at creation time.                                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | tags                | [String]       |                      | - List of tags as simple strings.                                                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -404,17 +408,19 @@ Application Attributes Table
 JobAttributes Table
 ------------------------
 
+..
+    | dynamicExecSystem   | boolean        |                      | - Indicates if constraints are to be used to select an execution system.             |
+    |                     |                |                      | - The default is FALSE.                                                              |
+    +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+    | execSystem          | [String]       | ["A=aval AND",       | - Capability constraints to use when dynamically searching for an execution system.  |
+    | Constraints         |                |   "B=bval"]          |                                                                                      |
+    +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | Attribute           | Type           | Example              | Notes                                                                                |
 +=====================+================+======================+======================================================================================+
 | description         | String         |                      | - Description to be filled in when this application is used to run a job.            |
 |                     |                |                      | - Macros allow this to act as a template to be filled in at job runtime.             |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| dynamicExecSystem   | boolean        |                      | - Indicates if constraints are to be used to select an execution system.             |
-|                     |                |                      | - The default is FALSE.                                                              |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| execSystem          | [String]       | ["A=aval AND",       | - Capability constraints to use when dynamically searching for an execution system.  |
-| Constraints         |                |   "B=bval"]          |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | execSystemId        | String         |                      | - Specific system on which the application is to be run.                             |
 |                     |                |                      | - Ignored if dynamicExecSystem is true.                                              |
@@ -516,8 +522,10 @@ Arg Attributes Table
 | Attribute           | Type           | Example              | Notes                                                                                |
 +=====================+================+======================+======================================================================================+
 | value               | String         |                      | - Value for the argument                                                             |
+|                     |                |                      | - **Required** at creation time.                                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | metaName            | String         |                      | - Identifying label associated with the argument.                                    |
+|                     |                |                      | - **Required** at creation time if metadata is included.                             |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | metaDescription     | String         |                      | -                                                                                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -542,6 +550,7 @@ FileInput Attributes Table
 | inPlace             | boolean        |                      | - Default is FALSE.                                                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | metaName            | String         |                      | - Identifying label associated with the input. Typically used during a job request.  |
+|                     |                |                      | - **Required** at creation time.                                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | metaDescription     | String         |                      | -                                                                                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+

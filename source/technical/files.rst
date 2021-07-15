@@ -4,8 +4,8 @@
 Files
 =====
 
-The files service is the central point of interaction for doing all file operations in the Tapis ecosystem. Users can preform
-file listing, uploading, operations such as move/copy/delete and also transfer files between systems. All
+The files service is the central point of interaction for doing all file operations in the Tapis ecosystem. Users can
+perform file listing, uploading, operations such as move/copy/delete and also transfer files between systems. All
 Tapis files APIs accept JSON as inputs.
 
 Currently the files service includes support for S3 and SSH type file systems. Other storage
@@ -15,7 +15,7 @@ systems like IRODS will be included in future releases.
 Overview
 ----------
 
-All file operations act upon *Storage* systems. If you are unfamiliar with the Systems service, please refer to the
+All file operations act upon Tapis *System* resources. If you are unfamiliar with the Systems service, please refer to the
 systems_ section
 
 .. _systems:

@@ -70,7 +70,7 @@ canExec flag
   Indicates if system can be used to execute jobs.
 Job related attributes
   Various attributes related to job execution such as *jobRuntimes*, *jobWorkingDir*, *jobIsBatch*,
-  *batchScheduler*, *batchLogicalQueues* and *jobCapabilities*
+  *batchScheduler*, *batchLogicalQueues*
 
 When creating a system the required attributes are: *id*, *systemType*, *host*, *defaultAuthnMethod* and *canExec*.
 Depending on the type of system and specific values for certain attributes there are other requirements.
@@ -137,7 +137,7 @@ Using PySDK:
 
 .. code-block:: python
 
- t.systems.getSystemById(systemId='tacc-bucket-sample-<userid>')
+ t.systems.getSystem(systemId='tacc-bucket-sample-<userid>')
 
 Using CURL::
 
@@ -247,9 +247,9 @@ Permissions are specified as either ``*`` for all permissions or some combinatio
 following specific permissions: ``("READ","MODIFY","EXECUTE")``. Specifying permissions in all
 lower case is also allowed. Having ``MODIFY`` implies ``READ``.
 
--------------------------
+--------------------------
 Authentication Credentials
--------------------------
+--------------------------
 At system creation time the authentication credentials may be specified if the effective
 access user *effectiveUserId* is a specific user (such as a service account) and not
 a dynamic user, i.e. ``${apiUserId}``. If the effective access user is dynamic then
@@ -258,13 +258,28 @@ separate API calls. Note that the Systems service does not store credentials.
 Credentials are persisted by the Security Kernel service and only specific Tapis services
 are authorized to retrieve credentials.
 
------------------
-Capabilities
------------------
-In addition to the system capabilities reflected in the basic attributes each system
-definition may contain a list of additional capabilities supported by that system.
-An Application or Job definition may then specify required capabilities. These are
-used for determining eligible systems for running an application or job.
+--------------------------
+Runtime
+--------------------------
+Runtime environment supported by the system that may be used to run applications, such as docker or singularity.
+Consists of the runtime type and version.
+
+--------------------------
+Logical Batch Queue
+--------------------------
+A queue that maps to a single HPC queue. Logical batch queues provide a uniform front end abstraction for an HPC queue.
+They also provide more features and flexibility than is typically provided by an HPC scheduler. Multiple logical queues
+may be defined for each HPC queue. If an HPC queue does not have a corresponding logical queue defined then a user will
+not be able use the Tapis system to directly submit a job via Tapis to that HPC queue.
+
+..
+    -----------------
+    Capabilities
+    -----------------
+    In addition to the system capabilities reflected in the basic attributes each system
+    definition may contain a list of additional capabilities supported by that system.
+    An Application or Job definition may then specify required capabilities. These are
+    used for determining eligible systems for running an application or job.
 
 -----------------
 Deletion
@@ -317,7 +332,7 @@ System Attributes Table
 |                     |                |                      | - *effectiveUserId* must be static, either a string constant or ${owner}.            |
 |                     |                |                      | - May not be specified if *effectiveUserId* is dynamic, i.e. *${apiUserId}*.         |
 |                     |                |                      | - On output contains credential for *effectiveUserId* and requested *authnMethod*.   |
-|                     |                |                      | - Returned credential contains relevant information based on *systemType*.           |
+|                     |                |                      | - Returned credential contains relevant information based on *authnMethod*.          |
 |                     |                |                      | - Credentials may be updated using the systems credentials endpoint.                 |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | bucketName          | String         | tapis-ds1-jdoe       | - Name of bucket for an S3 system.                                                   |
@@ -351,15 +366,19 @@ System Attributes Table
 | canExec             | boolean        |                      | - Indicates if system will be used to execute jobs.                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobRuntimes         | [Runtime]      |                      | - List of runtime environments supported by the system.                              |
+|                     |                |                      | - At least one entry required if *canExec* is true.                                  |
+|                     |                |                      | - Each Runtime specifies the Runtime type and version                                |
+|                     |                |                      | - Runtime type is required and must be one of: DOCKER, SINGULARITY.                  |
+|                     |                |                      | - Runtime version is optional.                                                       |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobWorkingDir       | String         | HOST_EVAL($SCRATCH)  | - Parent directory from which a job is run.                                          |
 |                     |                |                      | - Relative to the effective root directory *rootDir*.                                |
 |                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| jobEnvVariables     | [String]       |                      | - Environment variables added to the shell environment in which the job is running.  |
+| jobEnvVariables     | [KeyValuePair] |                      | - Environment variables added to the shell environment in which the job is running.  |
 |                     |                |                      | - Added to environment variables specified in job and application definitions.       |
 |                     |                |                      | - Will overwrite job and application variables with same names.                      |
-|                     |                |                      | - Each string in the list must have the format *<env_name>=<env_value>*              |
+|                     |                |                      | - Each entry has a *key* (required) and a *value* (optional)                         |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobMaxJobs          | int            |                      | - Max total number of jobs .                                                         |
 |                     |                |                      | - Set to -1 for unlimited.                                                           |
@@ -379,8 +398,6 @@ System Attributes Table
 |batchDefaultLogical  | LogicalQueue   |                      | - Default logical batch queue for the system.                                        |
 |Queue                |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| jobCapabilities     | [Capability]   |                      | - List of additional job related capabilities supported by the system.               |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | tags                | [String]       |                      | - List of tags as simple strings.                                                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | notes               | String         | "{}"                 | - Simple metadata in the form of a Json object.                                      |
@@ -394,6 +411,10 @@ System Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | updated             | Timestamp      | 2020-07-04T23:21:22Z | - When the system was last updated. Maintained by service.                           |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+
+..
+    | jobCapabilities     | [Capability]   |                      | - List of additional job related capabilities supported by the system.               |
+    +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 
 ---------------------------
 Credential Attributes Table
@@ -417,6 +438,75 @@ Credential Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | accessSecret        | String         |                      | - Access secret used to authenticate to an S3 system.                                |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+
+-----------------------------
+LogicalQueue Attributes Table
+-----------------------------
+
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute           | Type           | Example              | Notes                                                                                |
++=====================+================+======================+======================================================================================+
+| name                | String         |                      | - Name of the tenant for which the system is defined.                                |
+|                     |                |                      | - *tenant* + *id* must be unique.                                                    |
+|                     |                |                      | - Determined by the service at system creation time.                                 |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| hpcQueueName        | String         |                      | - Identifier for the system. URI safe, see RFC 3986.                                 |
+|                     |                |                      | - *tenant* + *id* must be unique.                                                    |
+|                     |                |                      | - Allowed characters: Alphanumeric [0-9a-zA-Z] and special characters [-._~].        |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| maxJobs             | int            |                      | - Maximum total number of jobs that can be queued or running in this queue.          |
+|                     |                |                      |                                                                                      |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| maxJobsPerUser      | int            |                      | - Maximum number of jobs associated with a specific user that can be queued.         |
+|                     |                |                      |                                                                                      |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| minNodeCount        | int            |                      | - Minimum number of nodes that can be requested when submitting a job to the queue.  |
+|                     |                |                      |                                                                                      |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| maxNodeCount        | int            |                      | - Maximum number of nodes that can be requested when submitting a job to the queue.  |
+|                     |                |                      |                                                                                      |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| minCoresPerNode     | int            |                      | - Minimum number of cores per node that can be requested when submitting a job.      |
+|                     |                |                      | - Default is 1                                                                       |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| maxCoresPerNode     | int            |                      | - Maximum number of cores per node that can be requested when submitting a job.      |
+|                     |                |                      |                                                                                      |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| minMemoryMB         | int            |                      | - Minimum memory in megabytes that can be requested when submitting a job.           |
+|                     |                |                      | - Default is 0                                                                       |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| maxMemoryMB         | int            |                      | - Maximum memory in megabytes that can be requested when submitting a job.           |
+|                     |                |                      | - Default is unlimited                                                               |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| minMinutes          | int            |                      | - Minimum run time in minutes that can be requested when submitting a job.           |
+|                     |                |                      | - Default is 0                                                                       |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| maxMinutes          | int            |                      | - Maximum run time in minutes that can be requested when submitting a job.           |
+|                     |                |                      | - Default is unlimited                                                               |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+
+..
+    ---------------------------
+    Capability Attributes Table
+    ---------------------------
+..
+  +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+  | Attribute           | Type           | Example              | Notes                                                                                |
+  +=====================+================+======================+======================================================================================+
+  | category            | enum           |                      | - Category for grouping of capabilities                                              |
+  |                     |                |                      | - Types: SCHEDULER, OS, HARDWARE, SOFTWARE, JOB, CONTAINER, MISC, CUSTOM             |
+  +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+  | name                | String         |                      | - Name for the capability                                                            |
+  +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+  | datatype            | enum           |                      | - Datatype for the value. Used for comparison operations and validation.             |
+  |                     |                |                      | - Types: STRING, INTEGER, BOOLEAN, NUMBER, TIMESTAMP                                 |
+  +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+  | precedence          | int            |                      | - Precedence. Can be used when multiple systems match. 1 is lowest                   |
+  |                     |                |                      | - Higher value has higher precedence. Default is 100.                                |
+  |                     |                |                      | - Default is 100.                                                                    |
+  +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+  | value               | String         |                      | - Value or range of values.                                                          |
+  +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 
 -----------------------
 Searching
@@ -456,10 +546,10 @@ Notes:
   * ``"`` ``\`` `````
 
 * Attribute names may be specified using Camel Case or Snake Case.
+
 * Following complex attributes not supported when searching:
 
-  * ``authnCredential`` ``jobRuntimes`` ``jobEnvVariables`` ``jobCapabilities`` ``batchLogicalQueues``  ``tags``  ``notes``
-
+   * ``authnCredential`` ``jobRuntimes`` ``jobEnvVariables`` ``batchLogicalQueues``  ``tags``  ``notes``
 
 Dedicated Search Endpoint
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -495,7 +585,7 @@ Notes:
 * Attribute names may be specified using Camel Case or Snake Case.
 * Following complex attributes not supported when searching:
 
-  * ``authnCredential`` ``jobRuntimes`` ``jobEnvVariables`` ``jobCapabilities`` ``batchLogicalQueues``  ``tags``  ``notes``
+  * ``authnCredential`` ``jobRuntimes`` ``jobEnvVariables`` ``batchLogicalQueues``  ``tags``  ``notes``
 
 Search using POST on Dedicated Endpoint
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
