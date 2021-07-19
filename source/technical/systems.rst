@@ -18,9 +18,9 @@ A system can be used for the following purposes:
 
 * Running a job, including:
 
-  * Staging files to an execution system in preparation for running a job.
-  * Executing a job on an execution system.
-  * Archiving files and data on a remote storage system after job execution.
+  * Staging files to a system in preparation for running a job.
+  * Executing a job on a system.
+  * Archiving files and data on a remote system after job execution.
 
 * Storing and retrieving files and data.
 
@@ -45,7 +45,7 @@ Owner
 Host name or IP address.
   FQDN or IP address
 Enabled flag
-  Indicates if system is currently considered active and available for use. Default is true.
+  Indicates if system is currently considered active and available for use. Default is *true*.
 Effective User
   The user name to use when accessing the system. Referred to as *effectiveUserId.*
   A specific user (such as a service account) or the dynamic user ``${apiUserId}``
@@ -191,7 +191,7 @@ The response should look similar to the following::
     "metadata": null
  }
 
-Note that authnCredential is null. Only specific Tapis services are authorized to retrieve credentials.
+Note that authnCredential is *null*. Only specific Tapis services are authorized to retrieve credentials.
 
 Retrieving details for all systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -774,7 +774,7 @@ The metadata object will contain the following information:
  * ``totalCount`` - Total number of records that would have been returned without a limit query parameter being imposed. -1 if total count was not computed.
 
 For performance reasons computation of ``totalCount`` is only determined on demand. This is controlled by the boolean
-query parameter ``computeTotal``. By default ``computeTotal`` is false.
+query parameter ``computeTotal``. By default ``computeTotal`` is *false*.
 
 Example query and response:
 
