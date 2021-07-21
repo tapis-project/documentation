@@ -102,11 +102,9 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 With PySDK:
 
-Note: project_uuid is same as project_id, used in project creation.
-
 .. code-block:: plaintext
 
-        $ t.streams.get_project(project_uuid='tapis_demo_project_testuser6')
+        $ t.streams.get_project(project_id='tapis_demo_project_testuser6')
 
 
 With CURL:
@@ -141,14 +139,14 @@ With PySDK:
 
 .. code-block:: plaintext
 
-        $ t.streams.update_project(project_uuid='tapis_demo_project_testuser6', project_name='tapis_demo_project_testuser6', pi='testuser6', owner='testuser6', description= 'changed description',project_url='tapis_demo_project.tacc.utexas.edu')
+        $ t.streams.update_project(project_id='tapis_demo_project_testuser6', project_name='tapis_demo_project_testuser6', pi='testuser6', owner='testuser6', description= 'changed description',project_url='tapis_demo_project.tacc.utexas.edu')
 
 With CURL:
 
 .. code-block:: plaintext
 
         $ curl -v -X PUT -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '{"project_name": "tapis_demo_project_testuser6",
-                                                                "project_uuid":"tapis_demo_project_testuser6",
+                                                                "project_id":"tapis_demo_project_testuser6",
                                                                 "owner": "testuser6",
                                                                 "pi": "testuser6",
                                                                 "description": "changed description",
@@ -182,7 +180,7 @@ With PySDK:
 
 .. code-block:: plaintext
 
-        $ t.streams.delete_project(project_uuid='tapis_demo_project_testuser6')
+        $ t.streams.delete_project(project_id='tapis_demo_project_testuser6')
 
 With CURL:
 
@@ -225,13 +223,13 @@ With PySDK:
 
 .. code-block:: plaintext
 
-        $ t.streams.create_site(project_uuid='tapis_demo_project_testuser6',site_name='tapis_demo_site', site_id='tapis_demo_site', latitude=50, longitude = 10, elevation=2,description='test_site')
+        $ t.streams.create_site(project_id='tapis_demo_project_testuser6',request_body[{"site_name":"tapis_demo_site", "site_id":"tapis_demo_site", "latitude":50,"longitude":10, "elevation":2,"description":"test_site"}])
 
 With CURL:
 
 .. code-block:: plaintext
 
-       $  curl -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '{"site_name":"tapis_demo_site","latitude":50,"longitude":10,"elevation":2,"site_id":"tapis_demo_site", "description":"test_site"}' $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites
+       $  curl -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '[{"site_name":"tapis_demo_site","latitude":50,"longitude":10,"elevation":2,"site_id":"tapis_demo_site", "description":"test_site"}]' $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites
 
 
 The response will look something like the following:
@@ -261,7 +259,7 @@ With PySDK:
 
 .. code-block:: plaintext
 
-        $ t.streams.list_sites(project_uuid='tapis_demo_project_testuser6')
+        $ t.streams.list_sites(project_id='tapis_demo_project_testuser6')
 
 With CURL:
 
@@ -310,7 +308,7 @@ With PySDK:
 
 .. code-block:: plaintext
 
-        $ t.streams.get_site(project_uuid='tapis_demo_project_testuser6', site_id='tapis_demo_site1')
+        $ t.streams.get_site(project_id='tapis_demo_project_testuser6', site_id='tapis_demo_site1')
 
 
 With CURL:
@@ -323,7 +321,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     $ t.streams.get_site(project_uuid='tapis_demo_project_testuser6', site_id='tapis_demo_site')
+     $ t.streams.get_site(project_id='tapis_demo_project_testuser6', site_id='tapis_demo_site')
 
      .. code-block:: json
 
@@ -357,7 +355,7 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.update_site(project_uuid='tapis_demo_project_testuser6',site_name='tapis_demo_site', site_id='tapis_demo_site', latitude=10, longitude = 80, elevation=2,description='test_site changed')
+        $ t.streams.update_site(project_id='tapis_demo_project_testuser6',site_name='tapis_demo_site', site_id='tapis_demo_site', latitude=10, longitude = 80, elevation=2,description='test_site changed')
 
 
 The response will look something like the following:
@@ -394,7 +392,7 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.delete_site(project_uuid='tapis_demo_project_testuser6', site_id='tapis_demo_site')
+        $ t.streams.delete_site(project_id='tapis_demo_project_testuser6', site_id='tapis_demo_site')
 
 
 |
@@ -411,13 +409,13 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.create_instrument(project_uuid='tapis_demo_project_testuser6',topic_category_id ='2',site_id='tapis_demo_site',  inst_name='tapis_demo_instrument',inst_description='demo instrument', inst_id='tapis_demo_instrument')
+        $ t.streams.create_instrument(project_id='tapis_demo_project_testuser6',site_id='tapis_demo_site',request_body=[{"topic_category_id":"2",  "inst_name":"tapis_demo_instrument","inst_description":"demo instrument", "inst_id":"tapis_demo_instrument"}])
 
 With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '{"project_uuid":"tapis_demo_project_testuser6","topic_category_id":"2","site_id":"tapis_demo_site","inst_name":"tapis_demo_instrument","inst_description":"demo instrument", "inst_id":"tapis_demo_instrument"}'  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site/instruments
+        $ curl -v -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '[{"topic_category_id":"2",","inst_name":"tapis_demo_instrument","inst_description":"demo instrument", "inst_id":"tapis_demo_instrument"}]'  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site/instruments
 
 
 
@@ -444,7 +442,7 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.list_instruments(project_uuid='tapis_demo_project_testuser6', site_id='tapis_demo_site')
+        $ t.streams.list_instruments(project_id='tapis_demo_project_testuser6', site_id='tapis_demo_site')
 
 With CURL:
 
@@ -472,7 +470,7 @@ The response will look something like the following:
          inst_description: demo instrument
          inst_id: tapis_demo_instrument
          inst_name: tapis_demo_instrument1
-         project_uuid: tapis_demo_project_testuser6
+         project_id: tapis_demo_project_testuser6
          site_id: tapis_demo_site
          topic_category_id: 2,
 
@@ -500,7 +498,7 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.list_instruments(project_uuid='tapis_demo_project_testuser6', site_id='tapis_demo_site',inst_id='demo_instrument')
+        $ t.streams.list_instruments(project_id='tapis_demo_project_testuser6', site_id='tapis_demo_site',inst_id='demo_instrument')
 
 With CURL:
 
@@ -531,7 +529,7 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.update_instrument(inst_id= 'Ohio_River_Robert_C_Byrd_Locks', project_uuid='wq_demo_tapis_streams_proj2020-08-26T08:41:11.813391', site_id='wq_demo_site', inst_name='test', inst_description='test')
+        $ t.streams.update_instrument(inst_id= 'Ohio_River_Robert_C_Byrd_Locks', project_id='wq_demo_tapis_streams_proj2020-08-26T08:41:11.813391', site_id='wq_demo_site', inst_name='test', inst_description='test')
 
 With CURL:
 
@@ -587,7 +585,7 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.delete_instrument(inst_id= 'tapis_demo_instrument', project_uuid='tapis_demo_project_testuser6_3', site_id='tapis_demo_site')
+        $ t.streams.delete_instrument(inst_id= 'tapis_demo_instrument', project_id='tapis_demo_project_testuser6_3', site_id='tapis_demo_site')
 
 With CURL:
 
@@ -607,13 +605,13 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.create_variable(project_uuid='tapis_demo_project_testuser6', topic_category_id='2', site_id='tapis_demo_site', inst_id='demo_instrument', var_name='battery', shortname='bat', var_id='batv')
+        $ t.streams.create_variable(project_id='tapis_demo_project_testuser6', inst_id='demo_instrument', site_id='tapis_demo_site', request_body=[{"topic_category_id":"2", "var_name":"battery", "shortname":"bat", "var_id":"batv"}])
 
 With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '{"project_uuid":"tapis_demo_project_testuser6", "topic_category_id":"2","site_id":"tapis_demo_site", "inst_id":"demo_instrument", "var_name":"battery", "shortname":"bat", "var_id":"batv"}'  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site/instruments/demo_instrument/variables
+        $ curl -v -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '{"project_id":"tapis_demo_project_testuser6", "topic_category_id":"2","site_id":"tapis_demo_site", "inst_id":"demo_instrument", "var_name":"battery", "shortname":"bat", "var_id":"batv"}'  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site/instruments/demo_instrument/variables
 
 
 The response will look something like the following:
@@ -637,7 +635,7 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.list_variables(project_uuid='tapis_demo_project_testuser6',site_id='tapis_demo_site', inst_id='demo_instrument')
+        $ t.streams.list_variables(project_id='tapis_demo_project_testuser6',site_id='tapis_demo_site', inst_id='demo_instrument')
 
 With CURL:
 
@@ -666,7 +664,7 @@ The response will look something like the following:
 
          chords_id: 40
          inst_id: demo_instrument_1
-         project_uuid: tapis_demo_project_testuser6
+         project_id: tapis_demo_project_testuser6
          shortname: bat
          site_id: tapis_demo_site
          topic_category_id: 2
@@ -683,7 +681,7 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.get_variable(project_uuid='tapis_demo_project_testuser6_1', site_id='tapis_site_final', inst_id='tapis_inst_final', var_id='batv')
+        $ t.streams.get_variable(project_id='tapis_demo_project_testuser6_1', site_id='tapis_site_final', inst_id='tapis_inst_final', var_id='batv')
 
 With CURL:
 
@@ -713,7 +711,7 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.update_variable(var_name='"updated_temp', var_id='temp', shortname='temp_updated', project_uuid='wq_demo_tapis_streams_proj2020-08-25T16:21:30.113392', site_id='wq_demo_site',inst_id='Ohio_River_Robert_C_Byrd_Locks')
+        $ t.streams.update_variable(var_name='"updated_temp', var_id='temp', shortname='temp_updated', project_id='wq_demo_tapis_streams_proj2020-08-25T16:21:30.113392', site_id='wq_demo_site',inst_id='Ohio_River_Robert_C_Byrd_Locks')
 
 With CURL:
 
@@ -743,7 +741,7 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.delete_variable( var_id='139', project_uuid='tapis_demo_instrument', site_id='tapis_demo_site',inst_id='tapis_demo_instrument')
+        $ t.streams.delete_variable( var_id='139', project_id='tapis_demo_instrument', site_id='tapis_demo_site',inst_id='tapis_demo_instrument')
 
 With CURL:
 
@@ -775,13 +773,13 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.create_measurement(inst_id='demo_instrument',vars=[{"var_id": "batv", "value": 10}],datetime='2020-07-20T22:19:25Z')
+        $ t.streams.create_measurement(inst_id='demo_instrument',vars=[{"batv":10, "temp":90, "datetime":"2020-07-20T22:19:25Z"}])
 
 With CURL:
 
 .. code-block:: plaintext
 
-        $ curl -v -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '{"inst_id":"demo_instrument", "datetime":"2020-07-20T23:19:25Z", "vars":[{"var_id": "batv", "value": 10}]}'  $BASE_URL/v3/streams/measurements
+        $ curl -v -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '{"inst_id":"demo_instrument", "vars":[{"datetime":"2020-07-20T23:19:25Z", "batv":10, "temp":90}]}'  $BASE_URL/v3/streams/measurements
 
 
 The response will look something like the following:
@@ -791,7 +789,8 @@ The response will look something like the following:
      .. code-block:: json
 
          {'message': 'Measurements Saved',
-         'result': [],
+         'result': {"batv":{"2020-07-20T23:19:25Z":10},"temp":{"2020-07-20T23:19:25Z":90}}
+         ],
          'status': 'success',
          'version': 'dev'}
 
@@ -805,7 +804,7 @@ With PySDK
 
 .. code-block:: plaintext
 
-        $ t.streams.list_measurements(inst_id='demo_instrument',start_date='2020-05-08T00:00:00Z',end_date='2020-07-21T22:19:25Z', format='csv',project_uuid='tapis_demo_project_testuser6',site_id='tapis_demo_site')
+        $ t.streams.list_measurements(inst_id='demo_instrument',start_date='2020-05-08T00:00:00Z',end_date='2020-07-21T22:19:25Z', format='csv',project_id='tapis_demo_project_testuser6',site_id='tapis_demo_site')
 
 With CURL:
 
