@@ -546,7 +546,6 @@ Notes:
   * ``"`` ``\`` `````
 
 * Attribute names may be specified using Camel Case or Snake Case.
-
 * Following complex attributes not supported when searching:
 
    * ``authnCredential`` ``jobRuntimes`` ``jobEnvVariables`` ``batchLogicalQueues``  ``tags``  ``notes``
@@ -815,11 +814,3 @@ Response::
     "totalCount": -1
   }
 
-Heading 2
-~~~~~~~~~
-
-Heading 3
-^^^^^^^^^
-
-Heading 4
-*********

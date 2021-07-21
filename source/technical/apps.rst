@@ -34,11 +34,11 @@ As discussed above most of the information in an application definition is in pl
 input, execute and archive output for an application. In addition, an application definition may include information to
 facilitate portal and gateway developers. This information is in the form of metadata that can be associated with the
 file inputs and the various collections of arguments. The collections are contained in the ``ParameterSet``, please see
-the table below. The collections include the ``appArgs``, ``containerArgs`` and ``schedulerOptions``. The metadata for
-each argument includes attributes for ``metaName``, ``metaDescription``, ``metaRequired``, and ``metaKvPairs`` (a list
-of free form key-value pairs). The intent of the ``metaDescription`` is to allow the application designer to document
-the argument in detail. The free form key-value pairs allow for specifying various validation requirements, such as
-argument type, maximum value or length, minimum value or length, etc.
+the table below. The collections include the ``appArgs``, ``containerArgs`` and ``schedulerOptions``. In addition to the
+argument value each argument includes metadata attributes for ``name``, ``description``, ``required``, and
+``keyValuePairs`` (a list of free form key-value pairs). The intent of the ``description`` is to allow the application
+designer to document the argument in detail. The free form key-value pairs allow for specifying various validation
+requirements, such as argument type, maximum value or length, minimum value or length, etc.
 
 -----------------
 Model
@@ -60,11 +60,12 @@ Owner
   A specific user set at application creation. Default is ``${apiUserId}``, the user making the request to
   create the application.
 Enabled flag
-  Indicates if application is currently considered active and available for use. Default is true.
+  Indicates if application is currently considered active and available for use. Default is *true*.
 Containerized flag
   Indicates if application has been fully containerized.
+
 .. note::
-  NOTE: Currently only containerized applications are supported
+  Currently only containerized applications are supported
 
 Versioned Attributes
 ~~~~~~~~~~~~~~~~~~~~
@@ -78,9 +79,9 @@ Runtime
 Runtime version
   Runtime version to be used when executing the application.
 Container image
-  Reference to be used when running the container image. Required if ``containerized`` is true.
+  Reference to be used when running the container image.
 Interactive flag
-  Indicates if the application is interactive. Default is false.
+  Indicates if the application is interactive. Default is *false*.
 Max jobs
   Maximum total number of jobs that can be queued or running for this application on a given execution system at
   a given time. Note that the execution system may also limit the number of jobs on the system which may further
@@ -90,23 +91,25 @@ Max jobs per user
   on a given execution system at a given time. Note that the execution system may also limit the number of jobs on the
   system which may further restrict the total number of jobs. Set to -1 for unlimited. Default is unlimited.
 Strict file inputs flag
-  Indicates if a job request is allowed to have unnamed file inputs. If value is true then a job request may only use
+  Indicates if a job request is allowed to have unnamed file inputs. If set to true then a job request may only use
   the named file inputs defined in the application. See attribute *fileInputs* in the JobAttributes table.
-  Default is false.
+  Default is *false*.
 Job related attributes
-  Various attributes related to job execution such as *jobDescription*, *execSystemId*, *execSystemExecDir*,
-  *execSystemInputDir*, *execSystemLogicalQueue* *appArgs*, *fileInputs*, etc.
+  Various attributes related to job execution such as *execSystemId*, *execSystemExecDir*, *execSystemInputDir*,
+  *execSystemLogicalQueue* *archiveSystemId*, *fileInputs*, etc.
+
+.. note::
+  Currently dynamic selection of an execution system is not supported. For this reason the job related attribute
+  *dynamicExecSystem* should be set to *false* (the default) and *execSystemConstraints* should not be set.
 
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-When creating a application the required attributes are: ``id``, ``version``, ``appType`` and ``containerImage``.
-Depending on the type of application and specific values for certain attributes there are other requirements.
+When creating a application the required attributes are: ``id``, ``version``, ``appType``,  ``containerImage`` and
+``jobAttributes->execSystemId``. Depending on the type of application and specific values for certain attributes there are other requirements.
 
 The restrictions are:
 
-* If ``dynamicExecSystem`` is true then ``execSystemConstraints`` must be specified.
-* If ``dynamicExecSystem`` is false then ``execSystemId`` must be specified.
 * If ``archiveSystemId`` is specified then ``archiveSystemDir`` must be specified.
 
 --------------------------------
@@ -185,7 +188,6 @@ The response should look similar to the following::
         "appType": "FORK",
         "owner": "<userid>",
         "enabled": true,
-        "containerized": true,
         "runtime": "DOCKER",
         "runtimeVersion": null,
         "runtimeOptions": [],
@@ -216,7 +218,7 @@ The response should look similar to the following::
                     "includeLaunchFiles": true
                 }
             },
-            "fileInputDefinitions": [],
+            "fileInputs": [],
             "nodeCount": 1,
             "coresPerNode": 1,
             "memoryMB": 100,
@@ -260,12 +262,10 @@ The response should contain a list of items similar to the single listing shown 
 -----------------------------------
 Minimal Definition and Restrictions
 -----------------------------------
-When creating an application the required attributes are: *id*, *version*, *appType* and *containerImage*.
-Depending on the type of application and specific values for certain attributes there are other requirements.
-The restrictions are:
+When creating an application the required attributes are: *id*, *version*, *appType*, *containerImage* and
+*jobAttributes->execSystemId*. Depending on the type of application and specific values for certain attributes there are
+other requirements. The restrictions are:
 
-* If *dynamicExecSystem* is true then *execSystemConstraints* is required.
-* If *dynamicExecSystem* is false then *execSystemId* is required.
 * If *archiveSystemId* is specified then *archiveSystemDir* is required.
 * If *appType* is FORK then the following attributes may not be specified: *maxJobs*, *maxJobsPerUser*, *nodeCount*,
   *coresPerNode*, *memoryMB*, *maxMinutes*.
@@ -283,13 +283,12 @@ recently created version of the application will be returned.
 -------------------------
 Containerized Application
 -------------------------
-An application that has been containerized is one that can be executed using a single container image. When the flag
-*containerized* is set to true then the attribute *containerImage* must be specified. Tapis will use the appropriate
-container runtime command and provide support for making the input and output directories available to the container
-when running the container image.
+An application that has been containerized is one that can be executed using a single container image. Tapis will use
+the appropriate container runtime command and provide support for making the input and output directories available to
+the container when running the container image.
 
 .. note::
-  NOTE: Currently only containerized applications are supported
+  Currently only containerized applications are supported
 
 ------------------------------
 Directory Semantics and Macros
@@ -328,10 +327,11 @@ lower case is also allowed. Having ``MODIFY`` implies ``READ``.
 -----------------
 Deletion
 -----------------
-An application may be deleted. Deletion means the application is marked as deleted and
-is no longer available for use. It will no longer show up in searches and operations on
-the application will no longer be allowed. The application definition is retained for auditing
-purposes. Note this means that application IDs may not be re-used after deletion.
+An application may be deleted and undeleted. Deletion means the application is marked as deleted and is no longer
+available for use. By default deleted applications will not be included in searches and operations on deleted
+applications will not be allowed. When listing applications the query parameter *showDeleted* may be used in order to
+include deleted applications in the results. Note that deletion applies to all version of an application. It is not
+possible to delete a specific version.
 
 -----------------------------
 Application Attributes Table
@@ -341,7 +341,7 @@ Application Attributes Table
 | Attribute           | Type           | Example              | Notes                                                                                |
 +=====================+================+======================+======================================================================================+
 | tenant              | String         | designsafe           | - Name of the tenant for which the application is defined.                           |
-|                     |                |                      | - *tenant* + $version* + *name* must be unique.                                      |
+|                     |                |                      | - *tenant* + $version* + *id* must be unique.                                        |
 |                     |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | id                  | String         | my-ds-app            | - Name of the application. URI safe, see RFC 3986.                                   |
@@ -370,19 +370,21 @@ Application Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | runtimeVersion      | String         | 2.5.2                | - Version or range of versions required.                                             |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| runtimeOptions      | [enum]         |                      | - Options that apply to specific runtimes.                                           |
+|                     |                |                      | - NONE, SINGULARITY_START, SINGULARITY_RUN                                           |
+|                     |                |                      | - Default is NONE.                                                                   |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | containerImage      | String         |docker.io/hello-world | - Reference for the container image. Other examples:                                 |
 |                     |                |                      | - Singularity: shub://GodloveD/lolcow                                                |
 |                     |                |                      | - Docker: tapis/hello-tapis:0.0.1                                                    |
 |                     |                |                      | - **Required** at creation time.                                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| isInteractive       | boolean        | FALSE                | - Indicates if application is interactive. Default is FALSE.                         |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| maxJobs             | int            | 10                   | - Max number of jobs that can be running for this app on an exec system.             |
-|                     |                |                      | - Execution system may also limit the number of jobs on the system.                  |
+| maxJobs             | int            | 10                   | - Max number of jobs that can be running for this app on a system.                   |
+|                     |                |                      | - System may also limit the number of jobs.                                          |
 |                     |                |                      | - Set to -1 for unlimited. Default is unlimited.                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | maxJobsPerUser      | int            | 2                    | - Max number of jobs per job owner.                                                  |
-|                     |                |                      | - Execution system may also limit the number of jobs on the system.                  |
+|                     |                |                      | - System may also limit the number of jobs.                                          |
 |                     |                |                      | - Set to -1 for unlimited. Default is unlimited.                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | strictFileInputs    | boolean        | FALSE                | - Indicates if a job request is allowed to have unnamed file inputs.                 |
@@ -423,7 +425,6 @@ JobAttributes Table
 |                     |                |                      | - Macros allow this to act as a template to be filled in at job runtime.             |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | execSystemId        | String         |                      | - Specific system on which the application is to be run.                             |
-|                     |                |                      | - Ignored if dynamicExecSystem is true.                                              |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | execSystemExecDir   | String         |                      | - Directory where application assets are staged.                                     |
 |                     |                |                      | - Current working directory at application launch time.                              |
@@ -466,7 +467,7 @@ JobAttributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | memoryMB            | int            |                      | - Memory in megabytes to request during job submission.                              |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| maxMinutes          | int            |                      | -  Run time to request during job submission.                                        |
+| maxMinutes          | int            |                      | - Run time to request during job submission.                                         |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | subscriptions       |                |                      | - Notification subscriptions.                                                        |
 |                     |                |                      | - See table below.                                                                   |
@@ -512,6 +513,7 @@ ArchiveFilter Attributes Table
 |                     |                |                      | - excludes list has precedence.                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | includeLaunchFiles  | boolean        |                      | - Indicates if Tapis generated launch scripts are to be included when archiving.     |
+|                     |                |                      | - The default is TRUE.                                                               |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 
 ------------------------
@@ -521,19 +523,20 @@ Arg Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | Attribute           | Type           | Example              | Notes                                                                                |
 +=====================+================+======================+======================================================================================+
-| value               | String         |                      | - Value for the argument                                                             |
+| arg                 | String         |                      | - Value for the argument                                                             |
 |                     |                |                      | - **Required** at creation time.                                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| metaName            | String         |                      | - Identifying label associated with the argument.                                    |
+| meta->name          | String         |                      | - Identifying label associated with the argument.                                    |
 |                     |                |                      | - **Required** at creation time if metadata is included.                             |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| metaDescription     | String         |                      | -                                                                                    |
+| meta->description   | String         |                      | - Optional description of the argument which may include usage, purpose, etc.        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| metaRequired        | boolean        |                      | - Indicates if input must be present prior to execution of the application.          |
+| meta->required      | boolean        |                      | - Indicates if input must be present prior to execution of the application.          |
 |                     |                |                      | - Default is FALSE.                                                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| metaKvPairs         | [String]       |                      | - Additional information as key-value pairs.                                         |
-|                     |                |                      | - Each pair must be in the form <key>=<value> where <value> is optional.             |
+| meta->keyValuePairs | [KeyValuePair] |                      | - Additional information as key-value pairs.                                         |
+|                     |                |                      | - May include validation information such as expected type, minimum value, etc.      |
+|                     |                |                      | - key is required, value is optional.                                                |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 
 --------------------------
@@ -547,18 +550,19 @@ FileInput Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | targetPath          | String         |                      | - Target path used by the Jobs service when transferring files.                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| inPlace             | boolean        |                      | - Default is FALSE.                                                                  |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| metaName            | String         |                      | - Identifying label associated with the input. Typically used during a job request.  |
-|                     |                |                      | - **Required** at creation time.                                                     |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| metaDescription     | String         |                      | -                                                                                    |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| metaRequired        | boolean        |                      | - Indicates if input must be present prior to execution of the application.          |
+| inPlace             | boolean        |                      | - Indicates if staging will be done in place. Please see Jobs Service.               |
 |                     |                |                      | - Default is FALSE.                                                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| metaKvPairs         | [String]       |                      | - Additional information as key-value pairs.                                         |
-|                     |                |                      | - Each pair must be in the form <key>=<value> where <value> is optional.             |
+| meta->name          | String         |                      | - Identifying label associated with the input. Typically used during a job request.  |
+|                     |                |                      | - **Required** at creation time.                                                     |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| meta->description   | String         |                      | - Optional description.                                                              |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| meta->required      | boolean        |                      | - Indicates if input must be present prior to execution of the application.          |
+|                     |                |                      | - Default is FALSE.                                                                  |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| meta->keyValuePairs | [KeyValuePair] |                      | - Additional information as key-value pairs.                                         |
+|                     |                |                      | - key is required, value is optional.                                                |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 
 -----------------------
@@ -832,7 +836,7 @@ The metadata object will contain the following information:
  * ``totalCount`` - Total number of records that would have been returned without a limit query parameter being imposed. -1 if total count was not computed.
 
 For performance reasons computation of ``totalCount`` is only determined on demand. This is controlled by the boolean
-query parameter ``computeTotal``. By default ``computeTotal`` is false.
+query parameter ``computeTotal``. By default ``computeTotal`` is *false*.
 
 Example query and response:
 
@@ -870,11 +874,3 @@ Response::
     }
   }
 
-Heading 2
-~~~~~~~~~
-
-Heading 3
-^^^^^^^^^
-
-Heading 4
-*********
