@@ -9,7 +9,7 @@
 .. _jobs:
 
 ####
-Jobs 
+Jobs
 ####
 
 .. raw:: html
@@ -24,24 +24,29 @@ Jobs
 Introduction to Jobs
 ====================
 
-The Tapis v3 Jobs service is specialized to run containerized applications on any host that supports container runtimes.  Currently, Docker and Singularity containers are supported.  The Jobs service uses the Systems, Apps, Files and Security Kernel services to process jobs.  
+The Tapis v3 Jobs service is specialized to run containerized applications on any host that supports container runtimes.  Currently, Docker and Singularity containers are supported.  The Jobs service uses the Systems, Apps, Files and Security Kernel services to process jobs.
 
 Implementation Status
 ---------------------
 The following table describes the current state of the Beta release of Jobs.  All UrlPaths shown start with /v3/jobs.  The unauthenticated health check, ready and hello APIs do not require a Tapis JWT in the request header.
 
-============     ======   ====================   ===========
-Name             Method   UrlPath                Status
-============     ======   ====================   ===========
-Submit           POST     /submit                Implemented
-Resubmit         POST     /{jobUuid}/resubmit    Implemented
-Get              GET      /{jobUuid}             Implemented
-Get Status       GET      /{jobUuid}/status      Implemented
-\ 
-Health Check     GET      /healthcheck           Implemented
-Ready            GET      /ready                 Implemented
-Hello            GET      /hello                 Implemented
-============     ======   ====================   ===========
+===============     ======   =======================================   ===========
+Name                Method   UrlPath                                   Status
+===============     ======   =======================================   ===========
+Submit              POST     /submit                                   Implemented
+Resubmit            POST     /{jobUuid}/resubmit                       Implemented
+list                GET      /list                                     Implemented
+Search              GET      /search                                   Implemented                          
+Get                 GET      /{jobUuid}                                Implemented
+Get Status          GET      /{jobUuid}/status                         Implemented
+Get History         GET      /{jobUuid}/history                        Implemented
+Get Output list     GET      /{jobUuid}/output/list/{outputPath}       Implemented
+Download Output     GET      /{jobUuid}/output/download/{outputPath}   Implemented
+\
+Health Check        GET      /healthcheck                              Implemented
+Ready               GET      /ready                                    Implemented
+Hello               GET      /hello                                    Implemented
+===============     ======   =======================================   ===========
 
 
 Job Processing Overview
@@ -49,7 +54,7 @@ Job Processing Overview
 
 Before discussing the details of how to construct a job request, we take this opportunity to describe overall lifecycle of a job.  When a job request is recieved as the payload of an POST call, the following steps are taken:
 
-#. **Request authorization** - The tenant, owner, and user values from the request and Tapis JWT are used to authorize access to the application, execution system and, if specified, archive system.  
+#. **Request authorization** - The tenant, owner, and user values from the request and Tapis JWT are used to authorize access to the application, execution system and, if specified, archive system.
 
 #. **Request validation** - Request values are checked for missing, conflicting or improper values; all paths are assigned; required paths are created on the execution system; and macro substitution is performed to finalize all job parameters.
 
@@ -93,14 +98,14 @@ An archive system can also be specified in the application or job request; the d
 The Job Submission Request
 ==========================
 
-A job submission request must contain the name, appId and appVersion values as shown in the `Simple Job Submission Example`_.  Those values are marked *Required* in the list below, a list of all possible values allowed in a submission request.  If a parameter has a default value, that value is also shown.  
+A job submission request must contain the name, appId and appVersion values as shown in the `Simple Job Submission Example`_.  Those values are marked *Required* in the list below, a list of all possible values allowed in a submission request.  If a parameter has a default value, that value is also shown.
 
-In addition, some parameters can inherit their values from the application or system definitions as discussed in `Parameter Precedence`_.  These parameters are marked *Inherit*.  Parameters that merge inherited values (rather than override them) are marked *InheritMerge*.  
+In addition, some parameters can inherit their values from the application or system definitions as discussed in `Parameter Precedence`_.  These parameters are marked *Inherit*.  Parameters that merge inherited values (rather than override them) are marked *InheritMerge*.
 
 Parameters that do not need to be set are marked *Not Required*.  Finally, parameters that allow macro substitution are marked *MacroEnabled* (see `Macro Substitution`_ for details).
 
 **name**
-  The user chosen name of the job.  *MacroEnabled*, *Required.* 
+  The user chosen name of the job.  *MacroEnabled*, *Required.*
 **appId**
   The Tapis application to execute. *Required.*
 **appVersion**
@@ -180,9 +185,9 @@ The directories assigned when a system is defined:
   jobWorkingDir - the default directory for temporary files used or created during job execution.
   dtnMountPoint - the path relative to the execution system's rootDir where the DTN file system is mounted.
 
-An execution system may define a *Data Transfer Node* (DTN).  A DTN is a high throughput node used to stage job inputs and to archive job outputs.  The goal is to improve transfer performance.  The execution system mounts the DTN's file system at the *dtnMountPoint* so that executing jobs have access to its data, but Tapis will connect to the DTN rather than the execution system during transfers.  See `Data Transfer Nodes`_ for details. 
+An execution system may define a *Data Transfer Node* (DTN).  A DTN is a high throughput node used to stage job inputs and to archive job outputs.  The goal is to improve transfer performance.  The execution system mounts the DTN's file system at the *dtnMountPoint* so that executing jobs have access to its data, but Tapis will connect to the DTN rather than the execution system during transfers.  See `Data Transfer Nodes`_ for details.
 
-The directories assigned in application definitions and/or in a job submission requests: 
+The directories assigned in application definitions and/or in a job submission requests:
 
 ::
 
@@ -194,13 +199,13 @@ The directories assigned in application definitions and/or in a job submission r
 Directory Assignments
 ^^^^^^^^^^^^^^^^^^^^^
 
-The rootDir and jobWorkingDir are always assigned upon system creation, so they are available for use as macros when assigning directories in applications or job submission requests.  
+The rootDir and jobWorkingDir are always assigned upon system creation, so they are available for use as macros when assigning directories in applications or job submission requests.
 
-When a job request is submitted, each of the job's four execution and archive system directories are assigned as follows: 
+When a job request is submitted, each of the job's four execution and archive system directories are assigned as follows:
 
 #. If the job submission request assigns the directory, that value is used.  Otherwise,
 #. If the application definition assigns the directory, that value is used.  Otherwise,
-#. The default values shown below are assigned:  
+#. The default values shown below are assigned:
 
 ::
 
@@ -221,7 +226,7 @@ FileInputs
 The *fileInputs* in application definitions are merged with those in job submission requests to produce a complete list of input files that need to be staged for a job.  The fileInputs array contains elements that conform to the following JSON schema.
 
 ::
-  
+
    "InputSpec": {
        "$comment": "Used to specify file inputs on Jobs submission requests",
        "type": "object",
@@ -229,17 +234,17 @@ The *fileInputs* in application definitions are merged with those in job submiss
                "sourceUrl":  {"type": "string", "minLength": 1, "format": "uri"},
                "targetPath": {"type": "string", "minLength": 0},
                "inPlace":    {"type": "boolean"},
-               "meta":       {"type": "object", "$ref": "#/$defs/ArgMetaSpec"}             
+               "meta":       {"type": "object", "$ref": "#/$defs/ArgMetaSpec"}
            },
        "required": ["sourceUrl"],
        "additionalProperties": false
-   }   
+   }
 
 Since all input directories or files are staged to the *execSystemInputDir*, the only required field is the *sourceUrl*.  Any URL protocol accepted by the Tapis Files_ service can be used here.  The most common protocols used are tapis, http, and https.  The standard tapis URL format is *tapis://<tapis-system>/<path>*; please see the Files_ service for the complete list of supported protocols.
 
-If provided, the *targetPath* indicates a path relative to the *execSystemInputDir* into which the input is copied.  When not provided, the  directory or file named in *sourceUrl* is copied directly into *execSystemInputDir*. 
+If provided, the *targetPath* indicates a path relative to the *execSystemInputDir* into which the input is copied.  When not provided, the  directory or file named in *sourceUrl* is copied directly into *execSystemInputDir*.
 
-The *inPlace* value defaults to false when not provided.  When true, it instructs the Jobs service to **not** copy the input.  This setting is used to indicate that the input has already been put in place in the *execSystemInputDir* subtree by some means outside of Tapis, so no copying is needed.  The use of *inPlace* documents all inputs, even those that do not need to be transferred. 
+The *inPlace* value defaults to false when not provided.  When true, it instructs the Jobs service to **not** copy the input.  This setting is used to indicate that the input has already been put in place in the *execSystemInputDir* subtree by some means outside of Tapis, so no copying is needed.  The use of *inPlace* documents all inputs, even those that do not need to be transferred.
 
 See the `ArgMetaSpec`_ for a discussion of the *meta* field, which allows one to name the input, designate the input as optional, and attach arbitrary key/value pairs.
 
@@ -253,7 +258,7 @@ The job *parameterSet* argument is comprised of these objects:
 
 ================    =====================   ===================================================
 Name                JSON Schema Type        Description
-================    =====================   =================================================== 
+================    =====================   ===================================================
 appArgs             `ArgSpec`_ array        Arguments passed to user's application
 containerArgs       `ArgSpec`_ array        Arguments passed to container runtime
 schedulerOptions    `ArgSpec`_ array        Arguments passed to HPC batch scheduler
@@ -281,7 +286,7 @@ Specify HPC batch scheduler arguments for the container runtime using the *sched
 envVariables
 ^^^^^^^^^^^^
 
-Specify key/value pairs that will be injected as environment variables into the application's container when it's launched.  Key/value pairs specified in the execution system definition, application definition, and job submission request are aggregated using precedence ordering (system < app < request) to resolve conflicts.  
+Specify key/value pairs that will be injected as environment variables into the application's container when it's launched.  Key/value pairs specified in the execution system definition, application definition, and job submission request are aggregated using precedence ordering (system < app < request) to resolve conflicts.
 
 archiveFilter
 ^^^^^^^^^^^^^
@@ -297,14 +302,14 @@ The *archiveFilter* conforms to this JSON schema:
          "excludes": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
          "includeLaunchFiles": {"type": "boolean"}
       },
-      "additionalProperties": false 
+      "additionalProperties": false
    }
 
-An *archiveFilter* can be specified in the application definition and/or the job submission request.  The *includes* and *excludes* arrays are merged by appending entries from the application definition to those in the submission request.  
+An *archiveFilter* can be specified in the application definition and/or the job submission request.  The *includes* and *excludes* arrays are merged by appending entries from the application definition to those in the submission request.
 
 The *excludes* filter is applied first, so it takes precedence over *includes*.  If *excludes* is empty, then no output file or directory will be explicitly excluded from archiving.  If *includes* is empty, then all files in *execSystemOutputDir* will be archived unless explicitly excluded.  If *includes* is not empty, then only files and directories that match an entry and not explicitly excluded will be archived.
- 
-Each *includes* and *excludes* entry is a string, a string with wildcards or a regular expression.  Entries represent directories or files.  The wildcard semantics are that of glob (*), which is commonly used on the command line.  Tapis implements Java glob_ semantics.  To filter using a regular expression, construct the pattern using Java regex_ semantics and then preface it with **REGEX:** (case sensitive).  Here are examples of globs and regular expressions that could appear in a filter: 
+
+Each *includes* and *excludes* entry is a string, a string with wildcards or a regular expression.  Entries represent directories or files.  The wildcard semantics are that of glob (*), which is commonly used on the command line.  Tapis implements Java glob_ semantics.  To filter using a regular expression, construct the pattern using Java regex_ semantics and then preface it with **REGEX:** (case sensitive).  Here are examples of globs and regular expressions that could appear in a filter:
 
 ::
 
@@ -313,7 +318,7 @@ Each *includes* and *excludes* entry is a string, a string with wildcards or a r
                   "REGEX:^[\\p{IsAlphabetic}\\p{IsDigit}_\\.\\-]+$"
                   "REGEX:\\s+"
 
-When *includeLaunchFiles* is true (the default), then the script (*tapisjob.sh*) and environment (*tapisjob.env*) files that Tapis generates in the *execSystemExecDir* are also archived.  These launch files provide valuable information about how a job was configured and launched, so archiving them can help with debugging and improve reproducibility.  Since these files may contain application secrets, such database passwords or other credentials, care must be taken to not expose private data through archiving.  
+When *includeLaunchFiles* is true (the default), then the script (*tapisjob.sh*) and environment (*tapisjob.env*) files that Tapis generates in the *execSystemExecDir* are also archived.  These launch files provide valuable information about how a job was configured and launched, so archiving them can help with debugging and improve reproducibility.  Since these files may contain application secrets, such database passwords or other credentials, care must be taken to not expose private data through archiving.
 
 If no filtering is specified at all, then all files in *execSystemOutputDir* and the launch files are archived.
 
@@ -361,7 +366,7 @@ ArgMetaSpec
 The JSON schema for metadata objects used in `FileInputs`_ and other job parameters is below.
 
 ::
- 
+
    "ArgMetaSpec": {
        "$comment": "An open-ended way to name and annotate arguments",
        "type": "object",
@@ -376,8 +381,8 @@ The JSON schema for metadata objects used in `FileInputs`_ and other job paramet
         "required": ["name", "required"],
         "additionalProperties": false
    }
-   
-The *ArgMetaSpec* is always a child its enclosing job parameter.  The *ArgMetaSpec* requires that a name be assigned it parent and that whether the parent parameter is required or not.  Optionally, a description and a map of key/value strings can be included.  The complete *ArgMetaSpec* object is saved in the job, so the key/value pairs can be used to pass arbitrary information to any program that queries the job.  For example, a web application might submit a job request and embed display information in the metadata for use whenever the job is queried. 
+
+The *ArgMetaSpec* is always a child its enclosing job parameter.  The *ArgMetaSpec* requires that a name be assigned it parent and that whether the parent parameter is required or not.  Optionally, a description and a map of key/value strings can be included.  The complete *ArgMetaSpec* object is saved in the job, so the key/value pairs can be used to pass arbitrary information to any program that queries the job.  For example, a web application might submit a job request and embed display information in the metadata for use whenever the job is queried.
 
 KeyValuePair
 ^^^^^^^^^^^^
@@ -412,10 +417,10 @@ The following standard environment variables are passed into each application co
 
 ::
 
-    _tapisAppId - Tapis app ID 
+    _tapisAppId - Tapis app ID
     _tapisAppVersion - Tapis app version
     _tapisArchiveOnAppError - true means archive even if the app returns a non-zero exit code
-    _tapisArchiveSystemDir - the archive system directory on which app output is archived    
+    _tapisArchiveSystemDir - the archive system directory on which app output is archived
     _tapisArchiveSystemId - Tapis system used for archiving app output
     _tapisCoresPerNode - number of cores used per node by app
     _tapisDtnMountPoint - the mountpoint on the execution system for the source DTN directory
@@ -441,14 +446,14 @@ The following standard environment variables are passed into each application co
     _tapisNodes - the number of nodes on which the app runs
     _tapisSysBatchScheduler - the HPC scheduler on the execution system
     _tapisSysBucketName - an object store bucket name
-    _tapisSysHost - the IP address or DNS name of the exec system 
+    _tapisSysHost - the IP address or DNS name of the exec system
     _tapisSysRootDir - the root directory on the exec system
     _tapisTenant - the tenant in which the job runs
 
 Macro Substitution
 ------------------
 
-Tapis defines macros or template variables that get replaced with actual values at well-defined points during job creation.  The act of replacing a macro with a value is often called macro substitution or macro expansion.  The complete list of Tapis macros can be found at JobTemplateVariables_.  
+Tapis defines macros or template variables that get replaced with actual values at well-defined points during job creation.  The act of replacing a macro with a value is often called macro substitution or macro expansion.  The complete list of Tapis macros can be found at JobTemplateVariables_.
 
 There is a close relationship between these macro definitions and the Tapis environment variables just discussed:  Macros that have values assigned are passed as environment variables into application containers.  This makes macros used during job creation available to applications at runtime.
 
@@ -458,7 +463,7 @@ Most macro definitions are *ground* definitions because their values do not depe
 
    execSystemInputDir = ${jobWorkingDir}/jobs/${jobUUID}
 
-Macro values are referenced using the ${macro-name} notation.  Since derived macro definitions reference other macros, there is the possibility of circular references.  Tapis detects these errors and aborts job creation.  
+Macro values are referenced using the ${macro-name} notation.  Since derived macro definitions reference other macros, there is the possibility of circular references.  Tapis detects these errors and aborts job creation.
 
 Below is the complete, ordered list of derived macros.  Each macro in the list can be defined using any ground macro and any macro that preceeds it in the list.  Result are undefined if a derived macro references a macro that follows it in the derived list.
 
@@ -467,9 +472,9 @@ Below is the complete, ordered list of derived macros.  Each macro in the list c
 #. ExecSystemInputDir
 #. ExecSystemExecDir
 #. ExecSystemOutputDir
-#. ArchiveSystemDir 
+#. ArchiveSystemDir
 
-Finally, macro substitution is applied to the job *description* field, whether the description is specified in an application or a submission request.   
+Finally, macro substitution is applied to the job *description* field, whether the description is specified in an application or a submission request.
 
 Macro Functions
 ^^^^^^^^^^^^^^^
@@ -478,18 +483,18 @@ Directory assignments in systems, applications and job requests can also use the
 
 To increase application portability, an optional default value can be passed into the **HOST_EVAL** function.  The function's complete signature with the optional path parameter is:
 
-        **HOST_EVAL($VAR, path)** 
+        **HOST_EVAL($VAR, path)**
 
-If the environment variable VAR does not exist on the host, then the literal path parameter is returned by the function.  This added flexibility allows applications to run in different environments, such as on TACC HPC systems that automatically expose certain environment variables and VMs that might not.  If the environment variable does not exist and no optional path parameter is provided, the job fails due to invalid input. 
+If the environment variable VAR does not exist on the host, then the literal path parameter is returned by the function.  This added flexibility allows applications to run in different environments, such as on TACC HPC systems that automatically expose certain environment variables and VMs that might not.  If the environment variable does not exist and no optional path parameter is provided, the job fails due to invalid input.
 
 
 .. _JobTemplateVariables: https://github.com/tapis-project/tapis-java/blob/dev/tapis-jobslib/src/main/java/edu/utexas/tacc/tapis/jobs/model/enumerations/JobTemplateVariables.java
 
 
 Job Status
-----------  
+----------
 
-The list below contains all possible states of a Tapis job, which are indicated in the *status* field of a job record.  The initial state is PENDING.  Terminal states are FINISHED, CANCELLED and FAILED.  The BLOCKED state indicates that the job is recovering from a resource constraint, network problem or other transient problem.  When the problem clears, the job will restart from the state in which blocking occurred.  
+The list below contains all possible states of a Tapis job, which are indicated in the *status* field of a job record.  The initial state is PENDING.  Terminal states are FINISHED, CANCELLED and FAILED.  The BLOCKED state indicates that the job is recovering from a resource constraint, network problem or other transient problem.  When the problem clears, the job will restart from the state in which blocking occurred.
 ::
 
     PENDING - Job processing beginning
@@ -506,7 +511,7 @@ The list below contains all possible states of a Tapis job, which are indicated 
     CANCELLED - Job execution intentionally stopped
     FAILED - Job failed
 
-Normal processing of a successfully executing job proceeds as follows:      
+Normal processing of a successfully executing job proceeds as follows:
 
 ::
 
@@ -548,8 +553,8 @@ DTN usage requires the coordinated configuration of a DTN, an execution system a
 
    Job Request effective values:
      execSystemId:         ds-exec
-     execSystemExecDir:    ${jobWorkingDir}/jobs/${jobUUID} 
-     execSystemInputDir:   ${dtnMountPoint}/projects/NHERI/shared/{$jobOwner}/jobs/${jobUUID} 
+     execSystemExecDir:    ${jobWorkingDir}/jobs/${jobUUID}
+     execSystemInputDir:   ${dtnMountPoint}/projects/NHERI/shared/{$jobOwner}/jobs/${jobUUID}
      execSystemOutputDir:  ${dtnMountPoint}/projects/NHERI/shared/{$jobOwner}/jobs/${jobUUID}/output
 
    NFS Mount on ds-exec (done outside of Tapis):
@@ -557,7 +562,7 @@ DTN usage requires the coordinated configuration of a DTN, an execution system a
 
 The example execution system, **ds-exec**, defines two DTN related values (both required to configure DTN usage):
 
-**dtnMountSourcePath** 
+**dtnMountSourcePath**
   The tapis URL specifying the exported DTN path; the path is relative to the DTN system's rootDir (which is just "/" in this example).
 **dtnMountPoint**
   The path relative to the execution system's rootDir where the DtnMountSourcePath is mounted.
@@ -580,7 +585,7 @@ This is the standard tapis URL format:  tapis://<tapis-system>/<path>.  After in
 
           execSystemInputDir=/corral-repl/projects/NHERI/shared/Bud/jobs/123
 
-Since **ds-exec** mounts the corral root directory, the files staged to corral /gpfs/corral3/repl are accessible at execSystemInputDir on **ds-exec**, relative to rootDir /execRoot. A similar approach would be used to transfer files to an archive system using the DTN, except this time **corral-dtn** is the source of the file transfers rather than the target. 
+Since **ds-exec** mounts the corral root directory, the files staged to corral /gpfs/corral3/repl are accessible at execSystemInputDir on **ds-exec**, relative to rootDir /execRoot. A similar approach would be used to transfer files to an archive system using the DTN, except this time **corral-dtn** is the source of the file transfers rather than the target.
 
 ------------------------------------------------------------
 
@@ -589,19 +594,19 @@ Container Runtimes
 
 The Tapis v3 Jobs service currently supports Docker and Singularity containers run natively (i.e., not run using a batch scheduler like Slurm).  In general, Jobs launches an application's container on a remote system, monitors the container's execution, and captures the application's exit code after it terminates.  Jobs uses SSH to connect to the execution system to issue Docker, Singularity or native operating system commands.
 
-To launch a job, the Jobs service creates a bash script, **tapisjob.sh**, with the runtime-specific commands needed to execute the container.  This script references **tapisjob.env**, a file Jobs creates to pass environment variables to application containers.  Both files are staged in the job's execSystemExecDir and, by default, are archived with job output on the archive system.  See `archiveFilter`_ to override this default behavior, especially if archives will be shared and the scripts pass sensitive information into containers.  
+To launch a job, the Jobs service creates a bash script, **tapisjob.sh**, with the runtime-specific commands needed to execute the container.  This script references **tapisjob.env**, a file Jobs creates to pass environment variables to application containers.  Both files are staged in the job's execSystemExecDir and, by default, are archived with job output on the archive system.  See `archiveFilter`_ to override this default behavior, especially if archives will be shared and the scripts pass sensitive information into containers.
 
 Docker
 ------
 
-To launch a Docker container, the Jobs service will SSH to the target host and issue a command using this template: 
+To launch a Docker container, the Jobs service will SSH to the target host and issue a command using this template:
 
 ::
 
    docker run [docker options] image[:tag|@digest] [application args]
 
 #. docker options:  (optional) user-specified arguments passed to docker
-#. image:  (required) user-specified docker application image  
+#. image:  (required) user-specified docker application image
 #. application arguments:  (optional) user-specified command line arguments passed to the application
 
 The docker run-command_ options *--cidfile*, *-d*, *-e*, *--env*, *--name*, *--rm*, and *--user* are reserved for use by Tapis.  Most other Docker options are available to the user.  The Jobs service implements these calling conventions:
@@ -609,7 +614,7 @@ The docker run-command_ options *--cidfile*, *-d*, *-e*, *--env*, *--name*, *--r
 #. The container name is set to the job UUID.
 #. The container's user is set to the user ID used to establish the SSH session.
 #. The container ID file is specified as *<jobUUID>.cid* in the execSystemExecDir, i.e., the directory from which the container is launched.
-#. The *-rm* option is always set to remove the container after execution. 
+#. The *-rm* option is always set to remove the container after execution.
 
 Volume Mounts
 ^^^^^^^^^^^^^
@@ -618,8 +623,8 @@ In addition to the above conventions, bind_ mounts are used to mount the executi
 
 ::
 
-   execSystemExecDir   on host is mounted at /TapisExec in the container.  
-   execSystemInputDir  on host is mounted at /TapisInput in the container. 
+   execSystemExecDir   on host is mounted at /TapisExec in the container.
+   execSystemInputDir  on host is mounted at /TapisInput in the container.
    execSystemOutputDir on host is mounted at /TapisOutput in the container.
 
 .. _bind: https://docs.docker.com/storage/bind-mounts/
@@ -628,7 +633,7 @@ In addition to the above conventions, bind_ mounts are used to mount the executi
 Singularity
 -----------
 
-Tapis provides two distinct ways to launch a Singularity containers, using *singluarity instance start* or *singularity run*.      
+Tapis provides two distinct ways to launch a Singularity containers, using *singluarity instance start* or *singularity run*.
 
 Singularity Start
 ^^^^^^^^^^^^^^^^^
@@ -642,17 +647,17 @@ Singularity's support for detached processes and services is implemented nativel
 where:
 
 #. singularity options:  (optional) user-specified argument passed to singularity start
-#. image id:  (required) user-specified singularity application image  
+#. image id:  (required) user-specified singularity application image
 #. application arguments:  (optional) user-specified command line arguments passed to the application
 #. job uuid:  the job uuid used to name the instance (always set by Jobs)
 
 The singularity options *--pidfile*, *--env* and *--name* are reserved for use by Tapis.  Users specify the environment variables to be injected into their application containers via the `envVariables`_ parameter.  Most other singularity options are available to users.
 
-Jobs will then issue *singularity instance list* to obtain the container's process id (PID).  Jobs determines that the application has terminated when the PID is no longer in use by the operating system. 
+Jobs will then issue *singularity instance list* to obtain the container's process id (PID).  Jobs determines that the application has terminated when the PID is no longer in use by the operating system.
 
 By convention, Jobs will look for a **tapisjob.exitcode** file in the Job's output directory after containers terminate.  If found, the file should contain only the integer code the application reported when it exited.  If not found, Jobs assumes the application exited normally with a zero exit code.
 
-Finally, Jobs issues a *singularity instance stop <job uuid>* to clean up the singularity runtime environment and terminate all processes associated with the container.  
+Finally, Jobs issues a *singularity instance stop <job uuid>* to clean up the singularity runtime environment and terminate all processes associated with the container.
 
 .. _start: https://sylabs.io/guides/3.7/user-guide/cli/singularity_instance_start.html
 .. _stop: https://sylabs.io/guides/3.7/user-guide/cli/singularity_instance_stop.html
@@ -677,7 +682,7 @@ where:
 
 The singularity *--env* option is reserved for use by Tapis.  Users specify the environment variables to be injected into their application containers via the `envVariables`_ parameter.  Most other singularity options are available to users.
 
-Jobs will use the PID returned when issuing the background command to monitor the container's execution.  Jobs determines that the application has terminated when the PID is no longer in use by the operating system. 
+Jobs will use the PID returned when issuing the background command to monitor the container's execution.  Jobs determines that the application has terminated when the PID is no longer in use by the operating system.
 
 Jobs uses the same **TapisJob.exitcode** file convention introduced above to attain the application's exit code (if the file exists).
 
@@ -697,12 +702,12 @@ The Singularity Start and Singularity Run approaches boath allow SSH sessions be
 Required Termination Order
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Since Jobs monitors container execution by querying the operating system using the PID obtained at launch time, the initially launched program should be the last part of the application to terminate.  The program specified in the image script can spawn any number of processes (and threads), but it should not exit before those processes complete.  
+Since Jobs monitors container execution by querying the operating system using the PID obtained at launch time, the initially launched program should be the last part of the application to terminate.  The program specified in the image script can spawn any number of processes (and threads), but it should not exit before those processes complete.
 
 Optional Exit Code Convention
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Applications are not required to support the **TapisJob.exitcode** file convention as described above, but it is the only way in which Jobs can report the application specified exit status to the user.  
+Applications are not required to support the **TapisJob.exitcode** file convention as described above, but it is the only way in which Jobs can report the application specified exit status to the user.
 
 
 ------------------------------------------------------------
@@ -710,12 +715,478 @@ Applications are not required to support the **TapisJob.exitcode** file conventi
 Querying Jobs
 =============
 
-tbd
+Get Jobs list
+---------------
+
+With PySDK:
+
+.. code-block:: plaintext
+
+        $ t.jobs.getJobList(limit=2, orderBy='lastUpdated(desc),name(asc)', computeTotal=True)
+
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/list?limit=2&orderBy=lastUpdated(desc),name(asc)&computeTotal=true
+
+The response will look something like the following:
+
+::
+
+    {
+    "result": [
+        {
+            "uuid": "731b65f4-43e9-4a7a-b3a0-68644b53c1cb-007",
+            "name": "SyRunSleepSecondsNoIPFiles-2",
+            "owner": "testuser2",
+            "appId": "SyRunSleepSecondsNoIPFiles-2",
+            "created": "2021-07-21T19:56:02.163984Z",
+            "status": "FINISHED",
+            "remoteStarted": "2021-07-21T19:56:18.628448Z",
+            "ended": "2021-07-21T19:56:52.637554Z",
+            "tenant": "dev",
+            "execSystemId": "tapisv3-exec2",
+            "archiveSystemId": "tapisv3-exec2",
+            "appVersion": "0.0.1",
+            "lastUpdated": "2021-07-21T19:56:52.637554Z"
+        },
+        {
+            "uuid": "79dfaba5-bfb4-4c6d-a198-643bda211dbf-007",
+            "name": "SlurmSleepSeconds",
+            "owner": "testuser2",
+            "appId": "SlurmSleepSecondsVM",
+            "created": "2021-07-21T19:16:02.019916Z",
+            "status": "FINISHED",
+            "remoteStarted": "2021-07-21T19:16:35.102868Z",
+            "ended": "2021-07-21T19:16:57.909940Z",
+            "tenant": "dev",
+            "execSystemId": "tapisv3-exec2-slurm",
+            "archiveSystemId": "tapisv3-exec2-slurm",
+            "appVersion": "0.0.1",
+            "lastUpdated": "2021-07-21T19:16:57.909940Z"
+        }
+    ],
+    "status": "success",
+    "message": "JOBS_LIST_RETRIVED Jobs list for the user testuser2 in the tenant dev retrived.",
+    "version": "1.0.0-rc1",
+    "metadata": {
+        "recordCount": 2,
+        "recordLimit": 2,
+        "recordsSkipped": 0,
+        "orderBy": "lastUpdated(desc),name(asc)",
+        "startAfter": null,
+        "totalCount": 1799
+    }
+    }
+
+Job Search
+---------------
+
+With CURL:
+
+.. code-block:: plaintext
+
+      $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/search?limit=2&status.eq=FINISHED&created.between=2021-07-01,2021-07-21&orderBy=lastUpdated(desc),name(asc)&computeTotal=True
+
+The response will look something like the following:
+
+::
+
+    {
+      "result": [
+          {
+              "uuid": "79234b2a-0995-4632-956e-b940d10607ba-007",
+              "name": "SyRunSleepSecondsNoIPFiles-2",
+              "owner": "testuser2",
+              "appId": "SyRunSleepSecondsNoIPFiles-2",
+              "created": "2021-07-20T23:56:02.616Z",
+              "status": "FINISHED",
+              "remoteStarted": "2021-07-20T23:56:20.368Z",
+              "ended": "2021-07-20T23:56:54.409Z",
+              "tenant": "dev",
+              "execSystemId": "tapisv3-exec2",
+              "archiveSystemId": "tapisv3-exec",
+              "appVersion": "0.0.1",
+              "lastUpdated": "2021-07-20T23:56:54.409Z"
+          },
+          {
+              "uuid": "432f7018-070d-41c3-ba0e-a685f7f11e5c-007",
+              "name": "SlurmSleepSeconds",
+              "owner": "testuser2",
+              "appId": "SlurmSleepSecondsVM",
+              "created": "2021-07-20T23:16:01.629Z",
+              "status": "FINISHED",
+              "remoteStarted": "2021-07-20T23:16:24.781Z",
+              "ended": "2021-07-20T23:16:58.745Z",
+              "tenant": "dev",
+              "execSystemId": "tapisv3-exec2-slurm",
+              "archiveSystemId": "tapisv3-exec",
+              "appVersion": "0.0.1",
+              "lastUpdated": "2021-07-20T23:16:58.745Z"
+          }
+      ],
+      "status": "success",
+      "message": "JOBS_SEARCH_RESULT_LIST_RETRIEVED Jobs search list for the user testuser2 in the tenant dev retrieved.",
+      "version": "1.0.0-rc1",
+      "metadata": {
+          "recordCount": 2,
+          "recordLimit": 2,
+          "recordsSkipped": 0,
+          "orderBy": "lastUpdated(desc),name(asc)",
+          "startAfter": null,
+          "totalCount": 246
+      }
+      }
+
+Get Job Details
+-----------------
+
+With PySDK:
+
+.. code-block:: plaintext
+
+        $ t.jobs.getJob(jobUuid='ba34f946-8a18-44c4-9b25-19e21dfadf69-007')
+
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007
+
+The response will look something like the following:
+
+::
+
+     {
+    "result": {
+        "id": 1711,
+        "name": "SyRunSleepSecondsNoIPFiles-2",
+        "owner": "testuser2",
+        "tenant": "dev",
+        "description": "Sleep for a specified amount of time",
+        "status": "FINISHED",
+        "lastMessage": "Setting job status to FINISHED.",
+        "created": "2021-07-12T23:56:01.790165Z",
+        "ended": "2021-07-12T23:56:55.962694Z",
+        "lastUpdated": "2021-07-12T23:56:55.962694Z",
+        "uuid": "ba34f946-8a18-44c4-9b25-19e21dfadf69-007",
+        "appId": "SyRunSleepSecondsNoIPFiles-2",
+        "appVersion": "0.0.1",
+        "archiveOnAppError": true,
+        "dynamicExecSystem": false,
+        "execSystemId": "tapisv3-exec2",
+        "execSystemExecDir": "/workdir/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007",
+        "execSystemInputDir": "/workdir/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007",
+        "execSystemOutputDir": "/workdir/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/output",
+        "execSystemLogicalQueue": null,
+        "archiveSystemId": "tapisv3-exec",
+        "archiveSystemDir": "/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/archive",
+        "dtnSystemId": null,
+        "dtnMountSourcePath": null,
+        "dtnMountPoint": null,
+        "nodeCount": 1,
+        "coresPerNode": 1,
+        "memoryMB": 100,
+        "maxMinutes": 240,
+        "fileInputs": "[]",
+        "parameterSet": "{\"appArgs\": [], \"envVariables\": [{\"key\": \"_tapisAppId\", \"value\": \"SyRunSleepSecondsNoIPFiles-2\"}, {\"key\": \"_tapisAppVersion\", \"value\": \"0.0.1\"}, {\"key\": \"_tapisArchiveOnAppError\", \"value\": \"true\"}, {\"key\": \"_tapisArchiveSystemDir\", \"value\": \"/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/archive\"}, {\"key\": \"_tapisArchiveSystemId\", \"value\": \"tapisv3-exec\"}, {\"key\": \"_tapisCoresPerNode\", \"value\": \"1\"}, {\"key\": \"_tapisDynamicExecSystem\", \"value\": \"false\"}, {\"key\": \"_tapisEffeciveUserId\", \"value\": \"testuser2\"}, {\"key\": \"_tapisExecSystemExecDir\", \"value\": \"/workdir/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007\"}, {\"key\": \"_tapisExecSystemId\", \"value\": \"tapisv3-exec2\"}, {\"key\": \"_tapisExecSystemInputDir\", \"value\": \"/workdir/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007\"}, {\"key\": \"_tapisExecSystemOutputDir\", \"value\": \"/workdir/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/output\"}, {\"key\": \"_tapisJobCreateDate\", \"value\": \"2021-07-12Z\"}, {\"key\": \"_tapisJobCreateTime\", \"value\": \"23:56:01.790165454Z\"}, {\"key\": \"_tapisJobCreateTimestamp\", \"value\": \"2021-07-12T23:56:01.790165454Z\"}, {\"key\": \"_tapisJobName\", \"value\": \"SyRunSleepSecondsNoIPFiles-2\"}, {\"key\": \"_tapisJobOwner\", \"value\": \"testuser2\"}, {\"key\": \"_tapisJobUUID\", \"value\": \"ba34f946-8a18-44c4-9b25-19e21dfadf69-007\"}, {\"key\": \"_tapisJobWorkingDir\", \"value\": \"workdir\"}, {\"key\": \"_tapisMaxMinutes\", \"value\": \"240\"}, {\"key\": \"_tapisMemoryMB\", \"value\": \"100\"}, {\"key\": \"_tapisNodes\", \"value\": \"1\"}, {\"key\": \"_tapisSysHost\", \"value\": \"129.114.17.113\"}, {\"key\": \"_tapisSysRootDir\", \"value\": \"/home/testuser2\"}, {\"key\": \"_tapisTenant\", \"value\": \"dev\"}, {\"key\": \"JOBS_PARMS\", \"value\": \"15\"}, {\"key\": \"MAIN_CLASS\", \"value\": \"edu.utexas.tacc.testapps.tapis.SleepSecondsSy\"}], \"archiveFilter\": {\"excludes\": [], \"includes\": [\"Sleep*\", \"tapisjob.*\"], \"includeLaunchFiles\": true}, \"containerArgs\": [], \"schedulerOptions\": []}",
+        "execSystemConstraints": null,
+        "subscriptions": "[]",
+        "blockedCount": 0,
+        "remoteJobId": "1466046",
+        "remoteJobId2": null,
+        "remoteOutcome": "FINISHED",
+        "remoteResultInfo": "0",
+        "remoteQueue": null,
+        "remoteSubmitted": null,
+        "remoteStarted": "2021-07-12T23:56:20.900039Z",
+        "remoteEnded": "2021-07-12T23:56:42.411522Z",
+        "remoteSubmitRetries": 0,
+        "remoteChecksSuccess": 3,
+        "remoteChecksFailed": 0,
+        "remoteLastStatusCheck": "2021-07-12T23:56:42.382661Z",
+        "inputTransactionId": null,
+        "inputCorrelationId": null,
+        "archiveTransactionId": "66bc6c9a-210b-4ee6-9da3-252922928e7b",
+        "archiveCorrelationId": "87f62e69-c180-4ad1-9aa7-ac5ada78e1b6",
+        "tapisQueue": "tapis.jobq.submit.DefaultQueue",
+        "visible": true,
+        "createdby": "testuser2",
+        "createdbyTenant": "dev",
+        "tags": [
+            "singularity",
+            "sleep",
+            "test"
+        ],
+        "_fileInputsSpec": null,
+        "_parameterSetModel": null
+    },
+    "status": "success",
+    "message": "JOBS_RETRIEVED Job ba34f946-8a18-44c4-9b25-19e21dfadf69-007 retrieved.",
+    "version": "1.0.0-rc1",
+  "metadata": null
+  }
+
+Get Job Status
+----------------
+
+With PySDK:
+
+.. code-block:: plaintext
+
+        $ t.jobs.getJobStatus(jobUuid='ba34f946-8a18-44c4-9b25-19e21dfadf69-007')
+
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/status
+
+The response will look something like the following:
+
+::
+
+  {
+    "result": {
+      "status": "FINISHED"
+      },
+      "status": "success",
+      "message": "JOBS_STATUS_RETRIEVED Status of the Job ba34f946-8a18-44c4-9b25-19e21dfadf69-007 retrieved.",
+      "version": "1.0.0-rc1",
+      "metadata": null
+      }
+
+
+Get Job History
+----------------
+
+With PySDK:
+
+.. code-block:: plaintext
+
+        $ t.jobs.getJobHistory(jobUuid='ba34f946-8a18-44c4-9b25-19e21dfadf69-007')
+
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/history
+
+The response will look something like the following:
+
+::
+
+    {
+    "result": [
+        {
+            "event": "JOB_NEW_STATUS",
+            "created": "2021-07-12T23:56:02.365996Z",
+            "jobStatus": "PENDING",
+            "description": "The job has transitioned to a new status: PENDING.",
+            "transferTaskUuid": null,
+            "transferSummary": {}
+        },
+        {
+            "event": "JOB_NEW_STATUS",
+            "created": "2021-07-12T23:56:02.799166Z",
+            "jobStatus": "PROCESSING_INPUTS",
+            "description": "The job has transitioned to a new status: PROCESSING_INPUTS. The previous job status was PENDING.",
+            "transferTaskUuid": null,
+            "transferSummary": {}
+        },
+        {
+            "event": "JOB_NEW_STATUS",
+            "created": "2021-07-12T23:56:10.203007Z",
+            "jobStatus": "STAGING_INPUTS",
+            "description": "The job has transitioned to a new status: STAGING_INPUTS. The previous job status was PROCESSING_INPUTS.",
+            "transferTaskUuid": null,
+            "transferSummary": {}
+        },
+        {
+            "event": "JOB_NEW_STATUS",
+            "created": "2021-07-12T23:56:10.226013Z",
+            "jobStatus": "STAGING_JOB",
+            "description": "The job has transitioned to a new status: STAGING_JOB. The previous job status was STAGING_INPUTS.",
+            "transferTaskUuid": null,
+            "transferSummary": {}
+        },
+        {
+            "event": "JOB_NEW_STATUS",
+            "created": "2021-07-12T23:56:20.720637Z",
+            "jobStatus": "SUBMITTING_JOB",
+            "description": "The job has transitioned to a new status: SUBMITTING_JOB. The previous job status was STAGING_JOB.",
+            "transferTaskUuid": null,
+            "transferSummary": {}
+        },
+        {
+            "event": "JOB_NEW_STATUS",
+            "created": "2021-07-12T23:56:20.888569Z",
+            "jobStatus": "QUEUED",
+            "description": "The job has transitioned to a new status: QUEUED. The previous job status was SUBMITTING_JOB.",
+            "transferTaskUuid": null,
+            "transferSummary": {}
+        },
+        {
+            "event": "JOB_NEW_STATUS",
+            "created": "2021-07-12T23:56:20.902511Z",
+            "jobStatus": "RUNNING",
+            "description": "The job has transitioned to a new status: RUNNING. The previous job status was QUEUED.",
+            "transferTaskUuid": null,
+            "transferSummary": {}
+        },
+        {
+            "event": "JOB_NEW_STATUS",
+            "created": "2021-07-12T23:56:42.427492Z",
+            "jobStatus": "ARCHIVING",
+            "description": "The job has transitioned to a new status: ARCHIVING. The previous job status was RUNNING.",
+            "transferTaskUuid": null,
+            "transferSummary": {}
+        },
+        {
+            "event": "JOB_NEW_STATUS",
+            "created": "2021-07-12T23:56:55.966883Z",
+            "jobStatus": "FINISHED",
+            "description": "The job has transitioned to a new status: FINISHED. The previous job status was ARCHIVING.",
+            "transferTaskUuid": null,
+            "transferSummary": {}
+        }
+    ],
+    "status": "success",
+    "message": "JOBS_HISTORY_RETRIEVED Job ba34f946-8a18-44c4-9b25-19e21dfadf69-007 history retrieved for user testuser2 tenant dev",
+    "version": "1.0.0-rc1",
+    "metadata": {
+        "recordCount": 9,
+        "recordLimit": 100,
+        "recordsSkipped": 0,
+        "orderBy": null,
+        "startAfter": null,
+        "totalCount": -1
+    }
+    }
+
+Get Job Output Listing
+-----------------------
+
+With PySDK:
+
+.. code-block:: plaintext
+
+        $ t.jobs.getJobOutputList(jobUuid='ba34f946-8a18-44c4-9b25-19e21dfadf69-007', outputPath='/')
+
+
+With CURL:
+
+.. code-block:: plaintext
+
+        $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/output/list/
+
+The response will look something like the following:
+
+::
+
+    {
+    "result": [
+        {
+            "mimeType": null,
+            "type": "file",
+            "owner": "1003",
+            "group": "1003",
+            "nativePermissions": "rw-rw-r--",
+            "uri": "tapis://dev/tapisv3-exec/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/archive/SleepSeconds.out",
+            "lastModified": "2021-07-12T23:56:54Z",
+            "name": "SleepSeconds.out",
+            "path": "/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/archive/SleepSeconds.out",
+            "size": 3538
+        },
+        {
+            "mimeType": null,
+            "type": "file",
+            "owner": "1003",
+            "group": "1003",
+            "nativePermissions": "rw-rw-r--",
+            "uri": "tapis://dev/tapisv3-exec/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/archive/tapisjob.env",
+            "lastModified": "2021-07-12T23:56:53Z",
+            "name": "tapisjob.env",
+            "path": "/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/archive/tapisjob.env",
+            "size": 1051
+        },
+        {
+            "mimeType": null,
+            "type": "file",
+            "owner": "1003",
+            "group": "1003",
+            "nativePermissions": "rw-rw-r--",
+            "uri": "tapis://dev/tapisv3-exec/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/archive/tapisjob.exitcode",
+            "lastModified": "2021-07-12T23:56:54Z",
+            "name": "tapisjob.exitcode",
+            "path": "/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/archive/tapisjob.exitcode",
+            "size": 1
+        },
+        {
+            "mimeType": null,
+            "type": "file",
+            "owner": "1003",
+            "group": "1003",
+            "nativePermissions": "rw-rw-r--",
+            "uri": "tapis://dev/tapisv3-exec/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/archive/tapisjob.out",
+            "lastModified": "2021-07-12T23:56:54Z",
+            "name": "tapisjob.out",
+            "path": "/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/archive/tapisjob.out",
+            "size": 3566
+        },
+        {
+            "mimeType": "application/x-shar",
+            "type": "file",
+            "owner": "1003",
+            "group": "1003",
+            "nativePermissions": "rw-rw-r--",
+            "uri": "tapis://dev/tapisv3-exec/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/archive/tapisjob.sh",
+            "lastModified": "2021-07-12T23:56:54Z",
+            "name": "tapisjob.sh",
+            "path": "/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/archive/tapisjob.sh",
+            "size": 979
+        }
+    ],
+    "status": "success",
+    "message": "JOBS_OUTPUT_FILES_LIST_RETRIEVED Job ba34f946-8a18-44c4-9b25-19e21dfadf69-007 output files list retrieved for the user testuser2 in the tenant dev.",
+    "version": "1.0.0-rc1",
+    "metadata": {
+        "recordCount": 5,
+        "recordLimit": 100,
+        "recordsSkipped": 0,
+        "orderBy": null,
+        "startAfter": null,
+        "totalCount": 0
+    }
+    }
+
+Get Job Output Download
+-------------------------
+
+With PySDK:
+
+.. code-block:: plaintext
+
+       $ t.jobs.getJobOutputDownload(jobUuid='ba34f946-8a18-44c4-9b25-19e21dfadf69-007', outputPath='/')
+
+
+With CURL:
+
+.. code-block:: plaintext
+
+      $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/output/download/ --output joboutput.zip
+
+All the files in the the requested outputPath get downloaded in a zip file.
+
+
+
 
 ------------------------------------------------------------
 
 Job Actions
 ===========
-
-
-
