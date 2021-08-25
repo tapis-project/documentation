@@ -170,7 +170,7 @@ and ``username``, for example:
 
 
 Password Grant - Generating a Token For Yourself
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The simplest case is that you want to generate a Tapis OAuth token for yourself; to do this you can use the *password*
 grant flow, providing your username and password.
@@ -217,7 +217,7 @@ the tenant to verify the JWT signature.
 
 
 Using a Token
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 In order to use an access token in an API request to Tapis, pass the token in as the value of the ``X-Tapis-Token`` header.
 The PySDK will automatically send the token via this header for you. 
@@ -296,8 +296,9 @@ The authenticator for your tenant may include additional claims not listed here.
 .. _JWT: https://jwt.io/introduction/ 
 
 .. _oauth-clients-label:
+
 OAuth Clients
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 In order to use the more advanced OAuth2 flows, including any use of the authorization code grant type and to generate
 refresh tokens with the password grant type, you must generate an OAuth2 *client*. Clients in OAuth2 represent
@@ -306,11 +307,11 @@ on behalf of one or more users. Clients are created and managed using the ``/v3/
 
 
 Creating Clients
-^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~
 
 To create a client, make a POST request the the Clients API. All fields are optional; if you do not pass a 
 ``client_id`` or ``client_key`` in the request, the clients API will generate random ones for you. In order to
-use the ``authorize_code`` grant type you will need to set the ``callback_url`` when registering your client (see :ref: `_auth_code`).
+use the ``authorize_code`` grant type you will need to set the ``callback_url`` when registering your client (see :ref:`auth_code`).
 For a complete list of available parameters, see the API live-docs for Clients_.
 
 With PySDK:
@@ -346,7 +347,7 @@ The response will be similar to
 
 
 Listing Clients
-^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~
 
 With PySDK:
 
@@ -378,7 +379,7 @@ The response will be similar to
 
 
 Deleting Clients
-^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~
 
 You can also delete clients you are no longer using; just pass the ``client_id`` of the client to be deleted:
 
@@ -399,8 +400,9 @@ A null response is returned from a successful delete request.
 
 
 .. _auth_code:
+
 Authorization Code Grant - Generating Tokens For Users
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 An important aspect of OAuth2 is that it enables applications to generate tokens on behalf of users without the applications
 needing to possess user credentials (i.e., passwords). In this section, we discuss using the OAuth2 *authorization code* grant
@@ -450,7 +452,7 @@ tokens (i.e., controller 2 above).
 
 
 The Tapis Token Web Application
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Tapis provides a graphical interface via a web application that enables users to generate tokens. The Tapis Web 
 Application is available by default for any tenant using the default Tapis authenticator, including the ``tacc`` tenant.
