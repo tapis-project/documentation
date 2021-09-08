@@ -251,6 +251,8 @@ See the `ArgMetaSpec`_ for a discussion of the *meta* field, which allows one to
 
 .. _Files: https://tapis.readthedocs.io/en/latest/technical/files.html
 
+.. _Systems: https://tapis.readthedocs.io/en/latest/technical/systems.html
+
 ParameterSet
 ------------
 
@@ -282,6 +284,22 @@ schedulerOptions
 ^^^^^^^^^^^^^^^^
 
 Specify HPC batch scheduler arguments for the container runtime using the *schedulerOptions* parameter.  Arguments specified in the application definition are appended to those in the submission request.  The arguments for each scheduler are passed using that scheduler's conventions.  Metadata can be attached to any argument.
+
+Tapis defines a special scheduler option, **--tapis-profile**, to support local scheduler conventions.  Data centers sometimes customize their schedulers or restrict how those schedulers can be used.  The Systems_ service manages *SchedulerProfile* resources that are separate from any system definition, but can be referenced from system definitions.  The Jobs service uses directives contained in profiles to tailor application execution to local requirements.
+
+As an example, below is the JSON input used to create the TACC scheduler profile.  The *moduleLoadCommand* specifies the local command used to load (in order) each of the modules listed in *modulesToLoad*.  *hiddenOptions* identifies scheduler options that the local implementation prohibits.  In this case, "MEM" indicates that the *--mem* option should never be passed to Slurm. 
+
+::
+
+    {
+        "name": "TACC",
+        "owner": "user1",
+        "description": "Test profile for TACC Slurm",
+        "moduleLoadCommand": "module load", 
+        "modulesToLoad": ["tacc-singularity"],
+        "hiddenOptions": ["MEM"]
+    }
+
 
 envVariables
 ^^^^^^^^^^^^
