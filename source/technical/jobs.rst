@@ -34,14 +34,14 @@ The following table describes the current state of the Beta release of Jobs.  Al
 Name                Method   UrlPath                                   Status
 ===============     ======   =======================================   ===========
 Submit              POST     /submit                                   Implemented
-Resubmit            POST     /{jobUuid}/resubmit                       Implemented
+Resubmit            POST     /{JobUUID}/resubmit                       Implemented
 list                GET      /list                                     Implemented
 Search              GET      /search                                   Implemented                          
-Get                 GET      /{jobUuid}                                Implemented
-Get Status          GET      /{jobUuid}/status                         Implemented
-Get History         GET      /{jobUuid}/history                        Implemented
-Get Output list     GET      /{jobUuid}/output/list/{outputPath}       Implemented
-Download Output     GET      /{jobUuid}/output/download/{outputPath}   Implemented
+Get                 GET      /{JobUUID}                                Implemented
+Get Status          GET      /{JobUUID}/status                         Implemented
+Get History         GET      /{JobUUID}/history                        Implemented
+Get Output list     GET      /{JobUUID}/output/list/{outputPath}       Implemented
+Download Output     GET      /{JobUUID}/output/download/{outputPath}   Implemented
 \
 Health Check        GET      /healthcheck                              Implemented
 Ready               GET      /ready                                    Implemented
@@ -210,15 +210,15 @@ When a job request is submitted, each of the job's four execution and archive sy
 ::
 
    No DTN defined:
-     execSystemExecDir:    ${jobWorkingDir}/jobs/${jobUUID}
-     execSystemInputDir:   ${jobWorkingDir}/jobs/${jobUUID}
-     execSystemOutputDir:  ${jobWorkingDir}/jobs/${jobUUID}/output
+     execSystemExecDir:    ${JobWorkingDir}/jobs/${JobUUID}
+     execSystemInputDir:   ${JobWorkingDir}/jobs/${JobUUID}
+     execSystemOutputDir:  ${JobWorkingDir}/jobs/${JobUUID}/output
      archiveSystemDir:     /jobs/${JobUUID}/archive                 (if archiveSystemId is set)
    DTN defined:
-     execSystemExecDir:    ${dtnMountPoint}/jobs/${jobUUID}
-     execSystemInputDir:   ${dtnMountPoint}/jobs/${jobUUID}
-     execSystemOutputDir:  ${dtnMountPoint}/jobs/${jobUUID}/output
-     archiveSystemDir:     ${dtnMountPoint}/jobs/${JobUUID}/archive (if archiveSystemId is set)
+     execSystemExecDir:    ${DtnMountPoint}/jobs/${JobUUID}
+     execSystemInputDir:   ${DtnMountPoint}/jobs/${JobUUID}
+     execSystemOutputDir:  ${DtnMountPoint}/jobs/${JobUUID}/output
+     archiveSystemDir:     ${DtnMountPoint}/jobs/${JobUUID}/archive (if archiveSystemId is set)
 
 FileInputs
 ----------
@@ -461,9 +461,9 @@ Most macro definitions are *ground* definitions because their values do not depe
 
 ::
 
-   execSystemInputDir = ${jobWorkingDir}/jobs/${jobUUID}
+   execSystemInputDir = ${JobWorkingDir}/jobs/${JobUUID}
 
-Macro values are referenced using the ${macro-name} notation.  Since derived macro definitions reference other macros, there is the possibility of circular references.  Tapis detects these errors and aborts job creation.
+Macro values are referenced using the ${Macro-name} notation.  Since derived macro definitions reference other macros, there is the possibility of circular references.  Tapis detects these errors and aborts job creation.
 
 Below is the complete, ordered list of derived macros.  Each macro in the list can be defined using any ground macro and any macro that preceeds it in the list.  Result are undefined if a derived macro references a macro that follows it in the derived list.
 
@@ -553,9 +553,9 @@ DTN usage requires the coordinated configuration of a DTN, an execution system a
 
    Job Request effective values:
      execSystemId:         ds-exec
-     execSystemExecDir:    ${jobWorkingDir}/jobs/${jobUUID}
-     execSystemInputDir:   ${dtnMountPoint}/projects/NHERI/shared/{$jobOwner}/jobs/${jobUUID}
-     execSystemOutputDir:  ${dtnMountPoint}/projects/NHERI/shared/{$jobOwner}/jobs/${jobUUID}/output
+     execSystemExecDir:    ${JobWorkingDir}/jobs/${JobUUID}
+     execSystemInputDir:   ${DtnMountPoint}/projects/NHERI/shared/${JobOwner}/jobs/${JobUUID}
+     execSystemOutputDir:  ${DtnMountPoint}/projects/NHERI/shared/${JobOwner}/jobs/${JobUUID}/output
 
    NFS Mount on ds-exec (done outside of Tapis):
      mount -t nfs cic-dtn01:/gpfs/corral3/repl /execRoot/corral-repl
@@ -613,7 +613,7 @@ The docker run-command_ options *--cidfile*, *-d*, *-e*, *--env*, *--name*, *--r
 
 #. The container name is set to the job UUID.
 #. The container's user is set to the user ID used to establish the SSH session.
-#. The container ID file is specified as *<jobUUID>.cid* in the execSystemExecDir, i.e., the directory from which the container is launched.
+#. The container ID file is specified as *<JobUUID>.cid* in the execSystemExecDir, i.e., the directory from which the container is launched.
 #. The *-rm* option is always set to remove the container after execution.
 
 Volume Mounts

@@ -297,16 +297,16 @@ At job submission time the Jobs service supports the use of macros based on temp
 referenced when specifying directories in an application definition. For a full list of supported variables please see
 the Jobs Service. Here are some examples of variables that may be used when specifying directories for an application:
 
-* *jobId* - The Id of the job determined at job submission.
-* *jobOwner* - The owner of the job determined at job submission.
-* *jobWorkingDir* - Default parent directory from which a job is run. This will be relative to the effective root
+* *JobUUID* - The Id of the job determined at job submission.
+* *JobOwner* - The owner of the job determined at job submission.
+* *JobWorkingDir* - Default parent directory from which a job is run. This will be relative to the effective root
   directory *rootDir* on the execution system. *rootDir* and *jobWorkingDir* are attributes of the execution system.
 * *HOST_EVAL($<ENV_VARIABLE>)* - The value of the environment variable *ENV_VARIABLE* when evaluated on the execution
   system host when logging in under the job's effective user ID. This is a dynamic value determined at job submission
   time. The function *HOST_EVAL()* extracts specific environment variable values for use during job setup. In
   particular, the TACC specific values of *$HOME*, *$WORK*, *$SCRATCH* and *$FLASH* can be referenced. The specified
   environment variable name is used **as-is**. It is **not** subject to macro substitution. However, the function call
-  can have a path string appended to it, such as in *HOST_EVAL($SCRATCH)/tmp/${jobId}*, and macro substitution will be
+  can have a path string appended to it, such as in *HOST_EVAL($SCRATCH)/tmp/${JobUUID}*, and macro substitution will be
   applied to the path string.
 
 -----------------
@@ -371,7 +371,8 @@ Application Attributes Table
 | runtimeVersion      | String         | 2.5.2                | - Version or range of versions required.                                             |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | runtimeOptions      | [enum]         |                      | - Options that apply to specific runtimes.                                           |
-|                     |                |                      | - NONE, SINGULARITY_START, SINGULARITY_RUN                                           |
+|                     |                |                      | - Options: NONE, SINGULARITY_START, SINGULARITY_RUN                                  |
+|                     |                |                      | - If runtime is SINGULARITY then must have one of SINGULARITY_START, SINGULARITY_RUN |
 |                     |                |                      | - Default is NONE.                                                                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | containerImage      | String         |docker.io/hello-world | - Reference for the container image. Other examples:                                 |
@@ -428,17 +429,17 @@ JobAttributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | execSystemExecDir   | String         |                      | - Directory where application assets are staged.                                     |
 |                     |                |                      | - Current working directory at application launch time.                              |
-|                     |                |                      | - Macro template variables such as ${jobWorkingDir} may be used.                     |
-|                     |                |                      | - Default is ${jobWorkingDir}/jobs/${jobId}                                          |
+|                     |                |                      | - Macro template variables such as ${JobWorkingDir} may be used.                     |
+|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}                                          |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | execSystemInputDir  | String         |                      | - Directory where Tapis is to stage the inputs required by the application.          |
-|                     |                |                      | - Macro template variables such as ${jobWorkingDir} may be used.                     |
-|                     |                |                      | - Default is ${jobWorkingDir}/jobs/${jobId}                                          |
+|                     |                |                      | - Macro template variables such as ${JobWorkingDir} may be used.                     |
+|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}                                          |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | execSystemOutputDir | String         |                      | - Directory where Tapis expects the application to store its final output results.   |
 |                     |                |                      | - Files here are candidates for archiving.                                           |
-|                     |                |                      | - Macro template variables such as ${jobWorkingDir} may be used.                     |
-|                     |                |                      | - Default is ${jobWorkingDir}/jobs/${jobId}/output                                   |
+|                     |                |                      | - Macro template variables such as ${JobWorkingDir} may be used.                     |
+|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}/output                                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | execSystem          | String         | normal               | - LogicalQueue to use when running the job.                                          |
 | LogicalQueue        |                |                      |                                                                                      |
@@ -447,7 +448,7 @@ JobAttributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | archiveSystemDir    | String         |                      | - Directory on *archiveSystemId* where outputs will be placed.                       |
 |                     |                |                      | - This will be relative to the effective root directory defined for archiveSystemId. |
-|                     |                |                      | - Default is ${jobWorkingDir}/jobs/${jobId}                                          |
+|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}                                          |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | archiveOnAppError   | boolean        |                      | - Indicates if outputs should be archived if there is an error while running job.    |
 |                     |                |                      | - The default is TRUE.                                                               |
