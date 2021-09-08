@@ -615,7 +615,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta.createDocument(db='',collection=' ',basic=' ',body=' ')
+        $ t.meta.createDocument(db='',collection=' ',basic=' ',request_body=' ')
 
 With CURL:
 
@@ -637,7 +637,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta.createDocument(db='',collection=' ',basic=' ',body=' ')
+        $ t.meta.createDocument(db='',collection=' ',basic=' ', request_body=' ')
 
 With CURL:
 
