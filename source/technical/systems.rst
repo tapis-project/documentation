@@ -258,6 +258,9 @@ separate API calls. Note that the Systems service does not store credentials.
 Credentials are persisted by the Security Kernel service and only specific Tapis services
 are authorized to retrieve credentials.
 
+By default any credentials provided for LINUX type systems are verified. The query parameter
+skipCredentialCheck=true may be used to bypass the initial verification of credentials.
+
 --------------------------
 Runtime
 --------------------------
@@ -334,6 +337,8 @@ System Attributes Table
 |                     |                |                      | - On output contains credential for *effectiveUserId* and requested *authnMethod*.   |
 |                     |                |                      | - Returned credential contains relevant information based on *authnMethod*.          |
 |                     |                |                      | - Credentials may be updated using the systems credentials endpoint.                 |
+|                     |                |                      | - By default for LINUX the credentials are verified during create or update.         |
+|                     |                |                      | - Use query parameter skipCredentialCheck=true to bypass initial verification.       |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | bucketName          | String         | tapis-ds1-jdoe       | - Name of bucket for an S3 system.                                                   |
 |                     |                |                      | - Required if *systemType* is S3.                                                    |
