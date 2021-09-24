@@ -49,12 +49,12 @@ Universal Roles
 ---------------
 For now PgREST establishes the following five universal roles:
 
-  * ``PGREST_ADMIN`` -- Grants user read and write access to all objects (e.g., tables, views, roles) in the
-    ``/manage`` API as well as read and write access to all associated data in the ``/data`` API.
-  * ``PGREST_ROLE_ADMIN`` -- Grants user role creation and management access to roles in the ``/manage/roles`` API.
-  * ``PGREST_WRITE`` -- Grants user read and write access to all associated data in the ``/data`` API.
-  * ``PGREST_READ`` -- Grants user read access to all associated data in the ``/data`` API.
-  * ``PGREST_USER`` -- Grants permission to user ``/views`` API. Each view has additional permission rules though.
+* ``PGREST_ADMIN`` -- Grants user read and write access to all objects (e.g., tables, views, roles) in the
+  ``/manage`` API as well as read and write access to all associated data in the ``/data`` API.
+* ``PGREST_ROLE_ADMIN`` -- Grants user role creation and management access to roles in the ``/manage/roles`` API.
+* ``PGREST_WRITE`` -- Grants user read and write access to all associated data in the ``/data`` API.
+* ``PGREST_READ`` -- Grants user read access to all associated data in the ``/data`` API.
+* ``PGREST_USER`` -- Grants permission to user ``/views`` API. Each view has additional permission rules though.
 
 Without any of the above roles, a user will not have access to any PgREST endpoints.
 
