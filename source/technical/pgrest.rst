@@ -195,9 +195,9 @@ fields, with the column field have a host of options to delegate how to create t
 
   * Enum generation is done in table definitions.
   * Provide a dict of enums where the key is enum name and the value is the possible values for the enum.
-  * Ex: ``{"accountrole": ["ADMIN", "USER"]}``
+  * Ex: ``{"accountrole": ["ADMIN", "user"]}``
 
-    * Creates an "accountrole" enum that can have values of "ADMIN" or "USER"
+    * Creates an "accountrole" enum that can have values of "ADMIN" or "user"
 
   * Deletion/Updates are not currently supported. Speak to developer if you're interested in a delete/update endpoint.
   
@@ -227,6 +227,7 @@ fields, with the column field have a host of options to delegate how to create t
     * ``data_type`` - **required**
   
       * Specifies the data type for values in this column.
+      * Case insensitive.
       * Can be varchar, datetime, {enumName}, text, timestamp, serial, varchar[], boolean, integer, integer[].
 
         * Note: varchar requires the char_len column definition.
@@ -257,6 +258,7 @@ fields, with the column field have a host of options to delegate how to create t
     * ``default``
 
       * Sets default value for column to fallback on if no value is given.
+      * Case insensitive.
       * Must follow the data_type for the column.
       * Note: Setting a timestamp data_type column default to ``UPDATETIME`` or ``CREATETIME`` has special properties.
 
@@ -289,14 +291,28 @@ fields, with the column field have a host of options to delegate how to create t
           * Specifies the foreign column that the foreign_key is in.
           * Can be set to the key for any column in the reference_table.
 
-        * ``on_delete``
+        * ``on_event``
 
           * Only needed in the case that foreign_key is set to true.
-          * Specifies the deletion strategy when referencing a foreign key.
-          * Can be set to ``CASCADE`` or ``SET NULL``
+          * Case insensitive.          
+          * Specifies the event strategy when referencing a foreign key.
+          * Can be set to an event of ``ON DELETE`` or ``ON UPDATE``, if the key gets deleted or updated, the ``event_action`` will be completed by postgres
           
-            * ``CASCADE`` deletes this column if the foreign key's column is deleted.
-            * ``SET NULL`` set this column to null if the foreign key's column is deleted.
+            * ``ON DELETE`` Sets off event_action if reference is deleted.
+            * ``ON UPDATE`` Sets off event_action if reference is updated.
+
+        * ``event_action``
+
+          * Only needed in the case that foreign_key is set to true.
+          * Case insensitive.
+          * Specifies the event action to complete when a reference gets the ``on_event`` event.
+          
+            * ``CASCADE`` deletes or updates this column when ``on_event`` occurs to reference.
+            * ``SET NULL`` set this column to null when ``on_event`` occurs to reference.
+            * ``SET DEFAULT`` set this column to column default when ``on_event`` occurs to reference.
+            * ``RESTRICT`` prevents deletion/update of a row when ``on_event`` occurs to reference.
+            * ``NO ACTION`` does nothing, raises error when referenced, when ``on_event`` occurs to reference.
+
 
 
 Retrieving Table Descriptions
