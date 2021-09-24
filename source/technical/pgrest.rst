@@ -49,7 +49,7 @@ Universal Roles
 ---------------
 For now PgREST establishes the following five universal roles:
 
-* ``PGREST_ADMIN`` -- Grants user read and write access to all objects (e.g., tables, views, roles) in the
+* ``PGREST_ADMIN`` -- Grants user read and write access to all objects (e.g. tables, views, roles) in the
   ``/manage`` API as well as read and write access to all associated data in the ``/data`` API.
 * ``PGREST_ROLE_ADMIN`` -- Grants user role creation and management access to roles in the ``/manage/roles`` API.
 * ``PGREST_WRITE`` -- Grants user read and write access to all associated data in the ``/data`` API.
@@ -269,7 +269,7 @@ fields, with the column field have a host of options to delegate how to create t
 
       * Specifies primary_key for the table.
       * This can only be used for one column in the table.
-      * This primary_key column will be the value users can use to get a row in the table, ``/v3/pgrest/data/my_pk``,.
+      * This primary_key column will be the value users can use to get a row in the table, ``/v3/pgrest/data/my_pk``.
       * If this is not specified in a table, primary_key defaults to "{table_name}_id".
         * Note that this default cannot be modified and is of data_type=serial.
 
@@ -423,14 +423,16 @@ The following is a working complex table definition using all parameters for use
         "foreign_key": true,
         "reference_table": "Companys",
         "reference_column": "company_name",
-        "on_delete": "CASCADE"
+        "on_event": "ON UPDATE",
+        "event_action": "cascade"
       },
       "employee_id": {
         "data_type": "integer",
         "foreign_key": true,
         "reference_table": "Employees",
         "reference_column": "employee_id",
-        "on_delete": "CASCADE"
+        "on_event": "on delete",
+        "event_action": "RESTRICT"
       }
       "first_name": {
         "null": true,
@@ -600,7 +602,7 @@ This update_rows.json would be used in a PUT request to the root ``widgets`` col
 Where Stanzas
 -------------
 
-In PgREST, ``where`` stanzas are used in various endpoints throughout the API to filter the collection of results (i.e.,
+In PgREST, ``where`` stanzas are used in various endpoints throughout the API to filter the collection of results (i.e.
 rows) that an action (such as retrieving or updating) is applied to. The ``where`` stanza should be a JSON object with
 each key being the name of a column on the table and the value under each key being a JSON object with two properties:
 
