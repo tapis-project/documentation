@@ -9,7 +9,7 @@ utilizes a REST architecture.
 
 
 Overview
---------
+========
 
 There are two primary collections in the PgREST API. The Management API, provided at the URL ``/v3/pgrest/manage``,
 includes endpoints for managing the collection of tables, views, stored procedures, and other objects defined in the
@@ -21,11 +21,9 @@ API. The Data API is used to create, update, and read the rows within the corres
 
 
 Authentication and Tooling
---------------------------
+==========================
 PgREST currently recognizes Tapis v2 and v3 authentication tokens and uses these for determining access levels. 
-
-A valid Tapis v2 OAuth token should be passes to all requests to PgREST using the header ``Tapis-v2-token``.
-
+A valid Tapis v2 OAuth token should be passec to all requests to PgREST using the header ``Tapis-v2-token``.
 For example, using curl:
 
 .. code-block:: bash
@@ -33,7 +31,6 @@ For example, using curl:
   $ curl -H "Tapis-v2-token: 419465dg63h8e4782057degk20e3371" https://tacc.tapis.io/v3/pgrest/manage/tables
 
 Tapis v3 OAuth authentication tokens should be passed to all requests to PgREST using the header ``X-Tapis-Token``.
-
 For example, using curl:
 
 .. code-block:: bash
@@ -44,17 +41,38 @@ Additionally, PgREST should be accessible from the Tapis v3 Python SDK (tapipy) 
 
 
 Permissions and Roles
----------------------
-PgREST currently implements a basic, role-based permissions system that leverages the Tapis v3 Security Kernel (SK). We
-plan to expand on this system in the future to provide more fine-grained authorization controls. For now, three roles
-are recognized:
+=====================
+PgREST currently implements a handful of basic, role-based permissions that leverage the Tapis v3 Security Kernel (SK).
 
-  * ``PGREST_ADMIN`` -- Grants user read and write access to all objects (e.g., tables) in the ``/manage`` API
-    as well as read and write access to all associated data in the ``/data`` API.
+
+Universal Roles
+---------------
+For now PgREST establishes the following five universal roles:
+
+  * ``PGREST_ADMIN`` -- Grants user read and write access to all objects (e.g., tables, views, roles) in the
+    ``/manage`` API as well as read and write access to all associated data in the ``/data`` API.
+  * ``PGREST_ROLE_ADMIN`` -- Grants user role creation and management access to roles in the ``/manage/roles`` API.
   * ``PGREST_WRITE`` -- Grants user read and write access to all associated data in the ``/data`` API.
   * ``PGREST_READ`` -- Grants user read access to all associated data in the ``/data`` API.
+  * ``PGREST_USER`` -- Grants permission to user ``/views`` API. Each view has additional permission rules though.
 
 Without any of the above roles, a user will not have access to any PgREST endpoints.
+
+
+Fine-Tuned Role Access
+----------------------
+
+Along with the general access to endpoints when a user has a role of ``PGREST_READ`` or above, we have fine-tuned role
+access to our get `views` endpoint.
+
+Our get `views` endpoint requires only the ``PGREST_USER`` role. However each view itself when created (or modified) has a
+`permission_rules` field. This field is a list of roles that the user must have in order to have access to that view. Thus
+it is possible to divy out what information a user in the ``PGREST_USER`` role can get from views by restricting views with
+roles created by the ``/manage/roles`` endpoint as a ``PGREST_ADMIN`` or ``PGREST_ROLE_ADMIN``.
+
+
+Tenant Awareness
+----------------
 
 Note that these roles are granted at the *tenant* level, so a user may be authorized at one level in one tenant and at a
 different level (or not at all) in another tenant. In PgREST, the base URLs for a given tenant follow the pattern
@@ -73,18 +91,17 @@ would list tables in the TACC tenant, while
 would list tables in the CII tenant.
 
 
-Management API
---------------
-
-The Management API includes subcollections for each of the primary Postgres objects supported by PgREST.
-
-Tables
-^^^^^^
+Table Manage API
+====================
 
 Table management is accomplished with the ``/v3/pgrest/manage/tables`` endpoint. Creating a table amounts to
 specifying the table name, the columns on the table, including the type of each column, and any additional validation
 to be performed when storing data in the column, the root URL where the associated collection will be available within
 the Data API, and, optionally, which HTTP verbs should not be available on the collection.
+
+
+Table Creation Example
+----------------------
 
 For example, suppose we wanted to manage a table of "widgets" with four columns. We could create a table by POSTing
 the following JSON document to the ``/v3/pgrest/manage/tables`` endpoint:
@@ -159,31 +176,127 @@ is automatically made available for managing and retrieving the data (rows) on t
 below for more details.
 
 
-Supported Data Types
---------------------
+Table Definition Rules
+----------------------
 
-Currently, PgREST supports the following column types:
+This is a complete list of constraints and properties a table can have in it's table definition. Each table definition has a host of
+fields, with the column field have a host of options to delegate how to create the postgres column.
 
- * ``varchar`` -- Variable length character field; Attribute ``char_len`` specifying max length is required.
- * ``text`` -- Variable length character field with no max length.
- * ``boolean`` -- Standard SQL boolean type.
- * ``integer`` -- 4 bytes integer field.
+* ``table_name`` - **required**
 
-*Todo... Complete list of supported column types coming soon*
+  * The name of the table in question.
+  
+* ``root_url`` - **required**
+  
+  * The root_url for PgRESTs /data endpoint.
+  * Ex: root_url "table25" would be accessible via "http://pgrestURL/data/table25".
+  
+* ``enums``
 
-The project will be adding support for additional data types in subsequent releases.
+  * Enum generation is done in table definitions.
+  * Provide a dict of enums where the key is enum name and the value is the possible values for the enum.
+  * Ex: ``{"accountrole": ["ADMIN", "USER"]}``
 
-Supported Constraints
----------------------
+    * Creates an "accountrole" enum that can have values of "ADMIN" or "USER"
 
-Currently, PgREST supports the following SQL constraints:
+  * Deletion/Updates are not currently supported. Speak to developer if you're interested in a delete/update endpoint.
+  
+* ``comments``
+  
+  * Field to allow for better readability of table json. Table comments are saved and outputted on /manage/tables/ endpoints.
+  
+* ``constraints``
+  
+  * Specification of Postgres table constraints. Currently only allows multi-column unique constraints
+  * Constraints available:
+  
+    * ``unique``
+  
+      * multi-column unique constraint that requires sets of column values to be unique.
+      * Ex: ``"constraints": {"unique": {"two_col_pair": ["col_one", "col_two"]}}``
 
- * ``unique`` -- PgREST supports specifying a single column as unique.
- * ``null`` -- If a column description includes ``"null": false``, then the SQL ``NOT NULL`` constraint will be applied to the table.
- * ``primary_key`` -- A unique and not null column that acts as the primary key in order to access a specific row. If it
-   is not set, a field named ``{table_name}_id`` will be created and used by default, it is an integer and increases by one. 
-   This field allows the user to instead use their own key in matters such as how to call a row, ``/v3/pgrest/data/my_table/my_row_name``,
-   rather than than being assigned a primary_key id which is just a random integer. 
+        * This means that col_one and col_two cannot have pairs of values that are identical.
+        * The constraint name can be specified as well
+
+* ``columns`` - **required**
+
+  * Column definitions in the form of a dict. Dict key would be column, value would be column definition.
+  * Ex: ``{"username": {"unique": true, "data_type": "varchar", "char_len": 255}``
+  * Columns arguments are as follows.
+
+    * ``data_type`` - **required**
+  
+      * Specifies the data type for values in this column.
+      * Can be varchar, datetime, {enumName}, text, timestamp, serial, varchar[], boolean, integer, integer[].
+
+        * Note: varchar requires the char_len column definition.
+        * Note: Setting a timestamp data_type column default to ``UPDATETIME`` or ``CREATETIME`` has special properties.
+  
+          * ``CREATETIME`` sets the field to the UTC time at creation. It is then not changed later.
+          * ``UPDATETIME`` sets the filed to the UTC time at creation. It is updated to the update time when it is updated.
+
+    * ``char_len`` 
+
+      * Additional argument for varchar data_types. Required to set max value size.
+      * Can be any value from 1 to 255.
+
+    * ``unique``
+
+      * Determines whether or not each value in this column is unique.
+      * Can be true or false.
+
+    * ``null``
+
+      * States whether or not a value can be "null".
+      * Can be true or false.
+
+    * ``comments``
+
+      * Field to allow for better readability of table and column json. Column comments are not saved or used. They are for json readability only.
+
+    * ``default``
+
+      * Sets default value for column to fallback on if no value is given.
+      * Must follow the data_type for the column.
+      * Note: Setting a timestamp data_type column default to ``UPDATETIME`` or ``CREATETIME`` has special properties.
+
+        * ``CREATETIME`` sets the field to the UTC time at creation. It is then not changed later.
+        * ``UPDATETIME`` sets the filed to the UTC time at creation. It is updated to the update time when it is updated.
+
+    * ``primary_key``
+
+      * Specifies primary_key for the table.
+      * This can only be used for one column in the table.
+      * This primary_key column will be the value users can use to get a row in the table, ``/v3/pgrest/data/my_pk``,.
+      * If this is not specified in a table, primary_key defaults to "{table_name}_id".
+        * Note that this default cannot be modified and is of data_type=serial.
+
+    * ``foreign_key``
+
+      * Weather or not this key should reference a key in another table, a "foreign key".
+      * Can be true or false.
+      * If foreign_key is set to true, columns arguments ``reference_table``, ``reference_column``, and ``on_delete`` must also be set.
+
+        * ``reference_table``
+
+          * Only needed in the case that foreign_key is set to true.
+          * Specifies the foreign table that the foreign_key is in.
+          * Can be set to the table_name of any table.
+
+        * ``reference_column``
+
+          * Only needed in the case that foreign_key is set to true.
+          * Specifies the foreign column that the foreign_key is in.
+          * Can be set to the key for any column in the reference_table.
+
+        * ``on_delete``
+
+          * Only needed in the case that foreign_key is set to true.
+          * Specifies the deletion strategy when referencing a foreign key.
+          * Can be set to ``CASCADE`` or ``SET NULL``
+          
+            * ``CASCADE`` deletes this column if the foreign key's column is deleted.
+            * ``SET NULL`` set this column to null if the foreign key's column is deleted.
 
 
 Retrieving Table Descriptions
@@ -250,101 +363,85 @@ We can also retrieve a single table by ``id``. For example
         "tenant_id": "dev"
     }
 
-We can also pass ``details=true`` query parameter to see the column definitions, validation schema, etc. For example:
-
-
+We can also pass ``details=true`` query parameter to see the column definitions and validation schema for a particular
+table. This can be useful to understand exactly what's happening. The call would be as follows:
 
 .. code-block:: bash
 
     $ curl -H "tapis-v2-token: $tok" https://dev.tapis.io/v3/pgrest/manage/tables/6?details=true
 
-    {
-        "table_name": "widgets",
-        "table_id": 6,
-        "root_url": "widgets",
-        "endpoints": [
-          "GET_ONE",
-          "GET_ALL",
-          "CREATE",
-          "UPDATE",
-          "DELETE"
-        ],
-        "columns": {
-          "name": {
-            "null": false,
-            "unique": true,
-            "char_len": 255,
-            "data_type": "varchar"
-          },
-          "count": {
-            "null": true,
-            "data_type": "integer"
-          },
-          "is_private": {
-            "null": "true",
-            "default": "true",
-            "data_type": "boolean"
-          },
-          "widget_type": {
-            "null": true,
-            "char_len": 100,
-            "data_type": "varchar"
-          }
-        },
-        "tenant_id": "dev",
-        "update schema": {
-          "name": {
-            "type": "string",
-            "maxlength": 255
-          },
-          "count": {
-            "type": "integer"
-          },
-          "is_private": {
-            "type": "boolean"
-          },
-          "widget_type": {
-            "type": "string",
-            "maxlength": 100
-          }
-        },
-        "create schema": {
-          "name": {
-            "type": "string",
-            "required": true,
-            "maxlength": 255
-          },
-          "count": {
-            "type": "integer",
-            "required": false
-          },
-          "is_private": {
-            "type": "boolean",
-            "required": false
-          },
-          "widget_type": {
-            "type": "string",
-            "required": false,
-            "maxlength": 100
-          }
-        }
+
+Example of Complex Table
+------------------------
+
+The following is a working complex table definition using all parameters for user reference.
+
+.. code-block:: bash
+
+  {
+    "table_name": "UserProfile",
+    "root_url": "user-profile",
+    "delete": false,
+    "enums": {"accountrole": ["ADMIN",
+                              "USER",
+                              "GUEST"]},
+    "comments": "This is the user profile table that keeps track of user profiles and data",
+    "constraints": {"unique": {"unique_first_name_last_name_pair": ["first_name", "last_name"]}},
+    "columns": {
+      "user_profile_id": {
+        "data_type": "serial",
+        "primary_key": true
+      },
+      "username": {
+        "unique": true,
+        "data_type": "varchar",
+        "char_len": 255
+        "comments": "The username used by *** service"
+      },
+      "role": {
+        "data_type": "accountrole"
+      },
+      "company": {
+        "data_type": "varchar",
+        "char_len": 255,
+        "foreign_key": true,
+        "reference_table": "Companys",
+        "reference_column": "company_name",
+        "on_delete": "CASCADE"
+      },
+      "employee_id": {
+        "data_type": "integer",
+        "foreign_key": true,
+        "reference_table": "Employees",
+        "reference_column": "employee_id",
+        "on_delete": "CASCADE"
+      }
+      "first_name": {
+        "null": true,
+        "data_type": "varchar",
+        "char_len": 255
+      },
+      "last_name": { 
+        "null": true,
+        "data_type": "varchar",
+        "char_len": 255
+      },
+      "created_at": {
+        "data_type": "timestamp",
+        "default": "CREATETIME"
+      },
+      "last_updated_at": {
+        "data_type": "timestamp",
+        "default": "UPDATETIME"
       }
     }
+  }
 
 
-Views
-^^^^^
-
-*Coming soon*
-
-Stored Procedures
-^^^^^^^^^^^^^^^^^
-
-*Coming soon*
 
 
-Data API
---------
+Table User API
+==============
 
 The Data API provides endpoints for managing and retrieving data (rows) stored on tables defined through the Management
 API. For each table defined through the Management API, there is a corresponding endpoint within the Data API with URL
@@ -378,7 +475,8 @@ work on the ``_pkid`` field.
 
 
 Creating a Row
-^^^^^^^^^^^^^^
+--------------
+
 Sending a POST request to the ``/v3/pgrest/data/{root_url}`` URL will create a new row on the corresponding table. The
 POST message body should be a JSON document providing values for each of the columns inside a single ``data`` object.
 The values will first be validated with the json schema generated from the columns data sent in on table creation. This
@@ -427,8 +525,9 @@ if all goes well, the response should look like
 
 Note that an ``id`` of ``1`` was generated for the new record.
 
+
 Updating a Row
-^^^^^^^^^^^^^^
+--------------
 
 Sending a PUT request to the ``/v3/pgrest/data/{root_url}/{id}`` URL will update an existing row on the corresponding
 table. The request message body should be a JSON document providing the columns to be updates and the new values. For
@@ -453,8 +552,9 @@ The following curl command would update the ``example-widget`` row (with ``id`` 
 Note that since only the ``count`` field is provided in the PUT request body, that is the only column that will be
 modified.
 
+
 Updating Multiple Rows
-^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
 Update multiple rows with a single HTTP request is possible using a ``where`` filter (for more details, see the section
 `Where Stanzas`_ below), provided in the PUT request
@@ -481,9 +581,8 @@ This update_rows.json would be used in a PUT request to the root ``widgets`` col
   $ curl -H "tapis-v2-token: $TOKEN" -H "Content-type: application/json" -d "@update_rows.json" https://<tenant>.tapis.io/v3/pgrest/data/widgets
 
 
-
 Where Stanzas
-^^^^^^^^^^^^^
+-------------
 
 In PgREST, ``where`` stanzas are used in various endpoints throughout the API to filter the collection of results (i.e.,
 rows) that an action (such as retrieving or updating) is applied to. The ``where`` stanza should be a JSON object with
@@ -517,7 +616,7 @@ was between ``0`` and ``100`` and whose ``is_private`` property was ``true``:
 
 
 Valid Operators
-^^^^^^^^^^^^^^^
+---------------
 
 PgREST recognizes the following operators for use in ``where`` stanzas.
 
@@ -537,7 +636,7 @@ PgREST recognizes the following operators for use in ``where`` stanzas.
 
 
 Retrieving Rows
-^^^^^^^^^^^^^^^
+---------------
 
 To retrieve data from the ``/data`` API, make an HTTP GET request to the associated URL; an HTTP GET to
 ``/v3/pgrest/data/{root_url}`` will retrieve all rows on the associated table, while an HTTP GET to
@@ -655,4 +754,207 @@ Note that the result is always a JSON list, even when one or zero records are re
 .. code-block:: bash
 
   $ curl -H "tapis-v2-token: $TOKEN" https://dev.tapis.io/v3/pgrest/data/init?where_col_two=2
-    []
+
+
+Views Manage API
+====================
+
+Views allow admins to create postgres views to cordone off data from users and give users exactly what they need.
+These views allow for permission_rules which cross reference a users roles, if a user has all roles in the
+permission_rules they have access to view the view.
+
+Admins are able to create views with a post to the ``/v3/pgrest/manage/views`` endpoint. A get to ``/v3/pgrest/manage/views``
+returns information regarding the views.
+
+
+View Definition Rules
+---------------------
+
+A post to the ``/v3/pgrest/manage/views`` endpoint to create a view expects a json formatted view definition. Each view
+definition can have the following rules.
+
+* ``view_name`` - **required**
+  
+  * The name of the view in question.
+
+* ``root_url`` - **required**
+
+  * The root_url for PgRESTs /views endpoint.
+  * Ex: root_url "view25" would be accessible via "http://pgrestURL/views/table25".
+
+* ``select_query`` - **required**
+
+  * Query to select from the table specified with from_table
+
+* ``from_table`` - **required**
+
+  * Table to read data from
+
+* ``where_query``
+
+  * Optional field that allows you to specify a postgres where clause for the view
+
+* ``comments``
+
+  * Field to allow for better readability of view json. Table comments are saved and outputted on ``/v3/pgrest/manage/views/ endpoints.
+
+* ``permission_rules``
+
+  * List of roles required to view this view.
+  * If nothing is given, view is open to all.
+
+View Creation Example
+---------------------
+
+.. code-block:: bash
+
+  # new_view.json
+  {'view_name': 'test_view', 
+   'root_url': 'just_a_cool_url',
+   'select_query': '*',
+   'from_table': 'initial_table_2',
+   'where_query': 'col_one >= 90',
+   'permission_rules': ['lab_6_admin', 'cii_rep'],
+   'comments': 'This is a cool test_view to view all of
+                initial_table_2. Only users with the
+                lab_6_admin and cii_rep role can view this.'}
+
+The following code block would then be able to create the new view.
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" -H "Content-type: application/json" \
+    -d "@new_view.json" https://<tenant>.tapis.io/v3/pgrest/manage/views
+
+If you then wanted to get information about the view, but not the result of the view itself, you can make a call to the
+``/v3/pgrest/manage/views/just_a_cool_url`` endpoint.
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" \
+    https://<tenant>.tapis.io/v3/pgrest/manage/views/just_a_cool_url
+
+
+Views User API
+=========
+
+Users have no way to change views or to modify anything dealing with them, but they are able to get views that they have
+sufficient permissions to view. The ``/v3/pgrest/views/{view_id}`` requires the user to have at least a PGREST_USER role,
+this is to force all users to be in some way identified or managed. The PGREST_USER role grants no permissions except the
+permission to call a get on the ``/v3/pgrest/views/{view_id}`` endpoint. This means that admins can assume PGREST_USER users
+can only view `views` in which the user satisfies the permissions declared in a `views` ``permission_rules``. This gives
+admins fine-tuned controls on postgres data by using solely views.
+
+Users can make a get to ``/v3/pgrest/views/{view_id}`` with the following curl.
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" \
+    https://<tenant>.tapis.io/v3/pgrest/views/just_a_cool_url
+
+
+Role Manage API
+===================
+
+Role management is solely allowed for users in the PGREST_ROLE_ADMIN role, or PGREST_ADMIN. These endpoints allow users to
+create, grant, and revoke SK roles to users to match `view` ``permission_rules``. Modifiable roles all must start with 
+``PGREST_``, this ensures users can't change roles that might matter to other services. Along with that, users cannot manage
+the ``PGREST_ADMIN``, ``PGREST_ROLE_ADMIN``, ``PGREST_WRITE``, or ``PGREST_READ`` roles. This might be changed, but for now,
+contact an admin to be given these roles. Note, users can grant or revoke the ``PGREST_USER`` role, so that role_admins can
+manage who can see views without unnecessary intervention.
+
+Users have no access to these endpoints or anything regarding roles. 
+
+Role Creation
+-------------
+
+To create a new role users make a post to ``/v3/pgrest/roles/`` with a body such as:
+
+.. code-block:: bash
+
+  # new_role.json
+  {"role_name": "PGREST_My_New_Role", "description": "A new role!"}
+
+The post would then be as follows:
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" -H "Content-type: application/json" \
+    -d "@new_role.json" https://<tenant>.tapis.io/v3/pgrest/roles
+
+This would result in the creation of the ``PGREST_My_New_Role`` role.
+
+Role Creation Definition
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+* ``role_name`` - **required**
+  
+  * Name of the role to create, must start with ``PGREST_``. 
+
+* ``description`` - **required**
+
+  * A description of the role to be used for future reference in SK.
+
+
+Role Management
+---------------
+
+To grant or revoke a role to a specific username, users can make a post to ``/v3/pgrest/roles/{role_name}`` with a body such as:
+
+.. code-block:: bash
+
+  # grant_role.json
+  {"method": "grant", "username": "user3234"}
+
+The post would then be as follows:
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" -H "Content-type: application/json" \
+    -d "@grant_role.json" https://<tenant>.tapis.io/v3/pgrest/roles/PGREST_My_New_Role
+
+This would result in the user, ``user3234`` being granted the role, ``PGREST_My_New_Role``.
+
+Role Management Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* ``method`` - **required**
+  
+  * String of either "grant" or "revoke", specifying whether to revoke or grant the role to a user.
+
+* ``username`` - **required**
+
+  * Username to grant role to, or to revoke role from.
+
+
+
+Stored Procedures
+=================
+
+*Coming soon*
+
+
+API Reference
+=================
+
++-----+------+-----+-----+-------------------------------------------+-------------------------------------------------------+
+| GET | POST | PUT | DEL | Endpoint                                  | Description                                           |
++=====+======+=====+=====+===========================================+=======================================================+
+|  X  |  X   |     |     | /v3/pgrest/manage/tables                  | Get/Create tables for the tenant.                     |
++-----+------+-----+-----+-------------------------------------------+-------------------------------------------------------+
+|  X  |      |  X  |  X  | /v3/pgrest/manage/tables/{table_id}       | Get/Update/Delete a specified table.                  |
++-----+------+-----+-----+-------------------------------------------+-------------------------------------------------------+
+|  X  |  X   |  X  |     | /v3/pgrest/data/{table_id}                | Get/Create/Update rows for a specified table.         |
++-----+------+-----+-----+-------------------------------------------+-------------------------------------------------------+
+|  X  |      |  X  |  X  | /v3/pgrest/data/{table_id}/{row_id}       | Get/Update/Delete specific row for a specified table. |
++-----+------+-----+-----+-------------------------------------------+-------------------------------------------------------+
+|  X  |  X   |     |     | /v3/pgrest/manage/views                   | Get/Create view for the tenant.                       |
++-----+------+-----+-----+-------------------------------------------+-------------------------------------------------------+
+|  X  |      |     |  X  | /v3/pgrest/manage/views/{view_id}         | Get/Delete view specified.                            |
++-----+------+-----+-----+-------------------------------------------+-------------------------------------------------------+
+|  X  |      |     |     | /v3/pgrest/views/{view_id}                | Get results from view specified.                      |
++-----+------+-----+-----+-------------------------------------------+-------------------------------------------------------+
+|  X  |  X   |     |     | /v3/pgrest/manage/roles                   | Get/Create roles in SK for the tenant.                |
++-----+------+-----+-----+-------------------------------------------+-------------------------------------------------------+
+|  X  |  X   |     |     | /v3/pgrest/manage/roles/{role_name}       | Get/Manage role specified.                            |
++-----+------+-----+-----+-------------------------------------------+-------------------------------------------------------+
