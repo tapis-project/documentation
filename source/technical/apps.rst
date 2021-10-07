@@ -105,8 +105,8 @@ Job related attributes
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-When creating a application the required attributes are: ``id``, ``version``, ``appType``,  ``containerImage`` and
-``jobAttributes->execSystemId``. Depending on the type of application and specific values for certain attributes there are other requirements.
+When creating a application the required attributes are: ``id``, ``version``, ``appType`` and  ``containerImage``.
+Depending on the type of application and specific values for certain attributes there are other requirements.
 
 The restrictions are:
 
@@ -262,9 +262,9 @@ The response should contain a list of items similar to the single listing shown 
 -----------------------------------
 Minimal Definition and Restrictions
 -----------------------------------
-When creating an application the required attributes are: *id*, *version*, *appType*, *containerImage* and
-*jobAttributes->execSystemId*. Depending on the type of application and specific values for certain attributes there are
-other requirements. The restrictions are:
+When creating an application the required attributes are: *id*, *version*, *appType* and *containerImage*
+Depending on the type of application and specific values for certain attributes there are other requirements.
+The restrictions are:
 
 * If *archiveSystemId* is specified then *archiveSystemDir* is required.
 * If *appType* is FORK then the following attributes may not be specified: *maxJobs*, *maxJobsPerUser*, *nodeCount*,
