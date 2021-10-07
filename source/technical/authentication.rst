@@ -325,7 +325,7 @@ With CURL:
 
 .. code-block:: plaintext
 
- $ curl -H "X-Tapis-Token: $JWT" -H "Content-type: application/json" -d '{"client_id": "test", "callback_url": "https://foo.example.com/oauth2/callback" https://tacc.tapis.io/v3/oauth2/clients
+ $ curl -H "X-Tapis-Token: $JWT" -H "Content-type: application/json" -d '{"client_id": "test", "callback_url": "https://foo.example.com/oauth2/callback"}' https://tacc.tapis.io/v3/oauth2/clients
 
 
 The response will be similar to
