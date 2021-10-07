@@ -220,7 +220,7 @@ Depending on the type of system and specific values for certain attributes there
 The restrictions are:
 
 * If *systemType* is S3 then *bucketName* is required, *canExec* and *isDtn* must be false.
-* If *systemType* is LINUX then *rootDir* is required.
+* If *systemType* is LINUX then *rootDir* is required. Note that *rootDir* must be an absolute path starting with ``/``.
 * If *effectiveUserId* is ``${apiUserId}`` (i.e. it is not static) then *authnCredential* may not be specified.
 * If *isDtn* is true then *canExec* must be false and following may not be specified: *dtnSystemId*, *dtnMountSourcePath*, *dtnMountPoint*, all job execution related attributes.
 * If *canExec* is true then *jobWorkingDir* is required and *jobRuntimes* must have at least one entry.
@@ -344,7 +344,8 @@ System Attributes Table
 |                     |                |                      | - Required if *systemType* is S3.                                                    |
 |                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or *isDtn* = true. Must be an absolute path.     |
+| rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or *isDtn* = true.                               |
+|                     |                |                      | - Must be an absolute path, i.e. must begin with ``/``.                              |
 |                     |                |                      | - Serves as effective root directory when listing or moving files.                   |
 |                     |                |                      | - For DTN must be source location used in mount command.                             |
 |                     |                |                      | - Optional for an S3 system but may be used for a similar purpose.                   |
