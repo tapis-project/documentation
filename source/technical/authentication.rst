@@ -394,7 +394,7 @@ With CURL:
 
 .. code-block:: plaintext
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/oauth2/clients/test
+ $ curl -H "X-Tapis-Token: $JWT" -X DELETE https://tacc.tapis.io/v3/oauth2/clients/test
 
 A null response is returned from a successful delete request.
 
