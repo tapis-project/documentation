@@ -492,7 +492,6 @@ The truth table below defines how the AppArgSpec's *inputMode* and JobArgSpec's 
 
 +--------------------+-------------+-------------+
 | AppArgSpec         | JobArgSpec  | Meaning     |
-|                    |             |             |
 | *inputMode*        | *include*   |             |
 +====================+=============+=============+
 | INCLUDE_ON_DEMAND  | True        | include arg |
