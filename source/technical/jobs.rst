@@ -485,7 +485,7 @@ FIXED
 INCLUDE_ON_DEMAND
    The argument, if complete, will only be included in the final argument list constructed by Jobs if it's explicitly referenced and included in the Job request.  This is the default value.
 
-INCLUDE_BY_DEFAULT  
+INCLUDE_BY_DEFAULT
     The argument, if complete, will automatically be included in the final argument list constructed by Jobs unless explicitly excluded in the Job request.
 
 The truth table below defines how the AppArgSpec's *inputMode* and JobArgSpec's *include* settings interact to determine whether an argument is accepted or ignored during job processing.
