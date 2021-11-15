@@ -35,7 +35,7 @@ Name                Method   UrlPath                                   Status
 ===============     ======   =======================================   ===========
 Submit              POST     /submit                                   Implemented
 Resubmit            POST     /{JobUUID}/resubmit                       Implemented
-list                GET      /list                                     Implemented
+List                GET      /list                                     Implemented
 Search              GET      /search                                   Implemented                          
 Get                 GET      /{JobUUID}                                Implemented
 Get Status          GET      /{JobUUID}/status                         Implemented
@@ -91,7 +91,7 @@ The POST payload for the simplest job submission request looks like this:
 
 In this example, all input and output directories are either specified in the *myApp* definition or are assigned their default values.  Currently, the execution system on which an application runs must be specified in either the application definition or job request.  Our example assumes that *myApp* assigns the execution system.  Future versions of the Jobs service will support dynamic execution system selection.
 
-An archive system can also be specified in the application or job request; the default is to be the same as the execution system.
+An archive system can also be specified in the application or job request; the default is for it to be the same as the execution system.
 
 -----------------------
 
@@ -144,6 +144,8 @@ Parameters that do not need to be set are marked *Not Required*.  Finally, param
   Maximum number of minutes allowed for job execution.  *Inherit*, default is 10.
 **fileInputs**
   Input files that need to be staged for the application.  *InheritMerge*.
+**fileInputArrays**
+  Arrays of input files that need to be staged for the application.  *InheritMerge*.
 **parameterSet**
   Runtime parameters organized by category.  *Inherit*.
 **execSystemConstraints**
@@ -223,35 +225,105 @@ When a job request is submitted, each of the job's four execution and archive sy
 FileInputs
 ----------
 
-The *fileInputs* in application definitions are merged with those in job submission requests to produce a complete list of input files that need to be staged for a job.  The fileInputs array contains elements that conform to the following JSON schema.
+The *fileInputs* in Applications_ definitions are merged with those in job submission requests to produce the complete list of inputs to be staged for a job.  The following rules govern how job inputs are calculated.
+
+ 1. The effective inputs to a job are the combined inputs from the application and job request.
+ 2. Only named inputs are allowed in application definitions.
+ 3. Application defined inputs are either REQUIRED, OPTIONAL or FIXED.
+ 4. Applications can restrict the number and definitions of inputs (*strictFileInputs=true*).
+ 5. Anonymous (unnamed) inputs can be specified in the job request unless prohibited by the application definition (*strictFileInputs=true*).
+ 6. Job request inputs override values set in the application except for FIXED inputs.
+ 7. The *tapislocal* URL scheme specifies in-place inputs for which transfers are not performed.
+
+The fileInputs array in job requests contains elements that conform to the following JSON schema.
 
 ::
 
-   "InputSpec": {
+   "JobFileInput": {
        "$comment": "Used to specify file inputs on Jobs submission requests",
        "type": "object",
            "properties": {
+               "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+               "description": { "type": "string", "minLength": 1, "maxLength": 8096 },
+               "autoMountLocal": { "type": "boolean"},
                "sourceUrl":  {"type": "string", "minLength": 1, "format": "uri"},
-               "targetPath": {"type": "string", "minLength": 0},
-               "inPlace":    {"type": "boolean"},
-               "meta":       {"type": "object", "$ref": "#/$defs/ArgMetaSpec"}
+               "targetPath": {"type": "string", "minLength": 0}
            },
-       "required": ["sourceUrl"],
        "additionalProperties": false
    }
 
-Since all input directories or files are staged to the *execSystemInputDir*, the only required field is the *sourceUrl*.  Any URL protocol accepted by the Tapis Files_ service can be used here.  The most common protocols used are tapis, http, and https.  The standard tapis URL format is *tapis://<tapis-system>/<path>*; please see the Files_ service for the complete list of supported protocols.
+JobFileInputs can be named or unnamed.  When the *name* field is assigned, Jobs will look for an input with the same name in the application definition (all application inputs are named).  When a match is found, values from the AppFileInput are merged into unassigned fields in the JobFileInput.
 
-If provided, the *targetPath* indicates a path relative to the *execSystemInputDir* into which the input is copied.  When not provided, the  directory or file named in *sourceUrl* is copied directly into *execSystemInputDir*.
+The *name* must start with an alphabetic character or an underscore (_) followed by zero or more alphanumberic or underscore characters.  If the name does not match one of the input names defined in the application, then the application must have *strictFileInputs=false*.  If the name matches an input name defined in the application, then the application's inputMode must be REQUIRED or OPTIONAL.  An error occurs if the inputMode is FIXED and there is a name match--job inputs cannot override FIXED application inputs.
 
-The *inPlace* value defaults to false when not provided.  When true, it instructs the Jobs service to **not** copy the input.  This setting is used to indicate that the input has already been put in place in the *execSystemInputDir* subtree by some means outside of Tapis, so no copying is needed.  The use of *inPlace* documents all inputs, even those that do not need to be transferred.
+Except for in-place inputs discussed below, the *sourceUrl* is the location from which data are copied to the *targetPath*.  In Posix systems the sourceUrl can reference a file or a directory.  When a directory is specified, the complete directory subtree is copied.
 
-See the `ArgMetaSpec`_ for a discussion of the *meta* field, which allows one to name the input, designate the input as optional, and attach arbitrary key/value pairs.
+Any URL protocol accepted by the Tapis Files_ service can be used in a *sourceUrl*.  The most common protocols used are tapis, http, and https.  The standard tapis URL format is *tapis://<tapis-system>/<path>*; please see the Files_ service for the complete list of supported protocols.
+
+The *targetPath* is the location to which data are copied from the *sourceUrl*.  The target is rooted at the *execSystemInputDir* except, possibly, when HOST_EVAL() is used, in which case it is still relative to the execution system's rootDir.
+
+A JobFileInput object is **complete** when its *sourceUrl* and *targetPath* are assigned; this provides the minimal information needed to effect a transfer.  If only the *sourceUrl* is set, Jobs will use the simple directory or file name from the URL to automatically assign the *targetPath*.  Specifying a *targetPath* as "*" results in the same automatic assignment.  Whether assigned by the user or Jobs, all job inputs that are not in-place and do not use the HOST_EVAL() function are copied into the *execSystemInputDir* subtree.  
+
+After application inputs are added to or merged with job request inputs, all complete JobFileInput objects are designated for staging.  Incomplete objects are ignored only if they were specified as OPTIONAL in the application definition.  Otherwise, an incomplete input object causes the job request to be rejected.  
+
+
+In-Place Inputs (tapislocal)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Job inputs already present on an execution system do not need to be transferred, yet users may still want to declare them for documentation purposes or to control how they are mounted into containers.  It's common, for example, for large data sets that cannot reasonably be copied to be mounted directly onto execution systems.  The Jobs and Applications services provide custom syntax that allows such input to be declared, but instructs the Jobs service to **not** copy that input.    
+
+Tapis introduces a new URL scheme, *tapislocal*, that is only recognized by the Applications and Jobs services.  Here are example URLs:
+
+::
+
+    tapislocal://exec.tapis/home/bud/mymri.dcm
+    tapislocal://exec.tapis/corral/repl/shared
+
+Like the *tapis* scheme and all common schemes (https, sftp, etc.), the first segment following the double slashes designates a host.  For *tapislocal*, the host is always the literal **exec.tapis**, which serves as a placeholder for a job's execution system.  The remainder of the URL is the path on the Tapis system.  All paths on Tapis systems, including those using the HOST_EVAL() function and the tapislocal URL, are rooted at the Tapis system's rootDir. 
+
+A *tapislocal* URL can only appear in the sourceUrl field of AppFileInput and JobFileInput parameters.  
+
+The *tapislocal* scheme indicates to Jobs that a filepath already exists on the execution system and, therefore, does not require data transfer during job execution.  If targetPath is "*", the Jobs service will assign the target path inside the container to be the last segment of the tapislocal URL path (/mymri.dcm and /shared in the examples above). 
+
+In container systems that require the explicit mounting of host filepaths, such as Docker, the Jobs service can mount the filepath into the container.  Both application definitions and job requests support the *autoMountLocal* boolean parameter.  This parameter is true by default, which causes Jobs to automatically mount the filepath into containers.  Setting autoMountLocal to false allows the user complete control over mounting using a *containerArgs* parameter. 
 
 
 .. _Files: https://tapis.readthedocs.io/en/latest/technical/files.html
 
 .. _Systems: https://tapis.readthedocs.io/en/latest/technical/systems.html
+
+.. _Applications: https://tapis.readthedocs.io/en/latest/technical/apps.html
+
+
+FileInputArrays
+---------------
+
+The *fileInputArrays* parameter provides an alternative syntax for specifying inputs in Applications_ and job requests.  This syntax is convenient for specifying multiple inputs destined for the same target directory, an I/O pattern sometimes refered to as *scatter-gather*.  Generally, input arrays support the same semantics as FileInputs_ with some restrictions.       
+
+The fileInputArrays parameter in job requests contains elements that conform to the following JSON schema.
+
+::
+
+   "JobFileInputArray": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+            "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+            "description": { "type": "string", "minLength": 1, "maxLength": 8096},
+            "sourceUrls": { "type": ["array", "null"], 
+                            "items": { "type": "string", "format": "uri", "minLength": 1 } },       
+            "targetDir": { "type": "string", "minLength": 1 }
+        }
+   }
+
+A fileInputArrays parameter is an array of JobFileInputArray objects, each of which contains an array of *sourceUrls* and a single *targetDir*.  One restriction is that *tapislocal* URLs cannot appear in *sourceUrls* fields.  
+
+An application's fileInputArrays are added to or merged with those in a job request following the same rules established for fileInputs in the previous section.  In particular, when names match, the *sourceUrls* defined in a job request override (i.e., completely replace) those defined in an application.  After merging, each JobFileInputArray must have a non-empty *sourceUrls* array.  See FileInputs_ and Applications_ for related information.
+
+Each *sourceUrls* entry is a location from which data is copied to the *targetDir*.  In Posix systems each URL can reference a file or a directory.  In the latter case, the complete directory subtree is transferred.  All URLs recognized by the Tapis Files_ service can be used (*tapislocal* is not recognized by Files).    
+
+The *targetDir* is the directory into which all *sourceUrls* are copied.  The *targetDir* is always rooted at the *ExecSystemInputDir* and if *targetDir* is "*" or not specified, then it is assigned *ExecSystemInputDir*.  The simple name of each *sourceUrls* entry is the destination name used in *targetDir*.  Use different JobFileInputArrays with different targetDir's if name conflicts between *sourceUrls* entries exist.
+
 
 ParameterSet
 ------------
@@ -261,9 +333,9 @@ The job *parameterSet* argument is comprised of these objects:
 ================    =====================   ===================================================
 Name                JSON Schema Type        Description
 ================    =====================   ===================================================
-appArgs             `ArgSpec`_ array        Arguments passed to user's application
-containerArgs       `ArgSpec`_ array        Arguments passed to container runtime
-schedulerOptions    `ArgSpec`_ array        Arguments passed to HPC batch scheduler
+appArgs             `JobArgSpec`_ array     Arguments passed to user's application
+containerArgs       `JobArgSpec`_ array     Arguments passed to container runtime
+schedulerOptions    `JobArgSpec`_ array     Arguments passed to HPC batch scheduler
 envVariables        `KeyValuePair`_ array   Environment variables injected into application container
 archiveFilter       object                  File archiving selector
 ================    =====================   ===================================================
@@ -273,17 +345,17 @@ Each of these objects can be specifed in Tapis application definitions and/or in
 appArgs
 ^^^^^^^
 
-Specify one or more command line arguments for the user application using the *appArgs* parameter.  Arguments specified in the application definition are appended to those in the submission request.  Metadata can be attached to any argument.
+Specify one or more command line arguments for the user application using the *appArgs* parameter.  Arguments specified in the application definition are appended to those in the submission request.  
 
 containerArgs
 ^^^^^^^^^^^^^
 
-Specify one or more command line arguments for the container runtime using the *containerArgs* parameter.  Arguments specified in the application definition are appended to those in the submission request.  Metadata can be attached to any argument.
+Specify one or more command line arguments for the container runtime using the *containerArgs* parameter.  Arguments specified in the application definition are appended to those in the submission request.  
 
 schedulerOptions
 ^^^^^^^^^^^^^^^^
 
-Specify HPC batch scheduler arguments for the container runtime using the *schedulerOptions* parameter.  Arguments specified in the application definition are appended to those in the submission request.  The arguments for each scheduler are passed using that scheduler's conventions.  Metadata can be attached to any argument.
+Specify HPC batch scheduler arguments for the container runtime using the *schedulerOptions* parameter.  Arguments specified in the application definition are appended to those in the submission request.  The arguments for each scheduler are passed using that scheduler's conventions.  
 
 Tapis defines a special scheduler option, **--tapis-profile**, to support local scheduler conventions.  Data centers sometimes customize their schedulers or restrict how those schedulers can be used.  The Systems_ service manages *SchedulerProfile* resources that are separate from any system definition, but can be referenced from system definitions.  The Jobs service uses directives contained in profiles to tailor application execution to local requirements.
 
@@ -357,50 +429,86 @@ Not implementated yet.
 Shared Components
 -----------------
 
-ArgSpec
-^^^^^^^
+JobArgSpec
+^^^^^^^^^^
 
-The JSON schema for defining elements in various `ParameterSet`_ components is below.
+Simple argument strings can be specified in application definitions (AppArgSpec) and in job submission requests (JobArgSpec).  These argument strings are passed to specific components in the runtime system, such as the batch scheduler (schedulerOptions_), the container runtime (containerArgs_) or the user's application (appArgs_).  
+
+The following rules govern how job arguments are calculated.
+
+ 1. All argument in application definitions must be named.
+ 2. Application arguments are either REQUIRED, FIXED or one of two optional types.
+ 3. Anonymous (unnamed) argument can be specified in job requests.
+ 4. Job request argument override values set in the application except for FIXED arguments.
+ 5. The final argument ordering is the same as the order specified in the definitions, with application arguments preceding those from the job request.  Application arguments maintain their place even when overridden in the job request.
+
+We define a **complete** AppArgSpec as one that has a non-empty name and arg value.  We define a **complete** JobArgSpec as one that has a non-empty arg value.  A JobArgSpec with the same name as an AppArgSpec inherits from the application and may override the AppArgSpec values.
+
+This is the JSON schema used to define runtime arguments in `ParameterSet`_.
 
 ::
 
-   "ArgSpec": {
+   "JobArgSpec": {
        "$comment": "Used to specify parameters on Jobs submission requests",
        "type": "object",
            "properties": {
-               "arg":  {"type": "string", "minLength": 1},
-               "meta": {"type": "object", "$ref": "#/$defs/ArgMetaSpec"}
+               "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+               "description": { "type": "string", "minLength": 1, "maxLength": 8096 },
+               "include": { "type": "boolean" },
+               "arg":  {"type": "string", "minLength": 1}
            },
        "required": ["arg"],
        "additionalProperties": false
    }
 
-The required *arg* value is an arbitrary string and is used as-is.  See the `ArgMetaSpec`_ for a discussion of the *meta* field, which allows one to name arguments, designate them as optional, and attach arbitrary key/value pairs to them.
+As mentioned, the JobArgSpec is used in conjunction with the AppArgSpec defined in Applications_.  Arguments in application definitions are merged into job request arguments using the same name matching alorithm as in `FileInputs`_.
 
+The *name* identifies the input argument.  If present, the name must start with an alphabetic character or an underscore (_) followed by zero or more alphanumeric or underscore characters.
 
-ArgMetaSpec
-^^^^^^^^^^^
+The *description* is used to convey usage information to job requester.  If both application and request descriptions are provided, then the request description is appended as a separate paragraph to the application description.
 
-The JSON schema for metadata objects used in `FileInputs`_ and other job parameters is below.
+The required *arg* value is an arbitrary string and is used as-is.  If this argument's name matches that of an application argument, this *arg* value overrides the application's value except when *inputMode=FIXED* in the application.    
 
-::
+The *include* field applies only on named arguments that are also defined in the application definition with *inputMode* INCLUDE_ON_DEMAND or INCLUDE_BY_DEFAULT; this parameter is ignored on all other inputModes.  Argument inclusion is discussed in greater detail in following subsection.  
 
-   "ArgMetaSpec": {
-       "$comment": "An open-ended way to name and annotate arguments",
-       "type": "object",
-           "properties": {
-               "description": {"type": "string", "minLength": 1, "maxLength": 8096},
-               "name":        {"type": "string", "minLength": 1},
-               "required":    {"type": "boolean"},
-               "kv":          {"type": "array",
-                               "items": {"$ref": "#/$defs/KeyValuePair"},
-                               "uniqueItems": true}
-           },
-        "required": ["name", "required"],
-        "additionalProperties": false
-   }
+Argument Processing
+~~~~~~~~~~~~~~~~~~~
 
-The *ArgMetaSpec* is always a child its enclosing job parameter.  The *ArgMetaSpec* requires that a name be assigned it parent and that whether the parent parameter is required or not.  Optionally, a description and a map of key/value strings can be included.  The complete *ArgMetaSpec* object is saved in the job, so the key/value pairs can be used to pass arbitrary information to any program that queries the job.  For example, a web application might submit a job request and embed display information in the metadata for use whenever the job is queried.
+Applications_ use their AppArgSpecs to pass default values to job requests.  The AppArgSpec's *inputMode* determines how to handle arguments during job processing.  An *inputMode* field can have these values:
+
+REQUIRED 
+   The argument must be provided for the job to run.  If an arg value is not specified in the application       definition, then it must be specified in the job request.  When provided in both, the job request arg value overrides the one in application.
+
+FIXED
+   The argument is completely defined in the application and not overridable in a job request.
+
+INCLUDE_ON_DEMAND
+   The argument, if complete, will only be included in the final argument list constructed by Jobs if it's explicitly referenced and included in the Job request.  This is the default value.
+
+INCLUDE_BY_DEFAULT  
+    The argument, if complete, will automatically be included in the final argument list constructed by Jobs unless explicitly excluded in the Job request.
+
+The truth table below defines how the AppArgSpec's *inputMode* and JobArgSpec's *include* settings interact to determine whether an argument is accepted or ignored during job processing.
+
++--------------------+-------------+-------------+
+| AppArgSpec         | JobArgSpec  | Meaning     |
+|                    |             |             |
+| *inputMode*        | *include*   |             |
++====================+=============+=============+
+| INCLUDE_ON_DEMAND  | True        | include arg |
++--------------------+-------------+-------------+
+| INCLUDE_ON_DEMAND  | False       | exclude arg |
++--------------------+-------------+-------------+
+| INCLUDE_ON_DEMAND  | undefined   | include arg |
++--------------------+-------------+-------------+
+| INCLUDE_BY_DEFAULT | True        | include arg |
++--------------------+-------------+-------------+
+| INCLUDE_BY_DEFAULT | False       | exclude arg |
++--------------------+-------------+-------------+
+| INCLUDE_BY_DEFAULT | undefined   | include arg |
++--------------------+-------------+-------------+
+
+The JobArgSpec *include* value has no effect on REQUIRED or FIXED arguments.  In the cases where the value does apply, not specifying *include* in a named JobArgSpec that matches an AppArgSpec is effectively the same as setting *include=True*.  By setting *include=False*, a JobArgSpec can exclude any INCLUDE_ON_DEMAND or INCLUDE_BY_DEFAULT arguments. 
 
 KeyValuePair
 ^^^^^^^^^^^^
