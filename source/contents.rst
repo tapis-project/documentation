@@ -30,3 +30,12 @@ Welcome to Tapis's Documentation!
    technical/security
    technical/streams
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Deployment and Operations Guide:
+
+   deployment/index
+   deployment/introduction
+   deployment/associate
+   deployment/primary
+
