@@ -24,11 +24,10 @@ A system can be used for the following purposes:
 
 * Storing and retrieving files and data.
 
-Each system is of a specific type and owned by a specific user who has special
-privileges for the system. The system definition also includes the user that is
-used to access the system, referred to as *effectiveUserId*. This access user
-can be a specific user (such as a service account) or dynamically specified as
-``${apiUserId}`` in which case the user name is extracted from the identity
+Each system is of a specific type (such as LINUX or S3) and owned by a specific user who has special
+privileges for the system. The system definition also includes the user that is used to access the system,
+referred to as *effectiveUserId*. This access user can be a specific user (such as a service account) or dynamically
+specified as ``${apiUserId}``. For the case of ``${apiUserId}``, the username is extracted from the identity
 associated with the request to the service.
 
 At a high level a system represents the following information:
@@ -47,7 +46,7 @@ Host name or IP address.
 Enabled flag
   Indicates if system is currently considered active and available for use. Default is *true*.
 Effective User
-  The user name to use when accessing the system. Referred to as *effectiveUserId.*
+  The username to use when accessing the system. Referred to as *effectiveUserId.*
   A specific user (such as a service account) or the dynamic user ``${apiUserId}``
 Default authentication method
   How access authentication is handled by default. Authentication method can also be
@@ -68,12 +67,17 @@ isDtn flag
   Indicates if system will be used as a data transfer node (DTN). By default this is *false*.
 canExec flag
   Indicates if system can be used to execute jobs.
+canRunBatch flag
+  Indicates if system supports running jobs using a batch scheduler.
 Job related attributes
-  Various attributes related to job execution such as *jobRuntimes*, *jobWorkingDir*, *jobIsBatch*,
+  Various attributes related to job execution such as *jobRuntimes*, *jobWorkingDir*,
   *batchScheduler*, *batchLogicalQueues*
 
 When creating a system the required attributes are: *id*, *systemType*, *host*, *defaultAuthnMethod* and *canExec*.
 Depending on the type of system and specific values for certain attributes there are other requirements.
+
+Note that a system may be created as a storage-only resource (*canExec=false*) or as a system that can be used for both
+execution and storage (*canExec=true*).
 
 --------------------------------
 Getting Started
@@ -98,17 +102,12 @@ Create a local file named ``system_s3.json`` with json similar to the following:
     "effectiveUserId":"${owner}",
     "bucketName":"tapis-tacc-bucket-<userid>",
     "rootDir":"/",
-    "canExec": false,
-    "authnCredential":
-    {
-      "accessKey":"***",
-      "accessSecret":"***"
-    }
+    "canExec": false
   }
 
-where <userid> is replaced with your user name, your S3 host name is updated appropriately and if desired you have
-filled in your access key and secret. Note that credentials are stored in the Security Kernel and may also be set or
-updated using a separate API call. However, only specific Tapis services are authorized to retrieve credentials.
+where *<userid>* is replaced with your username, your S3 host name is updated appropriately. Note that although
+credentials may be included in the definition we have not done so here. For security reasons, it is recommended that
+login credentials be updated using a separate API call as discussed below.
 
 Using PySDK:
 
@@ -124,6 +123,38 @@ Using PySDK:
 Using CURL::
 
    $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems -d @system_s3.json
+
+Registering Credentials for a System
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now that you have registered a system you will need to register credentials so you can use Tapis to access the host.
+Various authentication methods can be used to access a system, such as PASSWORD and PKI_KEYS. Here we will cover
+registering a ssh keys.
+
+Create a local file named ``cred_tmp.json`` with json similar to the following::
+
+  {
+    "publicKey": "<ssh_public_key>",
+    "privateKey": "<ssh_private_key>"
+  }
+
+where *<ssh_public_key>* and *<ssh_private_key>* are replaced with your keys. The keys must be encoded on a single line
+with embedded newline characters. You may find the following linux command useful in converting a multi-line private
+key into a single line::
+
+  cat $privateKeyFile | awk -v ORS='\\n' '1'
+
+Using PySDK:
+
+.. code-block:: python
+
+ t.systems.createUserCredential(systemId='tacc-bucket-sample-<userid>', userName='<userid>', publicKey='<ssh_public_key>', privateKey='<ssh_private_key>'))
+
+Using CURL::
+
+   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/credential/tacc-bucket-sample-<userid>/<userid> -d @cred_tmp.json
+
+Note that credentials are stored in the Security Kernel. Only specific Tapis services are authorized to retrieve credentials.
 
 Viewing Systems
 ~~~~~~~~~~~~~~~
@@ -168,12 +199,12 @@ The response should look similar to the following::
         "dtnMountSourcePath": null,
         "isDtn": false,
         "canExec": false,
+        "canRunBatch": false,
         "jobRuntimes": [],
         "jobWorkingDir": null,
         "jobEnvVariables": [],
         "jobMaxJobs": 2147483647,
         "jobMaxJobsPerUser": 2147483647,
-        "jobIsBatch": false,
         "batchScheduler": null,
         "batchLogicalQueues": [],
         "batchDefaultLogicalQueue": null,
@@ -224,8 +255,8 @@ The restrictions are:
 * If *effectiveUserId* is ``${apiUserId}`` (i.e. it is not static) then *authnCredential* may not be specified.
 * If *isDtn* is true then *canExec* must be false and following may not be specified: *dtnSystemId*, *dtnMountSourcePath*, *dtnMountPoint*, all job execution related attributes.
 * If *canExec* is true then *jobWorkingDir* is required and *jobRuntimes* must have at least one entry.
-* If *jobIsBatch* is true then *batchScheduler* must be specified.
-* If *jobIsBatch* is true then *batchLogicalQueues* must have at least one item.
+* If *canRunBatch* is true then *batchScheduler* must be specified.
+* If *canRunBatch* is true then *batchLogicalQueues* must have at least one item.
 
   * If *batchLogicalQueues* has more than one item then *batchLogicalDefaultQueue* must be specified.
   * If *batchLogicalQueues* has exactly one item then *batchLogicalDefaultQueue* is set to that item.
@@ -313,7 +344,7 @@ System Attributes Table
 |                     |                |                      | - Types: LINUX, S3                                                                   |
 |                     |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| owner               | String         | jdoe                 | - User name of *owner*.                                                              |
+| owner               | String         | jdoe                 | - username of *owner*.                                                              |
 |                     |                |                      | - Variable references: *${apiUserId}*                                                |
 |                     |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -371,6 +402,8 @@ System Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | canExec             | boolean        |                      | - Indicates if system will be used to execute jobs.                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| canRunBatch         | boolean        |                      | - Indicates if system supports running jobs using a batch scheduler.                 |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobRuntimes         | [Runtime]      |                      | - List of runtime environments supported by the system.                              |
 |                     |                |                      | - At least one entry required if *canExec* is true.                                  |
 |                     |                |                      | - Each Runtime specifies the Runtime type and version                                |
@@ -391,8 +424,6 @@ System Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobMaxJobsPerUser   | int            |                      | - Max total number of jobs associated with a specific user.                          |
 |                     |                |                      | - Set to -1 for unlimited.                                                           |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| jobIsBatch          | boolean        |                      | - Indicates if system uses a batch scheduler to run jobs.                            |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | batchScheduler      | String         | SLURM                | - Type of scheduler used when running batch jobs.                                    |
 |                     |                |                      | - Schedulers: SLURM                                                                  |
@@ -429,7 +460,7 @@ Credential Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | Attribute           | Type           | Example              | Notes                                                                                |
 +=====================+================+======================+======================================================================================+
-| user                | String         | jsmith               | - User name associated with the credential.                                          |
+| user                | String         | jsmith               | - Username associated with the credential.                                          |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | authnMethod         | String         | PKI_KEYS             | - Indicates the authentication method associated with a retrieved credential.        |
 |                     |                |                      | - When a credential is retrieved it is for a specific authentication method.         |
@@ -678,7 +709,7 @@ Notes:
 
    * ``id``, ``systemType``, ``owner``, ``host``, ``effectiveUserId``, ``defaultAuthnMethod``, ``canExec``
 
- * By default all attributes are returned when retrieving a single resource via the endpoint systems/<system_id>.
+ * By default all attributes are returned when retrieving a single resource via the endpoint *systems/<system_id>*.
  * By default summary attributes are returned when retrieving a list of systems.
  * Specifying nested attributes is not supported.
  * The attribute ``id`` is always returned.
