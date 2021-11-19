@@ -105,7 +105,7 @@ Job related attributes
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-When creating a application the required attributes are: ``id``, ``version``, ``appType`` and  ``containerImage``.
+When creating a application the required attributes are: ``id``, ``version`` and  ``containerImage``.
 Depending on the type of application and specific values for certain attributes there are other requirements.
 
 The restrictions are:
@@ -129,10 +129,10 @@ Create a local file named ``app_sample.json`` with json similar to the following
   {
     "id":"tacc-sample-app-<userid>",
     "version":"0.1",
-    "appType":"FORK",
     "description":"My sample application",
     "runtime":"DOCKER",
     "containerImage":"docker.io/hello-world:latest",
+    "jobType":"FORK",
     "jobAttributes": {
       "description": "default job description",
       "execSystemId": "execsystem1"
@@ -185,13 +185,13 @@ The response should look similar to the following::
         "id": "tacc-sample-app-<userid>",
         "version": "0.1",
         "description": "My sample application",
-        "appType": "FORK",
         "owner": "<userid>",
         "enabled": true,
         "runtime": "DOCKER",
         "runtimeVersion": null,
         "runtimeOptions": [],
         "containerImage": "docker.io/hello-world:latest",
+        "jobType": "FORK",
         "maxJobs": 0,
         "maxJobsPerUser": 0,
         "strictFileInputs": false,
@@ -262,13 +262,11 @@ The response should contain a list of items similar to the single listing shown 
 -----------------------------------
 Minimal Definition and Restrictions
 -----------------------------------
-When creating an application the required attributes are: *id*, *version*, *appType* and *containerImage*
+When creating an application the required attributes are: *id*, *version* and *containerImage*
 Depending on the type of application and specific values for certain attributes there are other requirements.
 The restrictions are:
 
 * If *archiveSystemId* is specified then *archiveSystemDir* is required.
-* If *appType* is FORK then the following attributes may not be specified: *maxJobs*, *maxJobsPerUser*, *nodeCount*,
-  *coresPerNode*, *memoryMB*, *maxMinutes*.
 
 ------------------
 Version
@@ -356,10 +354,6 @@ Application Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | description         | String         | A sample application | - Description                                                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| appType             | enum           | BATCH                | - Type of application.                                                               |
-|                     |                |                      | - Types: BATCH, FORK                                                                 |
-|                     |                |                      | - **Required** at creation time.                                                     |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | owner               | String         | jdoe                 | - User name of *owner*. Default is *${apiUserId}*.                                   |
 |                     |                |                      | - Variable references: *${apiUserId}*                                                |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -379,6 +373,9 @@ Application Attributes Table
 |                     |                |                      | - Singularity: shub://GodloveD/lolcow                                                |
 |                     |                |                      | - Docker: tapis/hello-tapis:0.0.1                                                    |
 |                     |                |                      | - **Required** at creation time.                                                     |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| jobType             | enum           | BATCH                | - Default job type.                                                                  |
+|                     |                |                      | - Types: BATCH, FORK                                                                 |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | maxJobs             | int            | 10                   | - Max number of jobs that can be running for this app on a system.                   |
 |                     |                |                      | - System may also limit the number of jobs.                                          |
@@ -729,7 +726,7 @@ Notes:
  * Special select keywords are supported: ``allAttributes`` and ``summaryAttributes``
  * Summary attributes include:
 
-   * ``id``, ``version``, ``appType``, ``owner``
+   * ``id``, ``version``, ``owner``
 
  * By default all attributes are returned when retrieving a single resource via the endpoint apps/<app_id>.
  * By default summary attributes are returned when retrieving a list of applications.
@@ -852,13 +849,11 @@ Response::
         {
             "id": "TestApp1",
             "version": "0.0.1",
-            "appType": "BATCH",
             "owner": "testuser2"
         },
         {
             "id": "tacc-sample-app",
             "version": "0.1",
-            "appType": "FORK",
             "owner": "testuser2"
         }
     ],
