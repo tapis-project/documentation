@@ -110,6 +110,8 @@ Parameters that do not need to be set are marked *Not Required*.  Finally, param
   The Tapis application to execute. *Required.*
 **appVersion**
   The version of the application to execute. *Required.*
+**jobType**
+  A job's type can be either FORK or BATCH.
 **owner**
   User ID under which the job runs.  Administrators can designate a user other than themselves.
 **tenant**
@@ -170,6 +172,18 @@ See the jobs/apps/systems parameter matrix_ for a detailed description of how ea
 
 .. _matrix: https://drive.google.com/file/d/1cPwZl9V0u0FvuQTBrPK6TA5sNYs2fsfB/view?usp=sharing
 
+
+Job Type
+--------
+
+An execution system can run jobs using a batch scheduler (e.g., Slurm or Condor) or a native runtime (e.g., Docker or Singularity) or both.  Users specify how to run a job using the *jobType* parameter, which is set to "BATCH" to use a batch scheduler or "FORK" to use a native runtime.  The jobType can also be specified in application definitions.  The final value assigned to the jobType of a job is calculated as follows:
+
+::
+
+    1. If the user specifies jobType in the job request, use it.
+    2. Otherwise, if the app.jobType != null, use it.
+    3. Otherwise, query the execution system and set jobType=BATCH if execSys.canRunBatch==true.
+    4. Otherwise, set jobType=FORK.
 
 Directories
 -----------
