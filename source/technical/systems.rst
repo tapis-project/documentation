@@ -344,7 +344,7 @@ System Attributes Table
 |                     |                |                      | - Types: LINUX, S3                                                                   |
 |                     |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| owner               | String         | jdoe                 | - username of *owner*.                                                              |
+| owner               | String         | jdoe                 | - username of *owner*.                                                               |
 |                     |                |                      | - Variable references: *${apiUserId}*                                                |
 |                     |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -412,6 +412,7 @@ System Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobWorkingDir       | String         | HOST_EVAL($SCRATCH)  | - Parent directory from which a job is run.                                          |
 |                     |                |                      | - Relative to the effective root directory *rootDir*.                                |
+|                     |                |                      | - Required if *canExec* is true.                                                     |
 |                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobEnvVariables     | [KeyValuePair] |                      | - Environment variables added to the shell environment in which the job is running.  |
@@ -460,7 +461,7 @@ Credential Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | Attribute           | Type           | Example              | Notes                                                                                |
 +=====================+================+======================+======================================================================================+
-| user                | String         | jsmith               | - Username associated with the credential.                                          |
+| user                | String         | jsmith               | - Username associated with the credential.                                           |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | authnMethod         | String         | PKI_KEYS             | - Indicates the authentication method associated with a retrieved credential.        |
 |                     |                |                      | - When a credential is retrieved it is for a specific authentication method.         |

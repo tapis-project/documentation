@@ -427,16 +427,16 @@ JobAttributes Table
 | execSystemExecDir   | String         |                      | - Directory where application assets are staged.                                     |
 |                     |                |                      | - Current working directory at application launch time.                              |
 |                     |                |                      | - Macro template variables such as ${JobWorkingDir} may be used.                     |
-|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}                                          |
+|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | execSystemInputDir  | String         |                      | - Directory where Tapis is to stage the inputs required by the application.          |
 |                     |                |                      | - Macro template variables such as ${JobWorkingDir} may be used.                     |
-|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}                                          |
+|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | execSystemOutputDir | String         |                      | - Directory where Tapis expects the application to store its final output results.   |
 |                     |                |                      | - Files here are candidates for archiving.                                           |
 |                     |                |                      | - Macro template variables such as ${JobWorkingDir} may be used.                     |
-|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}/output                                   |
+|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}/output                                 |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | execSystem          | String         | normal               | - LogicalQueue to use when running the job.                                          |
 | LogicalQueue        |                |                      |                                                                                      |
@@ -445,7 +445,7 @@ JobAttributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | archiveSystemDir    | String         |                      | - Directory on *archiveSystemId* where outputs will be placed.                       |
 |                     |                |                      | - This will be relative to the effective root directory defined for archiveSystemId. |
-|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}                                          |
+|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | archiveOnAppError   | boolean        |                      | - Indicates if outputs should be archived if there is an error while running job.    |
 |                     |                |                      | - The default is TRUE.                                                               |
