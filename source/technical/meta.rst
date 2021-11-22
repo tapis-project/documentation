@@ -661,7 +661,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta.getDocument(db='',collection=' ',documentId=' ')
+        $ t.meta.getDocument(db='',collection=' ',docId=' ')
 
 With CURL:
 
@@ -686,7 +686,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta.replaceDocument(db='',collection=' ',documentId=' ')
+        $ t.meta.replaceDocument(db='',collection=' ',docId=' ')
 
 With CURL:
 
@@ -711,7 +711,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta.modifyDocument(db='',collection=' ',documentId=' ')
+        $ t.meta.modifyDocument(db='',collection=' ',docId=' ')
 
 With CURL:
 
@@ -736,7 +736,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta.deleteDocument(db='',collection=' ',documentId=' ')
+        $ t.meta.deleteDocument(db='',collection=' ',docId=' ')
 
 With CURL:
 
