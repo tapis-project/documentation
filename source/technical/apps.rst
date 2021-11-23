@@ -28,18 +28,6 @@ which allows the *Jobs* service to:
     request or an application may specify a list of constraints based on these capabilities. These are used for determining
     eligible systems at job execution time.
 
-Application Definition Creation and Validation in a Portal or Gateway
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-As discussed above most of the information in an application definition is in place in order to allow Tapis to stage
-input, execute and archive output for an application. In addition, an application definition may include information to
-facilitate portal and gateway developers. This information is in the form of metadata that can be associated with the
-file inputs and the various collections of arguments. The collections are contained in the ``ParameterSet``, please see
-the table below. The collections include the ``appArgs``, ``containerArgs`` and ``schedulerOptions``. In addition to the
-argument value each argument includes metadata attributes for ``name``, ``description``, ``required``, and
-``keyValuePairs`` (a list of free form key-value pairs). The intent of the ``description`` is to allow the application
-designer to document the argument in detail. The free form key-value pairs allow for specifying various validation
-requirements, such as argument type, maximum value or length, minimum value or length, etc.
-
 -----------------
 Model
 -----------------
@@ -54,8 +42,6 @@ Id
 Latest Version
   Applications are expected to evolve over time. This is the latest version of the application. The value is
   updated by the service as new versions are created.
-Type of application
-  BATCH or FORK
 Owner
   A specific user set at application creation. Default is ``${apiUserId}``, the user making the request to
   create the application.
@@ -82,6 +68,10 @@ Container image
   Reference to be used when running the container image.
 Interactive flag
   Indicates if the application is interactive. Default is *false*.
+Job type
+  FORK or BATCH. Jobs submitted will be of this type by default. May be overridden in the job submit request.
+  This allows an application designer to test an application run as a FORK job, for example, and then move on to
+  running as a BATCH job which typically involves further design work. Default is FORK.
 Max jobs
   Maximum total number of jobs that can be queued or running for this application on a given execution system at
   a given time. Note that the execution system may also limit the number of jobs on the system which may further
@@ -142,7 +132,8 @@ Create a local file named ``app_sample.json`` with json similar to the following
 where <userid> is replaced with your user name.
 
 .. note::
-  ``execSystemId`` must reference a system that exists and has ``canExec`` set to true.
+  If specified, ``execSystemId`` must reference a system that exists and has ``canExec`` set to true. If
+  ``execSystemId`` not specified, then it must be provided as part of the job submit request.
 
 Using PySDK:
 
@@ -219,6 +210,7 @@ The response should look similar to the following::
                 }
             },
             "fileInputs": [],
+            "fileInputArrays": [],
             "nodeCount": 1,
             "coresPerNode": 1,
             "memoryMB": 100,
@@ -352,17 +344,19 @@ Application Attributes Table
 |                     |                |                      | - Allowed characters: Alphanumeric [0-9a-zA-Z] and special characters [-._~].        |
 |                     |                |                      | - **Required** at creation time.                                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| description         | String         | A sample application | - Description                                                                        |
+| description         | String         | A sample application | - Optional description                                                               |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| owner               | String         | jdoe                 | - User name of *owner*. Default is *${apiUserId}*.                                   |
+| owner               | String         | jdoe                 | - User name of *owner*.                                                              |
 |                     |                |                      | - Variable references: *${apiUserId}*                                                |
+|                     |                |                      | - Default is *${apiUserId}*                                                          |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | enabled             | boolean        | FALSE                | - Indicates if application currently enabled for use. Default is TRUE.               |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| runtime             | enum           | SINGULARITY          | - Runtime to be used when executing the application. Default is DOCKER.              |
+| runtime             | enum           | SINGULARITY          | - Runtime to be used when executing the application.                                 |
 |                     |                |                      | - Runtimes: DOCKER, SINGULARITY                                                      |
+|                     |                |                      | - Default is DOCKER                                                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| runtimeVersion      | String         | 2.5.2                | - Version or range of versions required.                                             |
+| runtimeVersion      | String         | 2.5.2                | - Optional version or range of versions required.                                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | runtimeOptions      | [enum]         |                      | - Options that apply to specific runtimes.                                           |
 |                     |                |                      | - Options: NONE, SINGULARITY_START, SINGULARITY_RUN                                  |
@@ -376,6 +370,8 @@ Application Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobType             | enum           | BATCH                | - Default job type.                                                                  |
 |                     |                |                      | - Types: BATCH, FORK                                                                 |
+|                     |                |                      | - Jobs will be of this type by default. May be overridden in the job submit request. |
+|                     |                |                      | - Default is FORK.                                                                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | maxJobs             | int            | 10                   | - Max number of jobs that can be running for this app on a system.                   |
 |                     |                |                      | - System may also limit the number of jobs.                                          |
@@ -391,7 +387,6 @@ Application Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobAttributes       | JobAttributes  |                      | - Various attributes related to job execution.                                       |
 |                     |                |                      | - See table below.                                                                   |
-|                     |                |                      | - **Required** at creation time.                                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | tags                | [String]       |                      | - List of tags as simple strings.                                                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -416,62 +411,67 @@ JobAttributes Table
     | Constraints         |                |   "B=bval"]          |                                                                                      |
     +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| Attribute           | Type           | Example              | Notes                                                                                |
-+=====================+================+======================+======================================================================================+
-| description         | String         |                      | - Description to be filled in when this application is used to run a job.            |
-|                     |                |                      | - Macros allow this to act as a template to be filled in at job runtime.             |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| execSystemId        | String         |                      | - Specific system on which the application is to be run.                             |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| execSystemExecDir   | String         |                      | - Directory where application assets are staged.                                     |
-|                     |                |                      | - Current working directory at application launch time.                              |
-|                     |                |                      | - Macro template variables such as ${JobWorkingDir} may be used.                     |
-|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}                                        |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| execSystemInputDir  | String         |                      | - Directory where Tapis is to stage the inputs required by the application.          |
-|                     |                |                      | - Macro template variables such as ${JobWorkingDir} may be used.                     |
-|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}                                        |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| execSystemOutputDir | String         |                      | - Directory where Tapis expects the application to store its final output results.   |
-|                     |                |                      | - Files here are candidates for archiving.                                           |
-|                     |                |                      | - Macro template variables such as ${JobWorkingDir} may be used.                     |
-|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}/output                                 |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| execSystem          | String         | normal               | - LogicalQueue to use when running the job.                                          |
-| LogicalQueue        |                |                      |                                                                                      |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| archiveSystemId     | String         |                      | - System to use when archiving outputs.                                              |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| archiveSystemDir    | String         |                      | - Directory on *archiveSystemId* where outputs will be placed.                       |
-|                     |                |                      | - This will be relative to the effective root directory defined for archiveSystemId. |
-|                     |                |                      | - Default is ${JobWorkingDir}/jobs/${JobUUID}                                        |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| archiveOnAppError   | boolean        |                      | - Indicates if outputs should be archived if there is an error while running job.    |
-|                     |                |                      | - The default is TRUE.                                                               |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| parameterSet        | ParameterSet   |                      | - Various collections used during job execution.                                     |
-|                     |                |                      | - App arguments, container arguments, scheduler options, environment variables, etc. |
-|                     |                |                      | - See table below.                                                                   |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| fileInputs          | [FileInput]    |                      | - Collection of inputs for the application.                                          |
-|                     |                |                      | - Each input must have a name and may be defined as required or optional.            |
-|                     |                |                      | - *strictFileInputs*=TRUE means only inputs defined here may be specified for job.   |
-|                     |                |                      | - See table below.                                                                   |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| nodeCount           | int            |                      | - Number of nodes to request during job submission.                                  |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| coresPerNode        | int            |                      | - Number of cores per node to request during job submission.                         |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| memoryMB            | int            |                      | - Memory in megabytes to request during job submission.                              |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| maxMinutes          | int            |                      | - Run time to request during job submission.                                         |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| subscriptions       |                |                      | - Notification subscriptions.                                                        |
-|                     |                |                      | - See table below.                                                                   |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| tags                | [String]       |                      | - List of tags as simple strings.                                                    |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| Attribute           | Type             | Example            | Notes                                                                                |
++=====================+==================+====================+======================================================================================+
+| description         | String           |                    | - Description to be filled in when this application is used to run a job.            |
+|                     |                  |                    | - Macros allow this to act as a template to be filled in at job runtime.             |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| execSystemId        | String           |                    | - Specific system on which the application is to be run.                             |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| execSystemExecDir   | String           |                    | - Directory where application assets are staged.                                     |
+|                     |                  |                    | - Current working directory at application launch time.                              |
+|                     |                  |                    | - Macro template variables such as ${JobWorkingDir} may be used.                     |
+|                     |                  |                    | - Default is ${JobWorkingDir}/jobs/${JobUUID}                                        |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| execSystemInputDir  | String           |                    | - Directory where Tapis is to stage the inputs required by the application.          |
+|                     |                  |                    | - Macro template variables such as ${JobWorkingDir} may be used.                     |
+|                     |                  |                    | - Default is ${JobWorkingDir}/jobs/${JobUUID}                                        |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| execSystemOutputDir | String           |                    | - Directory where Tapis expects the application to store its final output results.   |
+|                     |                  |                    | - Files here are candidates for archiving.                                           |
+|                     |                  |                    | - Macro template variables such as ${JobWorkingDir} may be used.                     |
+|                     |                  |                    | - Default is ${JobWorkingDir}/jobs/${JobUUID}/output                                 |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| execSystem          | String           | normal             | - LogicalQueue to use when running the job.                                          |
+| LogicalQueue        |                  |                    |                                                                                      |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| archiveSystemId     | String           |                    | - System to use when archiving outputs.                                              |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| archiveSystemDir    | String           |                    | - Directory on *archiveSystemId* where outputs will be placed.                       |
+|                     |                  |                    | - This will be relative to the effective root directory defined for archiveSystemId. |
+|                     |                  |                    | - Default is ${JobWorkingDir}/jobs/${JobUUID}                                        |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| archiveOnAppError   | boolean          |                    | - Indicates if outputs should be archived if there is an error while running job.    |
+|                     |                  |                    | - The default is TRUE.                                                               |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| parameterSet        | ParameterSet     |                    | - Various collections used during job execution.                                     |
+|                     |                  |                    | - App arguments, container arguments, scheduler options, environment variables, etc. |
+|                     |                  |                    | - See table below.                                                                   |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| fileInputs          | [FileInput]      |                    | - Collection of file inputs that must be staged for the application.                 |
+|                     |                  |                    | - Each input must have a name.                                                       |
+|                     |                  |                    | - *strictFileInputs*=TRUE means only inputs defined here may be specified for job.   |
+|                     |                  |                    | - See table below.                                                                   |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| fileInputArrays     | [FileInputArray] |                    | - Collection of arrays of inputs that must be staged for the application.            |
+|                     |                  |                    | - Each input must have a name. All inputs in an array have the same target directory.|
+|                     |                  |                    | - *strictFileInputs*=TRUE means only inputs defined here may be specified for job.   |
+|                     |                  |                    | - See table below.                                                                   |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| nodeCount           | int              |                    | - Number of nodes to request during job submission.                                  |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| coresPerNode        | int              |                    | - Number of cores per node to request during job submission.                         |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| memoryMB            | int              |                    | - Memory in megabytes to request during job submission.                              |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| maxMinutes          | int              |                    | - Run time to request during job submission.                                         |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| subscriptions       |                  |                    | - Notification subscriptions.                                                        |
+|                     |                  |                    | - See table below.                                                                   |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| tags                | [String]         |                    | - List of tags as simple strings.                                                    |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
 
 -----------------------------
 ParameterSet Attributes Table
@@ -518,50 +518,67 @@ ArchiveFilter Attributes Table
 Arg Attributes Table
 ------------------------
 
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| Attribute           | Type           | Example              | Notes                                                                                |
-+=====================+================+======================+======================================================================================+
-| arg                 | String         |                      | - Value for the argument                                                             |
-|                     |                |                      | - **Required** at creation time.                                                     |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| meta->name          | String         |                      | - Identifying label associated with the argument.                                    |
-|                     |                |                      | - **Required** at creation time if metadata is included.                             |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| meta->description   | String         |                      | - Optional description of the argument which may include usage, purpose, etc.        |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| meta->required      | boolean        |                      | - Indicates if input must be present prior to execution of the application.          |
-|                     |                |                      | - Default is FALSE.                                                                  |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| meta->keyValuePairs | [KeyValuePair] |                      | - Additional information as key-value pairs.                                         |
-|                     |                |                      | - May include validation information such as expected type, minimum value, etc.      |
-|                     |                |                      | - key is required, value is optional.                                                |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
++---------------------+------------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute           | Type       | Example              | Notes                                                                                |
++=====================+============+======================+======================================================================================+
+| name                | String     |                      | - Identifying label associated with the argument.                                    |
+|                     |            |                      | - **Required** at creation time.                                                     |
++---------------------+------------+----------------------+--------------------------------------------------------------------------------------+
+| description         | String     |                      | - Optional description of the argument which may include usage, purpose, etc.        |
++---------------------+------------+----------------------+--------------------------------------------------------------------------------------+
+| inputMode           | enum       |                      | - Indicates how argument is to be treated when processing individual job requests.   |
+|                     |            |                      | - REQUIRED, FIXED, INCLUDE_ON_DEMAND, INCLUDE_BY_DEFAULT                             |
+|                     |            |                      | - Default is INCLUDE_ON_DEMAND.                                                      |
++---------------------+------------+----------------------+--------------------------------------------------------------------------------------+
+| arg                 | String     |                      | - Value for the argument                                                             |
+|                     |            |                      | - **Required** at creation time.                                                     |
++---------------------+------------+----------------------+--------------------------------------------------------------------------------------+
 
 --------------------------
 FileInput Attributes Table
 --------------------------
 
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| Attribute           | Type           | Example              | Notes                                                                                |
-+=====================+================+======================+======================================================================================+
-| sourceUrl           | String         |                      | - Source used by the Jobs service when transferring files.                           |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| targetPath          | String         |                      | - Target path used by the Jobs service when transferring files.                      |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| inPlace             | boolean        |                      | - Indicates if staging will be done in place. Please see Jobs Service.               |
-|                     |                |                      | - Default is FALSE.                                                                  |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| meta->name          | String         |                      | - Identifying label associated with the input. Typically used during a job request.  |
-|                     |                |                      | - **Required** at creation time.                                                     |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| meta->description   | String         |                      | - Optional description.                                                              |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| meta->required      | boolean        |                      | - Indicates if input must be present prior to execution of the application.          |
-|                     |                |                      | - Default is FALSE.                                                                  |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| meta->keyValuePairs | [KeyValuePair] |                      | - Additional information as key-value pairs.                                         |
-|                     |                |                      | - key is required, value is optional.                                                |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
++-----------------+-----------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute       | Type      | Example              | Notes                                                                                |
++=================+===========+======================+======================================================================================+
+| name            | String    |                      | - Identifying label associated with the input. Typically used during a job request.  |
+|                 |           |                      | - **Required** at creation time.                                                     |
++-----------------+-----------+----------------------+--------------------------------------------------------------------------------------+
+| description     | String    |                      | - Optional description.                                                              |
++-----------------+-----------+----------------------+--------------------------------------------------------------------------------------+
+| inputMode       | enum      |                      | - Indicates how input is to be treated when processing individual job requests.      |
+|                 |           |                      | - REQUIRED, OPTIONAL, FIXED                                                          |
+|                 |           |                      | - Default is OPTIONAL.                                                               |
++-----------------+-----------+----------------------+--------------------------------------------------------------------------------------+
+| autoMountLocal  | boolean   |                      | - Indicates if Jobs service should automatically mount file paths into containers.   |
+|                 |           |                      | - Note that not all container runtimes require this.                                 |
+|                 |           |                      | - Setting to FALSE allows user complete control using *containerArg* parameters.     |
+|                 |           |                      | - Default is TRUE.                                                                   |
++-----------------+-----------+----------------------+--------------------------------------------------------------------------------------+
+| sourceUrl       | String    |                      | - Source used by Jobs service when staging file inputs.                              |
++-----------------+-----------+----------------------+--------------------------------------------------------------------------------------+
+| targetPath      | String    |                      | - Target path used by Jobs service when staging file inputs.                         |
++-----------------+-----------+----------------------+--------------------------------------------------------------------------------------+
+
+-------------------------------
+FileInputArray Attributes Table
+-------------------------------
+
++-----------------+-----------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute       | Type      | Example              | Notes                                                                                |
++=================+===========+======================+======================================================================================+
+| name            | String    |                      | - Identifying label associated with the input. Typically used during a job request.  |
+|                 |           |                      | - **Required** at creation time.                                                     |
++-----------------+-----------+----------------------+--------------------------------------------------------------------------------------+
+| description     | String    |                      | - Optional description.                                                              |
++-----------------+-----------+----------------------+--------------------------------------------------------------------------------------+
+| inputMode       | enum      |                      | - REQUIRED, OPTIONAL, FIXED                                                          |
+|                 |           |                      | - Default is OPTIONAL.                                                               |
++-----------------+-----------+----------------------+--------------------------------------------------------------------------------------+
+| sourceUrls      | [String]  |                      | - Array of sources used by Jobs service when staging file inputs.                    |
++-----------------+-----------+----------------------+--------------------------------------------------------------------------------------+
+| targetDir       | String    |                      | - Target directory used by Jobs service when staging file inputs.                    |
++-----------------+-----------+----------------------+--------------------------------------------------------------------------------------+
 
 -----------------------
 Searching
@@ -588,7 +605,7 @@ search please see <TBD>.
 Example CURL command to search for applications that have ``Test`` in the id, are of type FORK and allow for *maxJobs*
 greater than ``5``::
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps?search="(id.like.*Test*)~(app_type.eq.FORK)~(max_jobs.gt.5)"
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps?search="(id.like.*Test*)~(job_type.eq.FORK)~(max_jobs.gt.5)"
 
 Notes:
 
@@ -630,7 +647,7 @@ search please see <TBD>.
 Example CURL command to search for applications that have ``Test`` in the id, are of type FORK and allow for *maxJobs*
 greater than ``5``::
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps/search/apps?id.like=*Test*\&app_type.eq=FORK\&max_jobs.gt=5
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps/search/apps?id.like=*Test*\&job_type.eq=FORK\&max_jobs.gt=5
 
 Notes:
 
@@ -657,7 +674,7 @@ with following json::
   {
     "search":
       [
-        "(owner = 'jdoe' AND app_type = 'FORK') OR",
+        "(owner = 'jdoe' AND job_type = 'FORK') OR",
         "(owner = 'jsmith' AND max_jobs < 5)"
       ]
   }
