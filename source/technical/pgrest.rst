@@ -195,9 +195,9 @@ fields, with the column field have a host of options to delegate how to create t
 
   * Enum generation is done in table definitions.
   * Provide a dict of enums where the key is enum name and the value is the possible values for the enum.
-  * Ex: ``{"accountrole": ["ADMIN", "user"]}``
+  * Ex: ``{"accountrole": ["ADMIN", "USER"]}``
 
-    * Creates an "accountrole" enum that can have values of "ADMIN" or "user"
+    * Creates an "accountrole" enum that can have values of "ADMIN" or "USER"
 
   * Deletion/Updates are not currently supported. Speak to developer if you're interested in a delete/update endpoint.
   
