@@ -231,8 +231,9 @@ fields, with the column field have a host of options to delegate how to create t
       * Can be varchar, datetime, {enumName}, text, timestamp, serial, varchar[], boolean, integer, integer[].
 
         * Note: varchar requires the char_len column definition.
+        * Note: serial data types start incrementing at 1000 to avoid any user collisions. Also enforces unique constraint.
         * Note: Setting a timestamp data_type column default to ``UPDATETIME`` or ``CREATETIME`` has special properties.
-  
+
           * ``CREATETIME`` sets the field to the UTC time at creation. It is then not changed later.
           * ``UPDATETIME`` sets the filed to the UTC time at creation. It is updated to the update time when it is updated.
 
@@ -454,6 +455,107 @@ The following is a working complex table definition using all parameters for use
       }
     }
   }
+
+Editing tables
+--------------
+
+Tenant admins are able to modify tables with a few select operations by making a PUT request to
+``/v3/pgrest/manage/tables/{table_id}``. This feature is only available to admins, please contact a
+service admin in order to see if you qualify for the role.
+
+.. Important::
+   Support for editing tables for tenant admins was added in version 1.1.0.
+
+This PUT endpoint effectively uses ``ALTER TABLE`` commands with postgres and also updates the Django
+database backend to match these changes. Due to the complexity in this workflow, admins are only allowed
+a fixed set of operations to use. Additionally, only one operation is allowed to take place per PUT
+request. For example, admins can not edit a table's name, and drop a column in the same request.
+
+The endpoint's error messages are generally verbose, so errors should be pointed out poignantly. A
+list of all PUT operations available and examples is as follows:
+
+
+* ``root_url``
+
+  * Operation to change the root_url currently associated with the table.
+  * Ex. Change table with root_url ``all_people`` to ``some_people``.
+    * Payload is ``{"root_url": "some_people"}``
+  
+* ``table_name``
+  
+  * Operation to change the table_name currently associated with the table.
+  * Ex: Change table with table_name ``all_people`` to ``some_people``.
+    * Payload is ``{"table_name": "some_people"}``
+
+* ``comments``
+  
+  * Operation to change the comments currently associated with the table (Overwrites existing).
+  * Ex: Adding "This column is not case-sensitive" comment to table with table_id ``84``.
+    * Payload is ``{"comments": "This column is not case-sensitive"}``
+
+* ``endpoints``
+
+  * Operation to change the endpoints a table currently has available.
+  * Endpoints available are "ALL" (alias to set all endpoints to available), "GET_ALL", "GET_ONE", "CREATE", "UPDATE", and "DELETE".
+  * Ex: Changing table so all endpoints are available.
+    * Payload is ``{"endpoints": ["ALL"]}``
+  
+* ``column_type``
+  
+  * Operation to change the column_type of a particular column in table.
+  * column_types available are "varchar", "boolean", "integer", "text", "timestamp", "serial", and "datetime".
+  * Ex: Changing column ``names`` from type ``integer`` to ``varchar``.
+    * Payload is ``{"column_type": "names, varchar"}``
+  
+* ``drop_column``
+
+  * Operation to drop a column in a table (Not reversible).
+  * Ex: Dropping column ``useless_archive_column``.
+    * Payload is ``{"drop_column": "useless_archive_column"}``
+  
+* ``drop_default``
+  
+  * Operation to drop a default currently set on a column in a table.
+  * Ex: Dropping default for column ``i_no_longer_need_a_default``.
+    * Payload is ``{"drop_default": "i_no_longer_need_a_default"}``
+  
+* ``set_default``
+  
+  * Operation to set a new default on a column in a table.
+  * Ex: Setting default on column ``names`` to ``no_name``.
+    * Payload is ``{"set_default": "names,no_name"}``
+
+
+For example, to change the table_name of table with table_id ``3`` to ``my_new_name``:
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $tok" \
+         -H "Content-type: application/json" \
+         -d "{'table_name': 'my_new_name'}" \
+         https://dev.tapis.io/v3/pgrest/manage/tables/3
+
+For example, to change the column_type of column ``names`` from ``integer`` to ``varchar`` in the same table:
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $tok" \
+         -H "Content-type: application/json" \
+         -d "{'column_type': 'names, varchar'}" \
+         https://dev.tapis.io/v3/pgrest/manage/tables/3
+
+For example, to change the endpoints of table ``3`` to only ``CREATE`` and ``DELETE``:
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $tok" \
+         -H "Content-type: application/json" \
+         -d "{'endpoints': \'['CREATE', 'DELETE']\'}" \
+         https://dev.tapis.io/v3/pgrest/manage/tables/3
+
+All operations will result in either a verbose error message from the API regarding issues,
+the postgres error message returned to the API in cases of a postgres error, or a
+``Table put successfully`` message.
 
 
 
@@ -774,6 +876,74 @@ Note that the result is always a JSON list, even when one or zero records are re
   $ curl -H "tapis-v2-token: $TOKEN" https://dev.tapis.io/v3/pgrest/data/init?where_col_two=2
 
 
+
+Retrieving rows with search parameters
+--------------------------------------
+
+PgREST allows users to retrieve table rows from either the ``/data`` endpoint or the ``/view`` endpoint
+using search parameters follow the Tapis V3 search specification. All search operations available and
+examples are detailed below.
+
+.. Important::
+
+  Support of retrieving rows with search parameters is available in version 1.1.0. Previous implementation
+  disregarded due to being out of date with Tapis V3 search specifications.
+
++-----------+---------------------+-----------------------+
+| Operator  | Postgres Equivalent | Description           |
++-----------+---------------------+-----------------------+
+| .eq       | =                   | Equal                 |
++-----------+---------------------+-----------------------+
+| .neq      | !=                  | Not equal             |
++-----------+---------------------+-----------------------+
+| .lt       | <                   | Less than             |
++-----------+---------------------+-----------------------+
+| .lte      | <=                  | Less than or equal    |
++-----------+---------------------+-----------------------+
+| .gt       | >                   | Greater than          |
++-----------+---------------------+-----------------------+
+| .gte      | >=                  | Greater than or equal |
++-----------+---------------------+-----------------------+
+| .in       | IN                  | In set of             |
++-----------+---------------------+-----------------------+
+| .nin      | NOT IN              | Not in set of         |
++-----------+---------------------+-----------------------+
+| .like     | LIKE                | Like value            |
++-----------+---------------------+-----------------------+
+| .nlike    | NOT LIKE            | Not like value        |
++-----------+---------------------+-----------------------+
+| .between  | BETWEEN             | Between set           |
++-----------+---------------------+-----------------------+
+| .nbetween | NOT BETWEEN         | Not between set       |
++-----------+---------------------+-----------------------+
+
+
+These operators are used in an endpoint's query parameters. For example if I had a table with root_url
+``my_table`` and I wanted to get all rows with column ``age`` greater than ``15`` I could do the following:
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" \
+    https://tapis.io/v3/pgrest/data/my_table?age.gt=15
+
+
+Another example using .between this time would be finding all rows with column ``age`` between ``18-30``:
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" \
+    https://tapis.io/v3/pgrest/data/my_table?age.between=18,30
+
+
+If you only wanted all rows with column ``age`` that match ``20``, ``30``, or ``40``:
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" \
+    https://tapis.io/v3/pgrest/data/my_table?age.in=20,30,40
+
+
+
 Views Manage API
 ====================
 
@@ -820,6 +990,17 @@ definition can have the following rules.
 
   * List of roles required to view this view.
   * If nothing is given, view is open to all.
+
+* ``raw_sql`` - **admins only**
+  * To allow for better use of postgres's feacilities there is a raw_sql view creation parameter.
+  * To use this parameter you must be an admin (talk to service admins)
+  * When using this paramter, select_query, where_query, and from_table are no longer allowed, other parameters are fine.
+  * The query follows ``CREATE OR REPLACE VIEW {tenant}.{view_name} {raw_sql}`` format.
+  * Example data body:
+    * {"view_name": "my_new_test_view",
+       "raw_sql": "AS SELECT * FROM tenant.my_table WHERE col_name >= 600;",
+       "comments": "An example of creating my_new_test_view."}
+
 
 View Creation Example
 ---------------------
@@ -869,6 +1050,72 @@ Users can make a get to ``/v3/pgrest/views/{view_id}`` with the following curl.
 
   $ curl -H "tapis-v2-token: $TOKEN" \
     https://<tenant>.tapis.io/v3/pgrest/views/just_a_cool_url
+
+Retrieving rows with search parameters
+--------------------------------------
+
+PgREST allows users to retrieve table rows from either the ``/data`` endpoint or the ``/view`` endpoint
+using search parameters follow the Tapis V3 search specification. All search operations available and
+examples are detailed below.
+
+.. Important::
+
+  Support of retrieving rows with search parameters is available in version 1.1.0. Previous implementation
+  disregarded due to being out of date with Tapis V3 search specifications.
+
++-----------+---------------------+-----------------------+
+| Operator  | Postgres Equivalent | Description           |
++-----------+---------------------+-----------------------+
+| .eq       | =                   | Equal                 |
++-----------+---------------------+-----------------------+
+| .neq      | !=                  | Not equal             |
++-----------+---------------------+-----------------------+
+| .lt       | <                   | Less than             |
++-----------+---------------------+-----------------------+
+| .lte      | <=                  | Less than or equal    |
++-----------+---------------------+-----------------------+
+| .gt       | >                   | Greater than          |
++-----------+---------------------+-----------------------+
+| .gte      | >=                  | Greater than or equal |
++-----------+---------------------+-----------------------+
+| .in       | IN                  | In set of             |
++-----------+---------------------+-----------------------+
+| .nin      | NOT IN              | Not in set of         |
++-----------+---------------------+-----------------------+
+| .like     | LIKE                | Like value            |
++-----------+---------------------+-----------------------+
+| .nlike    | NOT LIKE            | Not like value        |
++-----------+---------------------+-----------------------+
+| .between  | BETWEEN             | Between set           |
++-----------+---------------------+-----------------------+
+| .nbetween | NOT BETWEEN         | Not between set       |
++-----------+---------------------+-----------------------+
+
+
+These operators are used in an endpoint's query parameters. For example if I had a view with root_url
+``my_view`` and I wanted to get all rows with column ``age`` greater than ``15`` I could do the following:
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" \
+    https://tapis.io/v3/pgrest/views/my_view?age.gt=15
+
+
+Another example using .between this time would be finding all rows with column ``age`` between ``18-30``:
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" \
+    https://tapis.io/v3/pgrest/views/my_view?age.between=18,30
+
+
+If you only wanted all rows with column ``age`` that match ``20``, ``30``, or ``40``:
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" \
+    https://tapis.io/v3/pgrest/views/my_view?age.in=20,30,40
+
 
 
 Role Manage API
