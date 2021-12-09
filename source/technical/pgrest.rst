@@ -496,25 +496,29 @@ list of all PUT operations available and examples is as follows:
 
   * Operation to change the root_url currently associated with the table.
   * Ex. Change table with root_url ``all_people`` to ``some_people``.
+
     * Payload is ``{"root_url": "some_people"}``
   
 * ``table_name``
   
   * Operation to change the table_name currently associated with the table.
   * Ex: Change table with table_name ``all_people`` to ``some_people``.
+
     * Payload is ``{"table_name": "some_people"}``
 
 * ``comments``
   
   * Operation to change the comments currently associated with the table (Overwrites existing).
   * Ex: Adding "This column is not case-sensitive" comment to table with table_id ``84``.
+
     * Payload is ``{"comments": "This column is not case-sensitive"}``
 
 * ``endpoints``
 
   * Operation to change the endpoints a table currently has available.
-  * Endpoints available are "ALL" (alias to set all endpoints to available), "GET_ALL", "GET_ONE", "CREATE", "UPDATE", and "DELETE".
+  * Endpoints available are "ALL" (alias to set all endpoints to available), "NONE" (alias to set no endpoints), "GET_ALL", "GET_ONE", "CREATE", "UPDATE", and "DELETE".
   * Ex: Changing table so all endpoints are available.
+
     * Payload is ``{"endpoints": ["ALL"]}``
   
 * ``column_type``
@@ -522,24 +526,36 @@ list of all PUT operations available and examples is as follows:
   * Operation to change the column_type of a particular column in table.
   * column_types available are "varchar", "boolean", "integer", "text", "timestamp", "serial", and "datetime".
   * Ex: Changing column ``names`` from type ``integer`` to ``varchar``.
+
     * Payload is ``{"column_type": "names, varchar"}``
   
+* ``add_column``
+
+  * Operation to add a column to a table.
+  * Uses the same column definition formatting as when creating a table. All data types and parameters apply.
+  * Ex: Adding column ``names``.
+
+    * Payload is ``{"add_column": {"names": {"data_type": "varchar", "char_len": 255, "comments": "first name"}}``
+
 * ``drop_column``
 
   * Operation to drop a column in a table (Not reversible).
   * Ex: Dropping column ``useless_archive_column``.
+
     * Payload is ``{"drop_column": "useless_archive_column"}``
   
 * ``drop_default``
   
   * Operation to drop a default currently set on a column in a table.
   * Ex: Dropping default for column ``i_no_longer_need_a_default``.
+
     * Payload is ``{"drop_default": "i_no_longer_need_a_default"}``
   
 * ``set_default``
   
   * Operation to set a new default on a column in a table.
   * Ex: Setting default on column ``names`` to ``no_name``.
+
     * Payload is ``{"set_default": "names,no_name"}``
 
 
