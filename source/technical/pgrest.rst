@@ -679,6 +679,52 @@ if all goes well, the response should look like
 Note that an ``id`` of ``1`` was generated for the new record.
 
 
+Creating multiple rows at once
+------------------------------
+
+The same as creating a single row, POST requests to the``/v3/pgrest/data/{root_url}`` URL containing lists of row definitions
+will create rows in bulk. POST message body should be a JSON list contain JSON documents providing values for each of the
+columns inside a single ``data`` object. This works exactly the same way as single row creation, but with a list input. 
+The rows are then added to the table using pure SQL format and is fully ATOMIC.
+
+For example, the following JSON body could be used to create three rows on the widgets example table:
+
+new_rows.json:
+
+.. code-block:: bash
+
+  {
+    "data": [
+      {
+        "name": "example-widget1",
+        "widget_type": "gear1",
+        "count": 0,
+        "is_private": false
+      },
+      {
+        "name": "example-widget2",
+        "widget_type": "gear2",
+        "count": 0,
+        "is_private": true
+      },
+      {
+        "name": "example-widget3",
+        "widget_type": "gear3",
+        "count": 0,
+        "is_private": false
+      }
+    ]
+  }
+
+The following curl command would create a row defined by the JSON document above
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" -H "Content-type: application/json" -d "@new_rows.json" https://<tenant>.tapis.io/v3/pgrest/data/widgets
+
+if all goes well, the response should return all the rows just created.
+
+
 Updating a Row
 --------------
 
@@ -855,60 +901,6 @@ retrieves just the row with id "3":
         "col_five": "hi there again"
       }
 
-We can also search for specific rows using a ``where`` query parameter appended to the ``/v3/pgrest/data/{root_url}``
-endpoint. The ``where`` query parameter takes the form ``where_<column>=<value>``. For instance with the above example,
-we can search for all records where "col_four" equals ``true`` with the following:
-
-.. code-block:: bash
-
-  $ curl -H "tapis-v2-token: $TOKEN" https://dev.tapis.io/v3/pgrest/data/init?where_col_four=true
-
-    [
-      {
-        "_pkid": 2,
-        "initial_table_id": 2,
-        "col_one": "val",
-        "col_two": 5,
-        "col_three": 9,
-        "col_four": true,
-        "col_five": "hi there"
-      },
-      {
-        "_pkid": 3,
-        "initial_table_id": 3,
-        "col_one": "value",
-        "col_two": 7,
-        "col_three": 9,
-        "col_four": true,
-        "col_five": "hi there again"
-      }
-    ]
-
-and similarly, we can search for records where "col_four" equals ``false``
-
-.. code-block:: bash
-
-  $ curl -H "tapis-v2-token: $TOKEN" https://dev.tapis.io/v3/pgrest/data/init?where_col_four=false
-
-    [
-      {
-        "_pkid": 1,
-        "initial_table_id": 1,
-        "col_one": "col 1 value",
-        "col_two": 3,
-        "col_three": 8,
-        "col_four": false,
-        "col_five": null
-      }
-    ]
-
-Note that the result is always a JSON list, even when one or zero records are returned:
-
-.. code-block:: bash
-
-  $ curl -H "tapis-v2-token: $TOKEN" https://dev.tapis.io/v3/pgrest/data/init?where_col_two=2
-
-
 
 Retrieving rows with search parameters
 --------------------------------------
@@ -921,6 +913,11 @@ examples are detailed below.
 
   Support of retrieving rows with search parameters is available in version 1.1.0. Previous implementation
   disregarded due to being out of date with Tapis V3 search specifications.
+
+.. Important::
+
+  Two additional query parameters are limit and offset. Used like ``?limit=20`` or/and ``?offset=5``. This
+  caps the amount of results you get back or gives you results past a set number, respectively.
 
 +-----------+---------------------+-----------------------+
 | Operator  | Postgres Equivalent | Description           |
@@ -1095,6 +1092,11 @@ examples are detailed below.
 
   Support of retrieving rows with search parameters is available in version 1.1.0. Previous implementation
   disregarded due to being out of date with Tapis V3 search specifications.
+
+.. Important::
+
+  Two additional query parameters are limit and offset. Used like ``?limit=20`` or/and ``?offset=5``. This
+  caps the amount of results you get back or gives you results past a set number, respectively.
 
 +-----------+---------------------+-----------------------+
 | Operator  | Postgres Equivalent | Description           |
