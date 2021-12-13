@@ -213,6 +213,7 @@ fields, with the column field have a host of options to delegate how to create t
     * ``unique``
   
       * multi-column unique constraint that requires sets of column values to be unique.
+      * Note: Unique constraint must have unique naming between tables. Constraints cannot be used more than once.
       * Ex: ``"constraints": {"unique": {"two_col_pair": ["col_one", "col_two"]}}``
 
         * This means that col_one and col_two cannot have pairs of values that are identical.
@@ -1022,12 +1023,16 @@ definition can have the following rules.
   * If nothing is given, view is open to all.
 
 * ``raw_sql`` - **admins only**
+
   * To allow for better use of postgres's feacilities there is a raw_sql view creation parameter.
   * To use this parameter you must be an admin (talk to service admins)
   * When using this paramter, select_query, where_query, and from_table are no longer allowed, other parameters are fine.
   * The query follows ``CREATE OR REPLACE VIEW {tenant}.{view_name} {raw_sql}`` format.
   * Example data body:
-    * {"view_name": "my_new_test_view",
+  
+    .. code-block:: bash
+
+      {"view_name": "my_new_test_view",
        "raw_sql": "AS SELECT * FROM tenant.my_table WHERE col_name >= 600;",
        "comments": "An example of creating my_new_test_view."}
 
