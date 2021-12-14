@@ -361,7 +361,8 @@ Here is an example response:
 
      .. code-block:: json
 
-        { }
+	Status: 200 ok
+       
 
 
 **Delete a DB**
@@ -389,7 +390,8 @@ Here is an example response:
 
      .. code-block:: json
 
-     { }
+    	Status: 204 Deleted DB
+     
 
 
 Collection Resources
@@ -418,7 +420,8 @@ Here is an example response:
 
      .. code-block:: json
 
-        Empty response with HTTP status of 201
+	Status: 201 Collection created. An Etag header value is returned for collectuon identification
+
 
 **List Documents**
 
@@ -535,7 +538,8 @@ Here is an example response:
 
      .. code-block:: json
 
-        Empty response body with status code 204
+  	Status: 204 Deleted named collection from the database
+
 
 **Get Collection Size**
 
@@ -559,7 +563,11 @@ Here is an example response:
 
      .. code-block:: json
 
-        TODO
+	Status: 200 ok	
+
+	{
+          "_size": 1
+        }
 
 
 **Get Collection Metadata**
@@ -629,7 +637,7 @@ Here is an example response:
 
      .. code-block:: json
 
-        Empty response
+	Status: 201 Document created
 
 Multiple documents can be added to a collection by POSTing a json array of documents. The batch addition of documents only supports the default response.
 
@@ -650,7 +658,8 @@ The response body will be empty:
 .. container:: foldable
 
      .. code-block:: json
-        TODO
+	
+	Status: 201 Document created
 
 
 **Get a Document**
@@ -675,6 +684,7 @@ The response will be the standard json response:
 
      .. code-block:: json
 
+	Status: 200 Document returned
         {
             "_id"}
 
@@ -700,7 +710,7 @@ Here is an example response:
 
      .. code-block:: json
 
-        TODO
+        Status: 201 document upserted
 
 
 **Modify a Document**
@@ -725,7 +735,7 @@ Here is an example response:
 
      .. code-block:: json
 
-        TODO
+        Status: 201 document modified
 
 
 **Delete Document**
@@ -750,7 +760,7 @@ Here is an example response:
 
      .. code-block:: json
 
-        TODO
+        Status: 204 Document deleted
 
 
 Index Resources
@@ -767,7 +777,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta  TODO
+        $ t.meta.listIndexes(db='database_name',collection='collection_name')
 
 With CURL:
 
@@ -781,7 +791,15 @@ Here is an example response:
 
      .. code-block:: json
 
-        TODO
+        [
+	  {
+	    "v":2,
+	    "key":{
+	      "id":1
+	    }
+    	    "_id":"_id_"
+	  }
+  	]
 
 **Create Index**
 
@@ -798,7 +816,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta
+        $ t.meta.createIndex(db='jupyterhub_v3_metadata', collection='jupyterhub_dev', request_body={request_body}, indexName='test'
 
 With CURL:
 
@@ -811,8 +829,9 @@ Here is an example response:
 .. container:: foldable
 
      .. code-block:: json
-
-        TODO
+	
+	Status: 201 Empty Response
+        
 
 **Delete Index**
 
@@ -822,7 +841,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta TODO
+        $ t.meta.deleteIndex(db='jupyterhub_v3_metadata', collection='jupyterhub_dev', indexName='test1')
 
 With CURL:
 
@@ -835,8 +854,8 @@ Here is an example response:
 .. container:: foldable
 
      .. code-block:: json
-
-        TODO
+       
+	Status: 204 Deleted index from collection
 
 Aggregation Resources
 ---------------------
@@ -866,7 +885,7 @@ variables that are defined so that a future request may pass variable values for
 
 +------------+---------------+-------------------------------------------------------------------------------------------+
 | Property   | Mandatory     | Description                                                                               |
-+============+===============+===========================================================================================+
++============+===============+======	=====================================================================================+
 | type       | yes           | - for aggregation pipeline operations is "pipeline"                                       |
 +------------+---------------+-------------------------------------------------------------------------------------------+
 | uri        | yes           | - specifies the URI when the operation is bound under the path /<db>/<collection>/_aggrs. |
@@ -880,7 +899,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta  TODO
+        $ t.meta  To Appear in Future Release
 
 With CURL:
 
@@ -896,7 +915,7 @@ Here is an example response:
 
      .. code-block:: json
 
-        TODO
+        Status: 201 empty response body on created
 
 **Execute an Aggregation**
 
@@ -906,7 +925,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta  TODO
+        $ t.meta  To Appear in Future Release
 
 With CURL:
 
@@ -930,7 +949,7 @@ With pySDK operation:
 
 .. code-block:: plaintext
 
-        $ t.meta TODO
+        $ t.meta To Appear in Future Release
 
 With CURL:
 
@@ -944,4 +963,4 @@ Here is an example response:
 
      .. code-block:: json
 
-        TODO
+        Status: 204 Empty response body on delete
