@@ -186,7 +186,7 @@ fields, with the column field have a host of options to delegate how to create t
 
   * The name of the table in question.
   
-* ``root_url`` - **required**
+* ``root_url``
   
   * The root_url for PgRESTs /data endpoint.
   * Ex: root_url "table25" would be accessible via "http://pgrestURL/data/table25".
@@ -996,11 +996,6 @@ definition can have the following rules.
   
   * The name of the view in question.
 
-* ``root_url`` - **required**
-
-  * The root_url for PgRESTs /views endpoint.
-  * Ex: root_url "view25" would be accessible via "http://pgrestURL/views/table25".
-
 * ``select_query`` - **required**
 
   * Query to select from the table specified with from_table
@@ -1008,6 +1003,11 @@ definition can have the following rules.
 * ``from_table`` - **required**
 
   * Table to read data from
+
+* ``root_url``
+
+  * The root_url for PgRESTs /views endpoint.
+  * Ex: root_url "view25" would be accessible via "http://pgrestURL/views/table25".
 
 * ``where_query``
 
