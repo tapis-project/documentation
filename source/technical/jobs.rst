@@ -156,6 +156,12 @@ Parameters that do not need to be set are marked *Not Required*.  Finally, param
   Subscribe to the job's events.  *InheritMerge*.
 **tags**
   An array of user-chosen strings that are associated with a job.  *InheritMerge*.
+**isMpi**
+  Indicates whether this job is an MPI job.  *Inherit*, default is false.
+**mpiCmd**
+  Specify the MPI launch command.  Conflicts with cmdPrefix if isMpi is set.  *Inherit*.
+**cmdPrefix**
+  String prepended to the application invocation command.  Conflicts with mpiCmd if isMpi is set.  *Inherit*.
 
 The following subsections discuss the meaning and usage of each of the parameters available in a job request.  The schema_ and its referenced library_ comprise the actual JSON schema definition for job requests.
 
@@ -429,6 +435,20 @@ If no filtering is specified at all, then all files in *execSystemOutputDir* and
 .. _regex: https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/util/regex/Pattern.html
 
 .. _glob: https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob
+
+MPI and Related Support
+-----------------------
+
+On many systems, running Message Passing Interface (MPI) jobs is simply a matter of launching programs that have been configured or compiled with the proper MPI libraries.  Most of the work in employing MPI involves parallelizing program logic and specifying the correct libraries for the target execution system.  Once that's done, a command such as *mpirun* (or on TACC systems, *ibrun*) is passed the program's pathname and arguments to kick off parallel execution.
+
+Tapis's *mpiCmd* parameter lets users set the MPI launch command in a system definition, application definition and/or job submission request (lowest to highest priority).  For example, if *mpiCmd=mpirun*, then the string "mpirun " will be prepended to the command normally used to execute the application.  Some MPI launchers have their own parameters, for instance, *mpiCmd=ibrun -n 4* requests 4 MPI tasks.
+
+The *isMpi* parameter is specified in an application definition and/or job request to toggle MPI launching on or off.  This switch allows the same system to run both MPI and non-MPI jobs depending on the needs of particular jobs or applications.  The *isMpi* default is false, so this switch must be explicitly turned on to run an MPI job.  When turned on, *isMpi* requires *cmdMpi* be assigned in the system, application and/or job request.
+
+The *cmdPrefix* parameter provides generalized support for launchers and is available in application definitions and job submission requests.  Like *mpiCmd*, a *cmdPrefix* value is simply prepended to a program's pathname and arguments.  Being more general, *cmdPrefix* could specify an MPI launcher, but it's not supported in system definitions and does not have a toggle to control usage.
+
+*mpiCmd* and *cmdPrefix* are mutually exclusive; so if *isMpi* is true, then *cmdPrefix* must not be set.      
+
 
 ExecSystemConstraints
 ---------------------
