@@ -451,12 +451,12 @@ JobAttributes Table
 +---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
 | fileInputs          | [FileInput]      |                    | - Collection of file inputs that must be staged for the application.                 |
 |                     |                  |                    | - Each input must have a name.                                                       |
-|                     |                  |                    | - *strictFileInputs*=TRUE means only inputs defined here may be specified for job.   |
+|                     |                  |                    | - *strictFileInputs* =TRUE means only inputs defined here may be specified for job.  |
 |                     |                  |                    | - See table below.                                                                   |
 +---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
 | fileInputArrays     | [FileInputArray] |                    | - Collection of arrays of inputs that must be staged for the application.            |
 |                     |                  |                    | - Each input must have a name. All inputs in an array have the same target directory.|
-|                     |                  |                    | - *strictFileInputs*=TRUE means only inputs defined here may be specified for job.   |
+|                     |                  |                    | - *strictFileInputs* =TRUE means only inputs defined here may be specified for job.  |
 |                     |                  |                    | - See table below.                                                                   |
 +---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
 | nodeCount           | int              |                    | - Number of nodes to request during job submission.                                  |
