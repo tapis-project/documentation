@@ -276,7 +276,7 @@ the actor we want to register through the ``body`` parameter. For example:
 .. code-block:: python
 
   my_actor = {"image": "user/my_actor", "name": "word_counter", "description": "Actor that counts words."}
-  t.actors.createActor(**my_actor)
+  t.actors.create_actor(**my_actor)
 
 You should see a response like this:
 
@@ -286,12 +286,12 @@ You should see a response like this:
   executions: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/executions
   owner: https://tacc.tapis.io/profiles/v3/jstubbs
   createTime: 2020-10-21T17:20:20.718177
-  defaultEnvironment:
+  default_environment:
   description: Actor that counts words.
   hints: []
   id: JWpkNmBwKewYo
   image: abacosamples/wc
-  lastUpdateTime: 2020-10-21T17:20:20.718177
+  last_update_time: 2020-10-21T17:20:20.718177
   link: 
   mounts: [
   container_path: /home/tapis/runtime_files/_abaco_data1
@@ -306,10 +306,10 @@ You should see a response like this:
   state: 
   stateless: True
   status: SUBMITTED
-  statusMessage: 
+  status_message: 
   token: false
   type: none
-  useContainerUid: False
+  use_container_uid: False
   webhook: 
 
 Notes:
@@ -319,13 +319,13 @@ Notes:
 - Abaco returned a status of ``SUBMITTED`` for the actor; behind the scenes, Abaco is starting a worker container to
   handle messages passed to this actor. The worker must initialize itself (download the image, etc) before the
   actor is ready.
-- When the actor's worker is initialized, the status will change to ``READY``.
+- When the actor's worker is initialized, the status will change to ``READY``. 
 
 At any point we can check the details of our actor, including its status, with the following:
 
 .. code-block:: python
 
-  t.actors.getActor(actor_id='JWpkNmBwKewYo')
+  t.actors.get_actor(actor_id='JWpkNmBwKewYo')
 
 The response format is identical to that returned from the ``.add()`` method.
 
@@ -337,31 +337,31 @@ We are now ready to execute our actor by sending it a message. We built our acto
 that is what we will send, but there other options, including JSON and binary data. For more details, see the
 :ref:`messages` section.
 
-We send our actor a message using the ``sendMessage()`` method:
+We send our actor a message using the ``send_message()`` method:
 
 .. code-block:: python
 
- t.actors.sendMessage(actor_id='JWpkNmBwKewYo',
-                      request_body={'message': 'Actor, please count these words.'})
+ t.actors.send_message(actor_id='JWpkNmBwKewYo',
+                       request_body={'message': 'Actor, please count these words.'})
 
 Abaco queues up an execution for our actor and then responds with JSON, including an id for the execution contained in
-the ``executionId``:
+the ``execution_id``:
 
 .. code-block:: python
 
   _links: 
   messages: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/messages
   owner: https://tacc.tapis.io/profiles/v3/jstubbs
-  executionId: kA1P1m8NkkolK
+  execution_id: kA1P1m8NkkolK
   msg: Actor, please count these words.
 
 In general, an execution does not start immediately but is instead queued until a future time when a worker for the
 actor can take the message and start an actor container with the message. We can retrieve the details about an
-execution, including its status, using the ``getExecution()`` method:
+execution, including its status, using the ``get_execution()`` method:
 
 .. code-block:: bash
 
-  >>> t.actors.getExecution(actor_id='JWpkNmBwKewYo', execution_id='kA1P1m8NkkolK')
+  >>> t.actors.get_execution(actor_id='JWpkNmBwKewYo', execution_id='kA1P1m8NkkolK')
 
 The response will be similar to the following:
 
@@ -370,12 +370,12 @@ The response will be similar to the following:
   _links: 
   logs: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/executions/kA1P1m8NkkolK/logs
   owner: https://tacc.tapis.io/profiles/v3/jstubbs
-  actorId: JWpkNmBwKewYo
-  apiServer: https://tacc.tapis.io
+  actor_id: JWpkNmBwKewYo
+  api_server: https://tacc.tapis.io
   cpu: 9678006850
   executor: jstubbs
   exitCode: 1
-  finalState: 
+  final_state: 
   Dead: False
   Error: 
   ExitCode: 1
@@ -387,14 +387,14 @@ The response will be similar to the following:
   Running: False
   StartedAt: 2020-10-21T17:26:45.24Z0
   Status: exited
-  finishTime: 2020-10-21T17:26:49.77Z0
+  finish_time: 2020-10-21T17:26:49.77Z0
   id: kA1P1m8NkkolK
   io: 152287298
-  messageReceivedTime: 2020-10-21T17:26:44.367Z
+  message_received_time: 2020-10-21T17:26:44.367Z
   runtime: 5
-  startTime: 2020-10-21T17:26:44.841Z
+  start_time: 2020-10-21T17:26:44.841Z
   status: COMPLETE
-  workerId: QBmoQx4pOx1oA
+  worker_id: QBmoQx4pOx1oA
 
 Note that a status of ``COMPLETE`` indicates that the execution has finished and we are ready to retrieve our results.
 
@@ -403,12 +403,12 @@ Retrieving the Logs
 -------------------
 
 The Abaco system collects all standard out from an actor execution and makes it available via the ``logs`` endpoint.
-Let's retrieve the logs from the execution we just made. We use the ``getExecutionLogs()``
-method, passing out ``actorId`` and our ``executionId``:
+Let's retrieve the logs from the execution we just made. We use the ``get_execution_logs()``
+method, passing out ``actor_id`` and our ``execution_id``:
 
 .. code-block:: python
 
-  t.actors.getExecutionLogs(actor_id='JWpkNmBwKewYo', execution_id='kA1P1m8NkkolK')
+  t.actors.get_execution_logs(actor_id='JWpkNmBwKewYo', execution_id='kA1P1m8NkkolK')
 
 The response should be similar to the following:
 
@@ -520,7 +520,7 @@ be sure to pass properly formatted JSON in the payload.
 Python
 ~~~~~~
 
-To register the same actor using the tapipy library, we use the ``actors.createActor()`` method and pass the same arguments
+To register the same actor using the tapipy library, we use the ``actors.create_actor()`` method and pass the same arguments
 through the `request_body` parameter. In this case, the ``default_environment`` is just a standard Python dictionary where the
 keys and values are ``str`` type. For example,
 
@@ -533,7 +533,7 @@ keys and values are ``str`` type. For example,
            "name": "test",
            "description": "My test actor using the abacosamples image registered using tapipy.",
            "default_environment":{"key1": "value1", "key2": "value2"} }
-  t.actors.createActor(**actor)
+  t.actors.create_actor(**actor)
 
 
 
@@ -689,8 +689,8 @@ To send a message to the ``messages`` endpoint with ``tapipy`` and Python, you w
 
 .. code-block:: python
 
-  t.actors.sendMessage(actor_id='<actor_id>',
-                       request_body={'message':'<your content here>'})
+  t.actors.send_message(actor_id='<actor_id>',
+                        request_body={'message':'<your content here>'})
 
 Results
 ~~~~~~~
@@ -702,7 +702,7 @@ These calls result in a list similar to the following:
   _links: 
   messages: https://tacc.tapis.io/actors/v3/NPpjZkmZ4elY8/messages
   owner: https://tacc.tapis.io/profiles/v3/jstubbs
-  executionId: WrMk5EPmwYoL6
+  execution_id: WrMk5EPmwYoL6
   msg: <your content here>
 
 
@@ -729,7 +729,7 @@ To retrieve the current number of messages with ``tapipy`` the following is done
 
 .. code-block:: python
 
-    t.actors.getMessages(actor_id='<actor_id>')
+    t.actors.get_messages(actor_id='<actor_id>')
 
 Results
 ~~~~~~~
@@ -777,7 +777,7 @@ Creating actor with the TensorFlow image classifier docker image:
   my_actor = {'image': 'abacosamples/binary_message_classifier',
               'name': 'JPEG_classifier',
               'description': 'Labels a read in binary image'}
-  actor_data = t.actors.createActor(**my_actor)
+  actor_data = t.actors.create_actor(**my_actor)
 
 The following creates a binary message from a JPEG image file:
 
@@ -791,22 +791,22 @@ also just set the headers with ``Content-Type: application/octet-stream``):
 
 .. code-block:: python
 
-  result = t.actors.sendBinaryMessage(actor_id = actor_data.id,
+  result = t.actors.send_binary_message(actor_id = actor_data.id,
                                       request_body = binary_image)
 
 The following returns information pertaining to the execution:
 
 .. code-block:: python
 
-  execution = t.actors.getExecution(actor_id = actor_data.id,
-                                    execution_id = result.executionId)
+  execution = t.actors.get_execution(actor_id = actor_data.id,
+                                     execution_id = result.execution_id)
 
 Once the execution has complete, the logs can be called with the following:
 
 .. code-block:: python
     
-  exec_logs = t.actors.getExecutionLogs(actor_id = actor_data.id,
-                                        execution_id = result.executionId)
+  exec_logs = t.actors.get_execution_logs(actor_id = actor_data.id,
+                                          execution_id = result.execution_id)
 
 Sending binary from execution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -920,8 +920,8 @@ You can access the ``execution_id`` endpoint using ``tapipy`` and Python with th
 
 .. code-block:: python
 
-  t.actors.getExecution(actor_id='<actor_id>',
-                        execution_id='<execution_id>')    
+  t.actors.get_execution(actor_id='<actor_id>',
+                         execution_id='<execution_id>')    
 
 Results
 ~~~~~~~
@@ -933,12 +933,12 @@ Access the ``execution_id`` endpoint will result in something similar to the fol
   _links: 
   logs: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/executions/kA1P1m8NkkolK/logs
   owner: https://tacc.tapis.io/profiles/v3/jstubbs
-  actorId: JWpkNmBwKewYo
-  apiServer: https://tacc.tapis.io
+  actor_id: JWpkNmBwKewYo
+  api_server: https://tacc.tapis.io
   cpu: 9678006850
   executor: jstubbs
   exitCode: 1
-  finalState: 
+  final_state: 
   Dead: False
   Error: 
   ExitCode: 1
@@ -950,14 +950,14 @@ Access the ``execution_id`` endpoint will result in something similar to the fol
   Running: False
   StartedAt: 2020-10-21T17:26:45.24Z0
   Status: exited
-  finishTime: 2020-10-21T17:26:49.77Z0
+  finish_time: 2020-10-21T17:26:49.77Z0
   id: kA1P1m8NkkolK
   io: 152287298
-  messageReceivedTime: 2020-10-21T17:26:44.367Z
+  message_received_time: 2020-10-21T17:26:44.367Z
   runtime: 5
-  startTime: 2020-10-21T17:26:44.841Z
+  start_time: 2020-10-21T17:26:44.841Z
   status: COMPLETE
-  workerId: QBmoQx4pOx1oA
+  worker_id: QBmoQx4pOx1oA
      
 List executions
 ^^^^^^^^^^^^^^^
@@ -982,7 +982,7 @@ To list executions with ``tapipy`` the following is done:
 
 .. code-block:: python
 
-  t.actors.listExecutions(actor_id='<actor_id>')
+  t.actors.list_executions(actor_id='<actor_id>')
 
 Results
 ~~~~~~~
@@ -993,18 +993,18 @@ Calling the list of executions should result in something similar to:
 
   _links: 
   owner: https://master.staging.tapis.io/profiles/v3/abaco
-  actorId: WP7vMmRvrDXxN
-  apiServer: https://master.staging.tapis.io
+  actor_id: WP7vMmRvrDXxN
+  api_server: https://master.staging.tapis.io
   executions: [
-  finishTime: Wed, 21 Oct 2020 17:48:33 GMT
+  finish_time: Wed, 21 Oct 2020 17:48:33 GMT
   id: QBmoQx4pOx1oA
-  messageReceivedTime: Wed, 21 Oct 2020 17:48:20 GMT
-  startTime: Wed, 21 Oct 2020 17:48:20 GMT
+  message_received_time: Wed, 21 Oct 2020 17:48:20 GMT
+  start_time: Wed, 21 Oct 2020 17:48:20 GMT
   status: COMPLETE, 
-  finishTime: None
+  finish_time: None
   id: QZY8W1Z30Zmbq
-  messageReceivedTime: Wed, 21 Oct 2020 17:49:56 GMT
-  startTime: None
+  message_received_time: Wed, 21 Oct 2020 17:49:56 GMT
+  start_time: None
   status: SUBMITTED]
   owner: abaco
   totalCpu: 61248097463
@@ -1081,8 +1081,8 @@ To call the ``log`` endpoint using ``tapipy`` and Python, do the following:
 
 .. code-block:: python
 
-  t.actors.getExecutionLogs(actor_id='<actor_id>',
-                            execution_id='<executionId>')
+  t.actors.get_execution_logs(actor_id='<actor_id>',
+                              execution_id='<execution_id>')
 
 Results
 ~~~~~~~
@@ -1187,18 +1187,18 @@ Example of result with new ``result``
 .. code-block:: bash
 
     {'message': 'Executions search completed successfully.',
-     'result': {'_metadata': {'countReturned': 1,
-                             'recordLimit': 10,
-                             'recordsSkipped': 0,
-                             'totalCount': 1},
+     'result': {'_metadata': {'count_returned': 1,
+                             'record_limit': 10,
+                             'records_skipped': 0,
+                             'total_count': 1},
                  'search': [{'_links': {'logs': 'https://dev.tenants.aloedev.tacc.cloud/v3/actors/joBjeDkWyBwLx/logs',
                                      'owner': 'https://dev.tenants.aloedev.tacc.cloud/profiles/v3/testuser',
                                      'self': 'https://dev.tenants.aloedev.tacc.cloud/v3/actors/joBjeDkWyBwLx/executions/1JKkQwX75vE56'},
-                             'actorId': 'joBjeDkWyBwLx',
+                             'actor_id': 'joBjeDkWyBwLx',
                              'cpu': 444097006,
                              'executor': 'testuser',
                              'exitCode': 0,
-                             'finalState': {'Dead': False,
+                             'final_state': {'Dead': False,
                                          'Error': '',
                                          'ExitCode': 0,
                                          'FinishedAt': '2020-04-29T21:47:21.385Z',
@@ -1211,11 +1211,11 @@ Example of result with new ``result``
                                          'Status': 'exited'},
                              'id': '1JKkQwX75vE56',
                              'io': 716,
-                             'messageReceivedTime': '2020-04-29T21:47:18.7Z00',
+                             'message_received_time': '2020-04-29T21:47:18.7Z00',
                              'runtime': 2,
-                             'startTime': '2020-04-29T21:47:18.954Z',
+                             'start_time': '2020-04-29T21:47:18.954Z',
                              'status': 'COMPLETE',
-                             'workerId': '7kvAAKYKB6Qk6'}]},
+                             'worker_id': '7kvAAKYKB6Qk6'}]},
      'status': 'success',
      'version': ':dev'}
 
@@ -1321,26 +1321,26 @@ Result
 .. code-block:: bash
 
     {'message': 'Search completed successfully.',
-    'result': {'_metadata': {'countReturned': 1,
-                            'recordLimit': 10,
-                            'recordsSkipped': 0,
-                            'totalCount': 1},
+    'result': {'_metadata': {'count_returned': 1,
+                            'record_limit': 10,
+                            'records_skipped': 0,
+                            'total_count': 1},
                 'search': [{'_links': {'executions': 'https://dev.tenants.aloedev.tacc.cloud/v3/actors/joBjeDkWyBwLx/executions',
                                     'owner': 'https://dev.tenants.aloedev.tacc.cloud/profiles/v3/testuser',
                                     'self': 'https://dev.tenants.aloedev.tacc.cloud/v3/actors/joBjeDkWyBwLx'},
                             'createTime': '2020-04-29T21:46:53.393Z',
-                            'defaultEnvironment': {'default_env_key1': 'default_env_value1',
+                            'default_environment': {'default_env_key1': 'default_env_value1',
                                                 'default_env_key2': 'default_env_value2'},
                             'description': '',
                             'gid': None,
                             'hints': [],
                             'id': 'joBjeDkWyBwLx',
                             'image': 'abacosamples/test',
-                            'lastUpdateTime': '2020-04-29T21:46:53.393Z',
+                            'last_update_time': '2020-04-29T21:46:53.393Z',
                             'link': '',
-                            'maxCpus': None,
-                            'maxWorkers': None,
-                            'memLimit': None,
+                            'max_cpus': None,
+                            'max_workers': None,
+                            'mem_limit': None,
                             'mounts': [{'container_path': '/_abaco_data1',
                                         'host_path': '/data1',
                                         'mode': 'ro'}],
@@ -1351,12 +1351,12 @@ Result
                             'state': {},
                             'stateless': True,
                             'status': 'READY',
-                            'statusMessage': ' ',
+                            'status_message': ' ',
                             'tasdir': None,
                             'token': 'false',
                             'type': 'none',
                             'uid': None,
-                            'useContainerUid': False,
+                            'use_container_uid': False,
                             'webhook': ''}]},
     'status': 'success',
     'version': ':dev'}
@@ -1389,18 +1389,18 @@ Result
 .. code-block:: bash
 
     {'message': 'Executions search completed successfully.',
-     'result': {'_metadata': {'countReturned': 1,
-                             'recordLimit': 10,
-                             'recordsSkipped': 0,
-                             'totalCount': 1},
+     'result': {'_metadata': {'count_returned': 1,
+                             'record_limit': 10,
+                             'records_skipped': 0,
+                             'total_count': 1},
                  'search': [{'_links': {'logs': 'https://dev.tenants.aloedev.tacc.cloud/v3/actors/joBjeDkWyBwLx/logs',
                                      'owner': 'https://dev.tenants.aloedev.tacc.cloud/profiles/v3/testuser',
                                      'self': 'https://dev.tenants.aloedev.tacc.cloud/v3/actors/joBjeDkWyBwLx/executions/1JKkQwX75vE56'},
-                             'actorId': 'joBjeDkWyBwLx',
+                             'actor_id': 'joBjeDkWyBwLx',
                              'cpu': 444097006,
                              'executor': 'testuser',
                              'exitCode': 0,
-                             'finalState': {'Dead': False,
+                             'final_state': {'Dead': False,
                                          'Error': '',
                                          'ExitCode': 0,
                                          'FinishedAt': '2020-04-29T21:47:21.385Z',
@@ -1413,11 +1413,11 @@ Result
                                          'Status': 'exited'},
                              'id': '1JKkQwX75vE56',
                              'io': 716,
-                             'messageReceivedTime': '2020-04-29T21:47:18.7Z00',
+                             'message_received_time': '2020-04-29T21:47:18.7Z00',
                              'runtime': 2,
-                             'startTime': '2020-04-29T21:47:18.954Z',
+                             'start_time': '2020-04-29T21:47:18.954Z',
                              'status': 'COMPLETE',
-                             'workerId': '7kvAAKYKB6Qk6'}]},
+                             'worker_id': '7kvAAKYKB6Qk6'}]},
      'status': 'success',
      'version': ':dev'}
 
@@ -1436,7 +1436,7 @@ In this section we describe the state that can persist through Abaco actor conta
 State
 -----
 
-When an actor is registered, its ``stateless`` property is automatically set to ``true``. An actor must be registered with ``stateless=false`` to be stateful (maintain state across executions).
+When an actor is registered, its ``stateless`` property is automatically set to ``true``. An actor must be registered with ``stateless=false`` to be stateful (maintain state ass executions).
 
 Once an actor is executed, the associated worker ``GETs`` data from the ``/v3/actors/{actor_id}/state`` endpoint and injects it into the actor's ``_abaco_actor_state`` environment variable. While an actor is executing, the actor can update its state by ``POSTing`` to the aforementioned endpoint.
 
@@ -1501,15 +1501,15 @@ Registering an actor specifying statefulness: ``stateless=false``.
   t.get_tokens()
   actor = {"image": "abacosamples/test",
            "stateless": "False"}
-  actor_res = t.actors.createActor(**actor)
+  actor_res = t.actors.create_actor(**actor)
 
 POSTing a state to a particular actor; again keep in mind we must pass in JSON serializable data.
 
 .. code-block:: python
 
   state = {"some variable": "value", "another variable": "value2"}
-  t.actors.updateState(actor_id = actor_res.id,
-                       request_body = state)
+  t.actors.update_state(actor_id = actor_res.id,
+                        request_body = state)
 
 GETting information about a particular actor's state. This function returns a Python dictionary with many fields one of which is state. 
 
@@ -1649,8 +1649,8 @@ A typical response:
         "owner": "https://tacc.tapis.io/profiles/v3/testuser",
         "self": "https://tacc.tapis.io/v3/actors/rNjQG5BBJoxO1/nonces/DEV_qBMrvO6Zy0yQz"
       },
-      "actorId": "rNjQG5BBJoxO1",
-      "apiServer": "http://172.17.0.1:8000",
+      "actor_id": "rNjQG5BBJoxO1",
+      "api_server": "http://172.17.0.1:8000",
       "createTime": "2019-06-18 12:20:53.087704",
       "currentUses": 0,
       "description": "",
@@ -1727,7 +1727,7 @@ the words sent in a message. We might create an alias for it with the following:
 .. code-block:: bash
 
   $ curl -H "X-Tapis-Token: $TOKEN" \
-  -d "alias=counter&actorId=6PlMbDLa4zlON" \
+  -d "alias=counter&actor_id=6PlMbDLa4zlON" \
   https://tacc.tapis.io/v3/actors/aliases
 
 Example response:
@@ -1742,7 +1742,7 @@ Example response:
         "owner": "https://tacc.tapis.io/profiles/v3/jstubbs",
         "self": "https://tacc.tapis.io/v3/actors/aliases/counter"
       },
-      "actorId": "6PlMbDLa4zlON",
+      "actor_id": "6PlMbDLa4zlON",
       "alias": "counter",
       "owner": "apitest"
     },
