@@ -8,8 +8,8 @@ The files service is the central point of interaction for doing all file operati
 perform file listing, uploading, operations such as move/copy/delete and also transfer files between systems. All
 Tapis files APIs accept JSON as inputs.
 
-Currently the files service includes support for S3 and SSH type file systems. Other storage
-systems like IRODS will be included in future releases.
+Currently the files service includes support for systems of type LINUX, S3 and IRODS. Other system types such as
+GLOBUS will be included in future releases.
 
 ----------
 Overview
@@ -103,7 +103,7 @@ For example, to copy a file located at `/file1.txt` to `/subdir/file1.txt`
 
 .. code-block:: shell
 
-    curl -H "X-Tapis-Token: $JWT" -X PUT -d @body.json "https://tacc.tapis.io/v3/files/content/aturing-storage/file1.txt"
+    curl -H "X-Tapis-Token: $JWT" -X PUT -d @body.json "https://tacc.tapis.io/v3/files/ops/aturing-storage/file1.txt"
 
 with a JSON body of
 
@@ -118,7 +118,7 @@ with a JSON body of
 Delete
 ++++++++++++++++++
 
-To delete a file or folder, just iss a DELETE request on the path to the resource
+To delete a file or folder, issue a DELETE request on the path to the resource
 
 .. code-block:: shell
 
@@ -128,13 +128,13 @@ The request above would delete :code:`file1.txt`
 
 
 
-
 File Uploads
 ++++++++++++++++++
 
-To upload a new file to the files service, just POST a file to the service. The file will be placed at
-the location specified in the `{path}` parameter in the request. For example, given the system `my-system`, and you want to
-insert the file in a folder located at `/folderA/folderB/folderC`:
+To upload a new file to the files service, POST a file to the service. The file will be placed at
+the location specified in the `{path}` parameter in the request. Not all system types support this operation.
+For example, given the system `my-system`, and you want to insert the file in a folder located
+at `/folderA/folderB/folderC`:
 
 Using the official Tapis Python SDK:
 
@@ -147,18 +147,19 @@ Using the official Tapis Python SDK:
 
 .. code-block:: shell
 
-    curl -H "X-Tapis-Token: $JWT" -F "file=@someFile.txt" https://tacc.tapis.io/v3/files/content/my-system/folderA/folderB/folderC/someFile.txt
+    curl -H "X-Tapis-Token: $JWT" -X POST -F "file=@someFile.txt" https://tacc.tapis.io/v3/files/ops/my-system/folderA/folderB/folderC/someFile.txt
 
 Any folders that do not exist in the specified path will automatically be created.
 
 Create a new directory
 ++++++++++++++++++++++++
 
-For S3 storage systems, an empty key is created ending in `/`
+To create a directory, use POST and provide the path to the new directory in the request body. Not all system types
+support this operation.
 
 .. code-block:: shell
 
-    $ curl -H "X-Tapis-Token: $JWT" -d @body.json -X POST https://tacc.tapis.io/v3/files/content/my-system/
+    $ curl -H "X-Tapis-Token: $JWT" -X POST -d @body.json -X POST https://tacc.tapis.io/v3/files/ops/my-system
 
 with a JSON body of
 

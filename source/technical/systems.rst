@@ -152,7 +152,7 @@ Using PySDK:
 
 Using CURL::
 
-   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/credential/tacc-bucket-sample-<userid>/<userid> -d @cred_tmp.json
+   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/credential/tacc-bucket-sample-<userid>/user/<userid> -d @cred_tmp.json
 
 Note that credentials are stored in the Security Kernel. Only specific Tapis services are authorized to retrieve credentials.
 
