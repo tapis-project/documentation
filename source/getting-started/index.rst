@@ -34,21 +34,21 @@ to get a Tapis token from the authenticator. For this quickstart, we will be usi
 
 With CURL:
 
-.. code-block:: plain-text
+.. code-block:: text
 
  $ curl -H "Content-type: application/json" -d '{"username": "apitest", "password": "abcde123", "grant_type": "password" }' \
  https://tacc.tapis.io/v3/oauth2/tokens
 
 Be sure to export the access token returned from the above CURL command as an environment variable:
 
-.. code-block:: plaintext
+.. code-block:: text
 
  $ export JWT=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJqdGkiOiJmN2....
 
 
 With PySDK
 
-.. code-block:: plain-text
+.. code-block:: text
 
     from tapipy.tapis import Tapis
     # Create python Tapis client for user
@@ -67,7 +67,7 @@ To register the S3 bucket with Tapis we do the following:
 
 With PySDK
 
-.. code-block:: plain-text
+.. code-block:: text
 
     # the description of an S3 bucket
     s3_bucket = {
@@ -92,7 +92,7 @@ With PySDK
 
 The output should look similar to the following; it describes the System that was just created:
 
-.. code-block:: plain-text
+.. code-block:: text
 
     accessCredential: None
     bucketName: my.test.bucket
@@ -128,13 +128,13 @@ We are now able to list files in our bucket using the Files API.
 
 With PySDK
 
-.. code-block:: plain-text
+.. code-block:: text
 
   t.files.listFiles(systemId="my.test.bucket", path="/")
 
 The output should include a list of all files in the bucket; for example
 
-.. code-block:: plain-text
+.. code-block:: text
 
     [
      lastModified: 2020-06-12T16:29:10Z
@@ -146,5 +146,5 @@ The output should include a list of all files in the bucket; for example
      name: plot_2020-07-21T01:29:26.640144Z.png
      path: plot_2020-07-21T01:29:26.640144Z.png
      size: 31211
-]
 
+     ]

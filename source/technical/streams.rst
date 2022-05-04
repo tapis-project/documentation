@@ -15,13 +15,13 @@ Projects are defined at a top level in the hierarchy of Streams resources. A use
 
 With PySDK:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.create_project(project_name='tapis_demo_project_testuser6',description='test project', owner='testuser6', pi='testuser6', funding_resource='tapis', project_url='test.tacc.utexas.edu', project_id='tapis_demo_project_testuser6',active=True)
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -v -X POST -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '{"project_name": "tapis_demo_project_testuser6",
                                                                 "project_id":"tapis_demo_project_testuser6",
@@ -36,7 +36,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         active: True
         description: test project
@@ -56,13 +56,13 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.list_projects()
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/streams/projects
 
@@ -70,7 +70,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         [
          active: True
@@ -102,14 +102,14 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 With PySDK:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.get_project(project_id='tapis_demo_project_testuser6')
 
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6
 
@@ -117,7 +117,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         active: True
         description: project for early demo
@@ -137,13 +137,13 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.update_project(project_id='tapis_demo_project_testuser6', project_name='tapis_demo_project_testuser6', pi='testuser6', owner='testuser6', description= 'changed description',project_url='tapis_demo_project.tacc.utexas.edu')
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -v -X PUT -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '{"project_name": "tapis_demo_project_testuser6",
                                                                 "project_id":"tapis_demo_project_testuser6",
@@ -159,7 +159,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         active: True
         description: changed description
@@ -178,13 +178,13 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.delete_project(project_id='tapis_demo_project_testuser6')
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -X DELETE -H "X-tapis-token:$jwt" $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6
 
@@ -193,7 +193,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         active: True
         description: project for early adopters demo
@@ -221,13 +221,13 @@ Site is a geographical location that may hold one or more instruments. Sites are
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.create_site(project_id='tapis_demo_project_testuser6',request_body[{"site_name":"tapis_demo_site", "site_id":"tapis_demo_site", "latitude":50,"longitude":10, "elevation":2,"description":"test_site"}])
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
        $  curl -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '[{"site_name":"tapis_demo_site","latitude":50,"longitude":10,"elevation":2,"site_id":"tapis_demo_site", "description":"test_site"}]' $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites
 
@@ -236,7 +236,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
          chords_id: 27
          created_at: 2020-06-08 18:27:12.416134
@@ -257,13 +257,13 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.list_sites(project_id='tapis_demo_project_testuser6')
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites
 
@@ -272,7 +272,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         [
          chords_id: 13
@@ -306,14 +306,14 @@ The response will look something like the following:
 With PySDK:
 
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.get_site(project_id='tapis_demo_project_testuser6', site_id='tapis_demo_site1')
 
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
        $ curl -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site
 
@@ -323,7 +323,7 @@ The response will look something like the following:
 
      $ t.streams.get_site(project_id='tapis_demo_project_testuser6', site_id='tapis_demo_site')
 
-     .. code-block:: json
+     .. code-block:: text
 
         chords_id: 12
         created_at: 2020-07-20 18:15:25.404740
@@ -346,14 +346,14 @@ The response will look something like the following:
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -X PUT -H "Content-Type:application/json"  -H "X-Tapis-Token:$jwt" -d '{"project_id": "tapis_demo_project_testuser6","site_name":"tapis_demo_site","latitude":10, "longitude":80, "elevation":2, "description":"test site changed"}' $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site
 
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.update_site(project_id='tapis_demo_project_testuser6',site_name='tapis_demo_site', site_id='tapis_demo_site', latitude=10, longitude = 80, elevation=2,description='test_site changed')
 
@@ -362,7 +362,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         chords_id: 4
         created_at: 2020-08-10 19:36:48.649316
@@ -383,14 +383,14 @@ The response will look something like the following:
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -X DELETE -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site
 
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.delete_site(project_id='tapis_demo_project_testuser6', site_id='tapis_demo_site')
 
@@ -407,13 +407,13 @@ Instruments are physical entities that may have one or more embedded sensors to 
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.create_instrument(project_id='tapis_demo_project_testuser6',site_id='tapis_demo_site',request_body=[{"topic_category_id":"2",  "inst_name":"tapis_demo_instrument","inst_description":"demo instrument", "inst_id":"tapis_demo_instrument"}])
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -v -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '[{"topic_category_id":"2",","inst_name":"tapis_demo_instrument","inst_description":"demo instrument", "inst_id":"tapis_demo_instrument"}]'  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site/instruments
 
@@ -423,7 +423,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         chords_id: 10
         created_at: 2020-07-20 20:09:11.990814
@@ -440,13 +440,13 @@ The response will look something like the following:
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.list_instruments(project_id='tapis_demo_project_testuser6', site_id='tapis_demo_site')
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site/instruments
 
@@ -455,7 +455,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         [
          chords_id: 10
@@ -496,13 +496,13 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.list_instruments(project_id='tapis_demo_project_testuser6', site_id='tapis_demo_site',inst_id='demo_instrument')
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site/instruments/demo_instrument
 
@@ -510,7 +510,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         chords_id: 12
         created_at: 2020-07-20 20:20:45.171473
@@ -527,13 +527,13 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.update_instrument(inst_id= 'Ohio_River_Robert_C_Byrd_Locks', project_id='wq_demo_tapis_streams_proj2020-08-26T08:41:11.813391', site_id='wq_demo_site', inst_name='test', inst_description='test')
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -X PUT -H "X-Tapis-token:$jwt" -H "Content-Type:application/json" --data '{"inst_id": "Ohio_River_Robert_C_Byrd_Locks",
         "site_id": "wq_demo_site", "inst_name": "UpdatedNAME","inst_description": "updated descript"}'
@@ -544,7 +544,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         chords_id: 6
         inst_description: test
@@ -583,13 +583,13 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.delete_instrument(inst_id= 'tapis_demo_instrument', project_id='tapis_demo_project_testuser6_3', site_id='tapis_demo_site')
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -X DELETE -H "X-Tapis-token:$jwt" $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6_3/sites/tapis_demo_site/instruments/tapis_demo_instrument
 
@@ -603,13 +603,13 @@ Variables
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.create_variable(project_id='tapis_demo_project_testuser6', inst_id='demo_instrument', site_id='tapis_demo_site', request_body=[{"topic_category_id":"2", "var_name":"battery", "shortname":"bat", "var_id":"batv"}])
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -v -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '{"project_id":"tapis_demo_project_testuser6", "topic_category_id":"2","site_id":"tapis_demo_site", "inst_id":"demo_instrument", "var_name":"battery", "shortname":"bat", "var_id":"batv"}'  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site/instruments/demo_instrument/variables
 
@@ -618,7 +618,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         chords_id: 39
         shortname: bat
@@ -633,13 +633,13 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.list_variables(project_id='tapis_demo_project_testuser6',site_id='tapis_demo_site', inst_id='demo_instrument')
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6/sites/tapis_demo_site/instruments/demo_instrument/variables
 
@@ -647,7 +647,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         [
          chords_id: 38
@@ -679,13 +679,13 @@ The response will look something like the following:
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.get_variable(project_id='tapis_demo_project_testuser6_1', site_id='tapis_site_final', inst_id='tapis_inst_final', var_id='batv')
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6_1/sites/tapis_site_final/instruments/tapis_inst_final/variables/batv
 
@@ -693,7 +693,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         [
         chords_id: 21
@@ -709,13 +709,13 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.update_variable(var_name='"updated_temp', var_id='temp', shortname='temp_updated', project_id='wq_demo_tapis_streams_proj2020-08-25T16:21:30.113392', site_id='wq_demo_site',inst_id='Ohio_River_Robert_C_Byrd_Locks')
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -X PUT -H "X-Tapis-token:$jwt" -H "Content-type:application/json"  --data '{ "var_name": "updated_temp","var_id": "temp","shortname":"temp_updated"}' $BASE_URL/v3/streams/projects/wq_demo_tapis_streams_proj2020-08-25T16:21:30.113392/sites/wq_demo_site/instruments/Ohio_River_Robert_C_Byrd_Locks/variables/temp
 
@@ -724,7 +724,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         chords_id: 16
         inst_chords_id: 5
@@ -739,13 +739,13 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.delete_variable( var_id='139', project_id='tapis_demo_instrument', site_id='tapis_demo_site',inst_id='tapis_demo_instrument')
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -v -X DELETE  -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/projects/tapis_demo_project_testuser6_3/sites/tapis_demo_site/instruments/tapis_demo_instrument/variables/batv
 
@@ -754,7 +754,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         inst_chords_id: 24
         updated_at: 2020-12-03 02:52:27.437378
@@ -771,13 +771,13 @@ Measurements
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.create_measurement(inst_id='demo_instrument',vars=[{"batv":10, "temp":90, "datetime":"2020-07-20T22:19:25Z"}])
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -v -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '{"inst_id":"demo_instrument", "vars":[{"datetime":"2020-07-20T23:19:25Z", "batv":10, "temp":90}]}'  $BASE_URL/v3/streams/measurements
 
@@ -788,11 +788,19 @@ The response will look something like the following:
 
      .. code-block:: json
 
-         {'message': 'Measurements Saved',
-         'result': {"batv":{"2020-07-20T23:19:25Z":10},"temp":{"2020-07-20T23:19:25Z":90}}
-         ],
-         'status': 'success',
-         'version': 'dev'}
+       {
+        "message": "Measurements Saved",
+        "result": {
+          "batv": {
+            "2020-07-20T23:19:25Z": 10
+          },
+          "temp": {
+            "2020-07-20T23:19:25Z": 90
+          }
+       },
+       "status": "success",
+       "version": "dev"
+      }
 
 
 |
@@ -802,13 +810,13 @@ The response will look something like the following:
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.list_measurements(inst_id='demo_instrument',start_date='2020-05-08T00:00:00Z',end_date='2020-07-21T22:19:25Z', format='csv',project_id='tapis_demo_project_testuser6',site_id='tapis_demo_site')
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/measurements/demo_instrument
 
@@ -816,7 +824,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         b'time,batv\n2020-07-20T22:19:25Z,10.0\n2020-07-20T23:19:25Z,10.0\n'
 
@@ -831,13 +839,13 @@ Channels
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.create_channels(channel_id="demo.tapis.channel", channel_name='demo.tapis.channel', template_id="demo_channel_template",triggers_with_actions=[{"inst_ids":["demo_instrument"],"condition":{"key":"demo_instrument.batv","operator":">", "val":20},"action":{"method":"ACTOR","actor_id" :"XXXX","message":"Instrument: demo_instrument exceeded threshold", "abaco_base_url":"https://api.tacc.utexas.edu","nonces":"XXXX-YYYY-ZZZZ" }}])
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -v -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" --data '{"channel_id":"demo.tapis.channel","channel_name":"demo.tapis.channel_1","template_id":"demo_channel_template","triggers_with_actions":[{"inst_ids":["demo_instrument"],"condition":{"key":"demo_instrument.batv","operator":">", "val":"20"}, "action":{"method":"ACTOR","actor_id" :"XXXX","message":"Instrument: demo_instrument batv exceeded threshold", "abaco_base_url":"https://api.tacc.utexas.edu","nonces":"XXXX-YYYY-ZZZZ"}}]}'  $BASE_URL/v3/streams/channels
 
@@ -846,7 +854,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         channel_id: demo.tapis.channel
         channel_name: demo.tapis.channel
@@ -878,13 +886,13 @@ The response will look something like the following:
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.list_channels()
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/channels
 
@@ -892,12 +900,14 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+  .. code-block:: json
 
-        {'message': 'Channels found',
-         'result': [],
-         'status': 'success',
-         'version': 'dev'}
+    {
+      "message": "Channels found",
+      "result": [],
+      "status": "success",
+      "version": "dev"
+    }
 
 |
 
@@ -906,13 +916,13 @@ The response will look something like the following:
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.get_channel(channel_id='demo.tapis.channel')
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/channels/demo.tapis.channel
 
@@ -920,7 +930,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         channel_id: demo.tapis.channel
         channel_name: demo.tapis.channel
@@ -942,6 +952,7 @@ The response will look something like the following:
             operator: >
             val: 20
             inst_ids: ['demo_instrument']]
+
 |
 
 **Update Channels**:
@@ -949,7 +960,7 @@ The response will look something like the following:
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
        $ t.streams.update_channel(channel_id="test1", channel_name='demo.wq.channel', template_id="demo_channel_template",triggers_with_actions=[{"inst_ids":[
        "Ohio_River_Robert_C_Byrd_Locks"],"condition":{"key":"Ohio_River_Robert_C_Byrd_Locks.temp","operator":">", "val":30},
@@ -958,7 +969,7 @@ With PySDK
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -X PUT -H "X-Tapis-Token:$jwt" -H "Content-Type:application/json" $BASE_URL/v3/streams/channels/test1 -d '{"channel_id": "test1","channel_name":"demo.wq.channel","template_id": "demo_channel_template",
         "triggers_with_actions": [{"inst_ids": ["Ohio_River_Robert_C_Byrd_Locks" ],
@@ -968,7 +979,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         channel_id: test1
         channel_name: demo.wq.channel
@@ -998,12 +1009,13 @@ The response will look something like the following:
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.update_status(channel_id='demo.tapis.channel', status='INACTIVE')
+
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -X POST -H "Content-Type:application/json" -H "X-Tapis-Token:$jwt" -d '{"status":"INACTIVE"}' $BASE_URL/v3/streams/channels/demo.tapis.channel
 
@@ -1011,7 +1023,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         channel_id: demo.tapis.channel
         channel_name: demo.tapis.channel
@@ -1043,7 +1055,7 @@ Templates
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.create_template(template_id='test_template_for_tutorial', type='stream',
                 script=' var crit lambda \n var channel_id string\n stream\n    |from()\n        .measurement(\'tsdata\')\n        '
@@ -1060,7 +1072,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         create_time: 2020-07-22 15:30:58.244391
         last_updated: 2020-07-22 15:30:58.244407
@@ -1091,13 +1103,13 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.list_templates()
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "X-Tapis-Token:$jwt"  $BASE_URL/v3/streams/templates
 
@@ -1106,25 +1118,30 @@ The response will look something like the following:
 .. container:: foldable
 
      .. code-block:: json
-        {'message': 'Templates found',
-         'result': [],
-         'status': 'success',
-         'version': 'dev'}
+
+        {
+         "message": "Templates found",
+         "result": [],
+         "status": "success",
+         "version": "dev"
+       }
 
 
 
 |
+
 **Get Template Details**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.get_template(template_id='test_template_for_tutorial')
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl  -H "X-Tapis-Token:$jwt" $BASE_URL/v3/streams/templates/test_template_for_tutorial
 
@@ -1133,7 +1150,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         create_time: 2020-07-22 15:30:58.244391
         last_updated: 2020-07-22 15:30:58.244407
@@ -1165,7 +1182,7 @@ The response will look something like the following:
 ^^^^^^^^^^^^^^^^^^^^^
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         t.streams.update_template(template_id='test_template_for_tutorial', type='stream',
                 script=' var period=5s\n var every=0s\n var crit lambda \n var channel_id string\n stream\n    |from()\n        .measurement(\'tsdata\')\n        '
@@ -1180,7 +1197,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
         create_time: 2020-08-19 19:48:59.177935
         last_updated: 2020-08-19 19:50:00.102827
@@ -1217,14 +1234,14 @@ Alerts
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.list_alerts(channel_id='demo_wq_channel2020-06-19T17_34_46.425419')
 
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl  -H "X-Tapis-Token:$jwt" $BASE_URL/v3/streams/channels/demo_wq_channel2020-06-19T17_34_46.425419/alerts
 
@@ -1232,7 +1249,7 @@ The response will look something like the following:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
             alerts: [
                 actor_id: XXXX
@@ -1258,7 +1275,9 @@ The response will look something like the following:
                 message: demo_wq_channel2020-06-19T17_34_46.425419 tsdata/var=11/demo_wq_channel2020-06-19T17_34_46.425419/11 is CRITICAL at time: 2020-06-19 20:51:09.862752 +0000 UTC as value: 150 exceeded the threshold]
                 num_of_alerts: 3
             ]
+
 |
+
 
 Roles
 -----------
@@ -1305,7 +1324,7 @@ In order to list the user roles on a resource (Project, Channel, Template) the r
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.list_roles(resource_id=<resource_id>, user=<username>,resource_type='project')
         $ t.streams.list_roles(resource_id=<resource_id>, user=<username>,resource_type='channel')
@@ -1314,7 +1333,7 @@ With PySDK
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
 
         $ curl -H "X-Tapis-Token:$jwt" {BASE_URL}/v3/streams/roles?user={userid}&resource_type={project/channel/template}&resource_id={project_id/channel_id/template_id}
@@ -1325,9 +1344,10 @@ The response will look like the following with the Python Client:
 
 .. container:: foldable
 
-     .. code-block:: json
+     .. code-block:: text
 
             result: ['admin']
+
 |
 
 There are three possible responses depending on if the requesting(JWT) user and user specified in query parameters are same or different.
@@ -1410,14 +1430,14 @@ Users do **not** have privileges to grant roles.
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.grant_role(resource_id=<resource_id>, user=<user>,resource_type='project/channel/template',role_name='admin/manager/user')
 
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -X POST -H "X-Tapis-Token:$jwt" {BASE_URL}/v3/streams/roles
 
@@ -1434,7 +1454,7 @@ Case I: If the username provided in the request body is the same as the JWT user
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.grant_role(resource_id='test_proj', user='testuser2',resource_type='project',role_name='manager')
 
@@ -1443,17 +1463,18 @@ With PySDK
 
      .. code-block:: json
 
-        {'message': 'Cannot grant role for self',
-         'metadata': {},
-         'result': '',
-         'status': 'error',
-         'version': 'dev'}
+        {
+          "message": "Cannot grant role for self",
+          "metadata": {},
+          "result": "",
+          "status": "error",
+          "version": "dev"}
 
 Case II: If the JWT user and username provided in the request body are different, then existing roles for the username provided in the request body are retrieved and if the user already has the role JWT user user is asking for, no action is taken.
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.grant_role(resource_id='test_proj', user='testuser6',resource_type='project',role_name='manager')
 
@@ -1475,7 +1496,7 @@ Case III: If the role does not exist then JWT user roles are retrieved and compa
 
 For example testuser4 has ***manager** role on the project and the request is to grant testuser5 **admin*** role, then the request will not be fulfilled.
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.streams.grant_role(resource_id='test_proj', user='testuser5',resource_type='project',role_name='admin')
 
@@ -1524,7 +1545,7 @@ Users in **admin** role are capable of revoking any of the three roles: **admin*
 Users in *manager* and *user* role are not capable of revoking roles.
 
 +---------------------+------------------------+
-| Role                | Revoke                  |
+| Role                | Revoke                 |
 +=====================+========================+
 | admin               |  admin, manager, user  |
 |                     |                        |
@@ -1539,13 +1560,13 @@ Users in *manager* and *user* role are not capable of revoking roles.
 
 With PySDK
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ permitted_client.streams.revoke_role(resource_id='test_proj', user='testuser6',resource_type='project',role_name='manager')
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -X POST -H "X-Tapis-Token:$jwt" {BASE_URL}/v3/streams/revokeRole
 
@@ -1563,11 +1584,13 @@ The response will be following:
 
      .. code-block:: json
 
-         {'message': 'Role manager successfully deleted for user testuser6',
-         'metadata': {},
-         'result': '',
-         'status': 'success',
-         'version': 'dev'}
+         {
+          "message": "Role manager successfully deleted for user testuser6",
+          "metadata": [],
+          "result": "",
+          "status": "success",
+          "version": "dev"
+        }
 
 Responses will vary based on following cases:
 
@@ -1596,4 +1619,3 @@ Case II: If the JWT user is trying to revoke self role
                "status": "error",
                "version": "dev"
             }
-

@@ -9,7 +9,7 @@
 .. _actors:
 
 ######
-Actors 
+Actors
 ######
 
 ----
@@ -19,14 +19,14 @@ Introduction to Abaco
 
 What is Abaco
 -------------
-    
+
 **Abaco** is an NSF-funded web service and distributed computing platform providing functions-as-a-service (FaaS)
 to the research computing community. Abaco implements functions using the Actor Model of concurrent computation. In
 Abaco, each actor is associated with a Docker image, and actor containers are executed in response to messages posted
 to their inbox which itself is given by a URI exposed over HTTP.
 
 Abaco will ultimately offer three primary higher-level capabilities on top of the underlying Actor model:
- 
+
  * *Reactors* for event-driven programming
  * *Asynchronous Executors* for scaling out function calls within running applications, and
  * *Data Adapters* for creating rationalized microservices from disparate and heterogeneous sources of data.
@@ -37,7 +37,7 @@ Using Abaco
 -----------
 
 Abaco is in production and has been adopted by several projects. Abaco is available to researchers and students. To
-learn more about the the system, including getting access, follow the instructions in :doc:`getting-started/index`.
+learn more about the the system, including getting access, follow the instructions in :doc:`/getting-started/index`.
 
 
 ----
@@ -227,7 +227,7 @@ library in our image:
 
   RUN pip install --no-cache-dir tapipy
 
-(note: there is a ``abacosample`` image that contains Python and the tapipy library; see the :ref:`Samples`
+(Note: there is a ``abacosample`` image that contains Python and the tapipy library; see the Samples
 section for more details, coming soon.)
 
 We can also add local files to our image using the ``ADD`` instruction. To add the ``example.py`` file from our local
@@ -282,7 +282,7 @@ You should see a response like this:
 
 .. code-block:: python
 
-  _links: 
+  _links:
   executions: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/executions
   owner: https://tacc.tapis.io/profiles/v3/jstubbs
   createTime: 2020-10-21T17:20:20.718177
@@ -292,25 +292,25 @@ You should see a response like this:
   id: JWpkNmBwKewYo
   image: abacosamples/wc
   last_update_time: 2020-10-21T17:20:20.718177
-  link: 
+  link:
   mounts: [
   container_path: /home/tapis/runtime_files/_abaco_data1
   host_path: /home/apim/staging/runtime_files/data1
-  mode: ro, 
+  mode: ro,
   container_path: /home/tapis/runtime_files/_abaco_data2
   host_path: /home/apim/staging/runtime_files/data2/master/abaco
   mode: rw]
   owner: abaco
   privileged: False
   queue: default
-  state: 
+  state:
   stateless: True
   status: SUBMITTED
-  status_message: 
+  status_message:
   token: false
   type: none
   use_container_uid: False
-  webhook: 
+  webhook:
 
 Notes:
 
@@ -319,7 +319,7 @@ Notes:
 - Abaco returned a status of ``SUBMITTED`` for the actor; behind the scenes, Abaco is starting a worker container to
   handle messages passed to this actor. The worker must initialize itself (download the image, etc) before the
   actor is ready.
-- When the actor's worker is initialized, the status will change to ``READY``. 
+- When the actor's worker is initialized, the status will change to ``READY``.
 
 At any point we can check the details of our actor, including its status, with the following:
 
@@ -335,7 +335,7 @@ Executing an Actor
 
 We are now ready to execute our actor by sending it a message. We built our actor to process a raw message string, so
 that is what we will send, but there other options, including JSON and binary data. For more details, see the
-:ref:`messages` section.
+:ref:`Messages <target messages>` section.
 
 We send our actor a message using the ``send_message()`` method:
 
@@ -349,7 +349,7 @@ the ``execution_id``:
 
 .. code-block:: python
 
-  _links: 
+  _links:
   messages: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/messages
   owner: https://tacc.tapis.io/profiles/v3/jstubbs
   execution_id: kA1P1m8NkkolK
@@ -367,7 +367,7 @@ The response will be similar to the following:
 
 .. code-block:: python
 
-  _links: 
+  _links:
   logs: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/executions/kA1P1m8NkkolK/logs
   owner: https://tacc.tapis.io/profiles/v3/jstubbs
   actor_id: JWpkNmBwKewYo
@@ -375,9 +375,9 @@ The response will be similar to the following:
   cpu: 9678006850
   executor: jstubbs
   exitCode: 1
-  final_state: 
+  final_state:
   Dead: False
-  Error: 
+  Error:
   ExitCode: 1
   FinishedAt: 2020-10-21T17:26:49.77Z0
   OOMKilled: False
@@ -414,7 +414,7 @@ The response should be similar to the following:
 
 .. code-block:: python
 
-  _links: 
+  _links:
   execution: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/executions/kA1P1m8NkkolK
   owner: https://tacc.tapis.io/profiles/v3/jstubbs
   logs: Number of words is: 5\n
@@ -431,6 +431,8 @@ can do with the Abaco system. To learn more about the additional capabilities, p
 
 
 ----
+
+.. _target registration:
 
 Actor Registration
 ==================
@@ -452,15 +454,17 @@ available to all users and their descriptions.
 +---------------------+----------------------------------------------------------------------------------+
 | default_environment | The default environment is a set of key/value pairs to be injected into every    |
 |                     | execution of the actor. The values can also be overridden when passing a         |
-|                     | message to the reactor in the query parameters (see :ref:`messages`).            |
+|                     | message to the reactor in the query parameters (see                              |
+|                     | :ref:`Messages <target messages>`).                                              |
 +---------------------+----------------------------------------------------------------------------------+
 | hints               | A list of strings representing user-defined "tags" or metadata about the actor.  |
 |                     | "Official" Abaco hints can be applied to control configurable aspects of the     |
-|                     | actor runtime, such as the autoscaling algorithm used. (see :ref:`autoscaling`). |
+|                     | actor runtime, such as the  algorithm used (see                                  |
+|                     | :ref:`Autoscaling <target autoscaling>`).                                        |
 +---------------------+----------------------------------------------------------------------------------+
 | link                | Actor identifier (id or alias) of an actor to "link" this actor's events to.     |
 |                     | Requires execute permissions on the linked actor, and cycles are not permitted.  |
-|                     | (see :ref:`complex`).                                                            |
+|                     | (see :ref:`Actor Links, Events, and Webhooks <target actor links>`).             |
 +---------------------+----------------------------------------------------------------------------------+
 | privileged          | (True/False) - Whether the actor runs in privileged mode and has access to       |
 |                     | the Docker daemon. *Note*: Setting this parameter to True requires elevated      |
@@ -477,7 +481,7 @@ available to all users and their descriptions.
 |                     |                                                                                  |
 |                     | *Note: the default value for the ``token`` attribute varies from                 |
 |                     | tenant to tenant. Always explicitly set the token attribute when registering     |
-|                     | new actors to ensure the proper behavior.                                        |
+|                     | new actors to ensure the proper behavior.*                                       |
 +---------------------+----------------------------------------------------------------------------------+
 | use_container_uid   | Run the actor using the UID/GID set in the Docker image. *Note*: Setting         |
 |                     | this parameter to True requires elevated permissions.                            |
@@ -487,11 +491,11 @@ available to all users and their descriptions.
 |                     | *Note*: that this cannot be on while the use_container_uid is also on            |
 +---------------------+----------------------------------------------------------------------------------+
 | webhook             | URL to publish this actor's events to.                                           |
-|                     | (see :ref:`complex`).                                                            |
+|                     | (see :ref:`Actor Links, Events, and Webhooks <target actor links>`)              |
 +---------------------+----------------------------------------------------------------------------------+
 
 Notes
-^^^^^
+-----
 
 - The ``default_environment`` can be used to provide sensitive information to the actor that cannot be put in the image.
 - In order to execute privileged actors or to override the UID/GID used when executing an actor container,
@@ -501,10 +505,10 @@ Notes
   Abaco development team about your use case.
 
 Examples
-^^^^^^^^
+--------
 
 curl
-~~~~
+^^^^
 
 Here is an example using curl; note that to set the default environment, we *must* pass content type ``application/json`` and
 be sure to pass properly formatted JSON in the payload.
@@ -518,7 +522,7 @@ be sure to pass properly formatted JSON in the payload.
 
 
 Python
-~~~~~~
+^^^^^^
 
 To register the same actor using the tapipy library, we use the ``actors.create_actor()`` method and pass the same arguments
 through the `request_body` parameter. In this case, the ``default_environment`` is just a standard Python dictionary where the
@@ -544,6 +548,8 @@ Abaco Context & Container Runtime
 =================================
 
 In this section we describe the environment that Abaco actor containers can utilize during their execution.
+
+.. _target context:
 
 Context
 -------
@@ -586,8 +592,8 @@ Notes
 
 - The ``_abaco_actor_dbid`` is unique to each actor. Using this id, an actor can distinguish itself from other actors registered with the same function providing for SPMD techniques.
 - The ``_abaco_access_token`` is a valid OAuth token that actors can use to make authenticated requests to other TACC Cloud APIs during their execution.
-- The actor can update its state during the course of its execution; see the section :ref:`state` for more details.
-- The "executor" of the actor may be different from the owner; see :ref:`sharing` for more details.
+- The actor can update its state during the course of its execution; see the section :ref:`Actor State <target actor state>` for more details.
+- The "executor" of the actor may be different from the owner; see :ref:`Sharing <target actor sharing>` for more details.
 
 
 Access from Python
@@ -623,7 +629,7 @@ with the TACC account of the owner of the actor. This practice guarantees that a
 same accesses as the original author of the actor (for instance, access to files or directories on shared storage)
 and that files created or updated by the actor process will be owned by the underlying API user.
 Abaco API users that have elevated privilleges within the platform can override the UID and GID used to run the
-actor when registering the actor (see :ref:`registration`).
+actor when registering the actor (see :ref:`Registration <target registration>`).
 
 
 POSIX Interface to the TACC WORK File System
@@ -648,7 +654,7 @@ message can be raw string data, JSON data, or a binary message.
 
 Once a message is sent to an Abaco actor, the actor will create an execution with
 a unique ``execution_id`` tied to it that will show results, time running, and other
-stats which will be listed below. Executions also have logs, and when the log are 
+stats which will be listed below. Executions also have logs, and when the log are
 called for, you'll receive the command line logs of your running execution.
 Akin to what you'd see if you and outputted a script to the command line.
 Details on messages, executions, and logs are below.
@@ -656,15 +662,17 @@ Details on messages, executions, and logs are below.
 **Note:** Due to each message being tied to a specific execution, each execution
 will have exactly one message that can be processed.
 
+.. _target messages:
+
 Messages
 --------
 
 A message is simply the message given to an actor with data that can be used to run
 the actor. This data can be in the form of a raw message string, JSON, or binary.
-Once this message is sent, the messaged Abaco actor will queue an execution of 
+Once this message is sent, the messaged Abaco actor will queue an execution of
 the actor's specified image.
 
-Once off the queue, if your specified image has inputs for the messaged data, 
+Once off the queue, if your specified image has inputs for the messaged data,
 then that messaged data will be visible to your program. Allowing you to set
 custom parameters or inputs for your executions.
 
@@ -677,7 +685,7 @@ cURL
 To send a message to the ``messages`` endpoint with cURL, you would do the following:
 
 .. code-block:: bash
-    
+
   $ curl -H "X-Tapis-Token: $TOKEN" \
   -d "message=<your content here>" \
   https://tacc.tapis.io/v3/actors/<actor_id>/messages
@@ -699,7 +707,7 @@ These calls result in a list similar to the following:
 
 .. code-block:: python
 
-  _links: 
+  _links:
   messages: https://tacc.tapis.io/actors/v3/NPpjZkmZ4elY8/messages
   owner: https://tacc.tapis.io/profiles/v3/jstubbs
   execution_id: WrMk5EPmwYoL6
@@ -738,7 +746,7 @@ The result of getting the ``messages`` endpoint should be similar to:
 
 .. code-block:: bash
 
-  _links: 
+  _links:
   owner: https://tacc.tapis.io/profiles/v3/jstubbs
   messages: 12
 
@@ -782,7 +790,7 @@ Creating actor with the TensorFlow image classifier docker image:
 The following creates a binary message from a JPEG image file:
 
 .. code-block:: python
-    
+
   with open('<path to jpeg image here>', 'rb') as file:
       binary_image = file.read()
 
@@ -804,13 +812,13 @@ The following returns information pertaining to the execution:
 Once the execution has complete, the logs can be called with the following:
 
 .. code-block:: python
-    
+
   exec_logs = t.actors.get_execution_logs(actor_id = actor_data.id,
                                           execution_id = result.execution_id)
 
 Sending binary from execution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Another useful feature of Abaco is the ability to write to a socket connected 
+Another useful feature of Abaco is the ability to write to a socket connected
 to an Abaco endpoint from within an execution. This Unix Domain (Datagram)
 socker is mounted in the actor container at /_abaco_results.sock.
 
@@ -820,7 +828,7 @@ result to the socket. Another useful function is the ``send_python_result()``
 function that allows you to send any Python object that can be pickled with
 ``cloudpickle``.
 
-In order to retrieve these results from Abaco you can get the 
+In order to retrieve these results from Abaco you can get the
 ``/actors/<actor_id>/executions/<execution_id>/results`` endpoint. Each get of
 the endpoint will result in exactly one result being popped and retrieved. An
 empty result with be returned if the results queue is empty.
@@ -839,7 +847,7 @@ cURL
 To retrieve a result with cURL you would do the following:
 
 .. code-block:: bash
-    
+
   $ curl -H "X-Tapis-Token: $TOKEN" \
   -d "message=<your content here>" \
   https://tacc.tapis.io/v3/actors/<actor_id>/executions/<execution_id>/results
@@ -909,7 +917,7 @@ cURL
 You can access the ``execution_id`` endpoint using cURL with the following:
 
 .. code-block:: bash
-    
+
   $ curl -H "X-Tapis-Token: $TOKEN" \
   https://tacc.tapis.io/v3/actors/<actor_id>/executions/<execution_id>
 
@@ -921,7 +929,7 @@ You can access the ``execution_id`` endpoint using ``tapipy`` and Python with th
 .. code-block:: python
 
   t.actors.get_execution(actor_id='<actor_id>',
-                         execution_id='<execution_id>')    
+                         execution_id='<execution_id>')
 
 Results
 ~~~~~~~
@@ -929,8 +937,8 @@ Results
 Access the ``execution_id`` endpoint will result in something similar to the following:
 
 .. code-block:: python
-    
-  _links: 
+
+  _links:
   logs: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/executions/kA1P1m8NkkolK/logs
   owner: https://tacc.tapis.io/profiles/v3/jstubbs
   actor_id: JWpkNmBwKewYo
@@ -938,9 +946,9 @@ Access the ``execution_id`` endpoint will result in something similar to the fol
   cpu: 9678006850
   executor: jstubbs
   exitCode: 1
-  final_state: 
+  final_state:
   Dead: False
-  Error: 
+  Error:
   ExitCode: 1
   FinishedAt: 2020-10-21T17:26:49.77Z0
   OOMKilled: False
@@ -958,7 +966,7 @@ Access the ``execution_id`` endpoint will result in something similar to the fol
   start_time: 2020-10-21T17:26:44.841Z
   status: COMPLETE
   worker_id: QBmoQx4pOx1oA
-     
+
 List executions
 ^^^^^^^^^^^^^^^
 
@@ -991,7 +999,7 @@ Calling the list of executions should result in something similar to:
 
 .. code-block:: python
 
-  _links: 
+  _links:
   owner: https://master.staging.tapis.io/profiles/v3/abaco
   actor_id: WP7vMmRvrDXxN
   api_server: https://master.staging.tapis.io
@@ -1000,7 +1008,7 @@ Calling the list of executions should result in something similar to:
   id: QBmoQx4pOx1oA
   message_received_time: Wed, 21 Oct 2020 17:48:20 GMT
   start_time: Wed, 21 Oct 2020 17:48:20 GMT
-  status: COMPLETE, 
+  status: COMPLETE,
   finish_time: None
   id: QZY8W1Z30Zmbq
   message_received_time: Wed, 21 Oct 2020 17:49:56 GMT
@@ -1021,12 +1029,12 @@ data. Retrieving sent data depends on the data type sent.
 Python - Reading in raw string data or JSON
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To retrieve JSON or raw data from inside of an execution using Python and 
+To retrieve JSON or raw data from inside of an execution using Python and
 ``tapipy``, you would get the message context from within the actor and then
-get it's ``raw_message`` field. 
+get it's ``raw_message`` field.
 
 .. code-block:: python
-  
+
   from tapipy.actors import get_context
 
   context = get_context()
@@ -1050,7 +1058,7 @@ message.
 
   bin_message = get_binary_message()
 
- 
+
 
 Logs
 ----
@@ -1091,7 +1099,7 @@ This would result in data similar to the following:
 
 .. code-block:: bash
 
-  _links: 
+  _links:
   execution: https://tacc.tapis.io/actors/v3/JWpkNmBwKewYo/executions/kA1P1m8NkkolK
   owner: https://tacc.tapis.io/profiles/v3/jstubbs
   logs: <command line output here>
@@ -1117,7 +1125,7 @@ Search is available on the actors, workers, executions, and logs databases. Sear
 has been implemented on a new ``{base}/actors/search/{database}`` endpoint alongside being
 implemented on the ``{base}/actors``, ``{base}/actors/{actor_id}/workers``,
 ``{base}/actors/{actor_id}/executions``, and
-``{base}/actors/{actor_id}/executions/{execution_id}/logs``endpoints.
+``{base}/actors/{actor_id}/executions/{execution_id}/logs`` endpoints.
 
 To use search on the ``{base}/actors/search/{database}`` endpoint the database to be searched
 must be specified as either ``actors``, ``workers``, ``executions``, or ``logs`` in the URL.
@@ -1182,7 +1190,7 @@ or to only receive a set amount of records.
     A new ``_metadata`` object is now returned alongside the usual result in ``result.``
 
 Example of result with new ``result``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
@@ -1257,7 +1265,7 @@ Python - String with Timezone
 The following gets the current time as an ISO 8601 formatted string with timezone:
 
 .. code-block:: python
-    
+
     import datetime
     import pytz
 
@@ -1274,7 +1282,7 @@ Python - UTC String
 The following gets the current UTC time as an ISO 8601 formatted string:
 
 .. code-block:: python
-    
+
     import datetime
 
     isoString = datetime.datetime.utcnow().isoformat()
@@ -1310,7 +1318,7 @@ for the endpoints. Each queries the specified database.
 cURL
 ~~~~
 
-.. code-block:: cURL
+.. code-block:: text
 
     $ curl -H "X-Tapis-Token: $TOKEN" \
     https://tacc.tapis.io/v3/actors/search/actors?image=abacosamples/test&create_time.gt=2020-04-29&status.in=["READY", "BUSY"]
@@ -1378,7 +1386,7 @@ search available that does not use the ``{base}/actors/search/{database}`` endpo
 cURL
 ~~~~
 
-.. code-block:: cURL
+.. code-block:: text
 
     $ curl -H "X-Tapis-Token: $TOKEN" \
     https://tacc.tapis.io/v3/actors/search/actors/joBjeDkWyBwLx/executions?status=COMPLETE&start_time.gt=2019
@@ -1428,6 +1436,8 @@ Result
 
 ----
 
+.. _target actor state:
+
 Actor State
 ===========
 
@@ -1442,17 +1452,19 @@ Once an actor is executed, the associated worker ``GETs`` data from the ``/v3/ac
 
 
 Notes
-~~~~~
+^^^^^
+
 - The worker only ``GETs`` data from the state endpoint one time as the actor is initiated. If the actor updates its state endpoint during execution, the worker does not inject the new state until a new execution.
 - Stateful actors may only have one associated worker in order to avoid race conditions. Thus generally, stateless actors will execute quicker as they can operate in parallel.
 - Issuing a state to a stateless actor will return a ``actor is stateless.`` error.
-- The ``state`` variable must be JSON-serializable. An example of passing JSON-serializable data can be found under `Examples`_ below.
+- The ``state`` variable must be JSON-serializable. An example of passing JSON-serializable data can be found under `Examples <target state examples>` below.
 
 Utilizing State in Actors to Accomplish Something
 -------------------------------------------------
 
 **WIP**
 
+.. _target state examples:
 
 Examples
 --------
@@ -1511,7 +1523,7 @@ POSTing a state to a particular actor; again keep in mind we must pass in JSON s
   t.actors.update_state(actor_id = actor_res.id,
                         request_body = state)
 
-GETting information about a particular actor's state. This function returns a Python dictionary with many fields one of which is state. 
+GETting information about a particular actor's state. This function returns a Python dictionary with many fields one of which is state.
 
 .. code-block:: python
 
@@ -1522,6 +1534,8 @@ GETting information about a particular actor's state. This function returns a Py
 
 
 ----
+
+.. _target actor sharing:
 
 Actor Sharing and Nonces
 ========================
@@ -1549,7 +1563,7 @@ cURL
 To share an actor with another API user, make a POST request to the `/permissions` endpoint; the following example
 uses curl to grant READ permission to API user `jdoe`.
 
-.. code-block:: python
+.. code-block:: text
 
   $ curl -H "X-Tapis-Token: $TOKEN" \
   -d "user=jdoe&level=READ" \
@@ -1789,6 +1803,7 @@ will create a nonce associated with the ``counter`` alias.
   Listing, creating and deleting nonces associated with an alias requires the analagous permission for both the alias
   **and** the associated actor.
 
+.. _target actor links:
 
 Actor Events, Links and WebHooks
 --------------------------------
@@ -1830,7 +1845,7 @@ Adding a Link
 ~~~~~~~~~~~~~
 
 Registering an actor with a link (or updating an exisitng actor to add a link property) follows the same semantics as
-defined in the :ref:`registration` section; simply add the ``link`` attribute in the payload. For example, the following
+defined in the :ref:`Registration <target registration>` section; simply add the ``link`` attribute in the payload. For example, the following
 request creates an actor with a link to actor id ``6PlMbDLa4zlON``.
 
 .. code-block:: bash
@@ -1869,7 +1884,7 @@ Whenever a supported event occurs, Abaco sends a JSON message to the linked acto
 The included data depends on the event type, as documented below.
 
 In the case of a linked actor, all the typical context variables, as
-documented in :ref:`context`, will be injected as usual, excepted where noted below. In this case, note that there are
+documented in :ref:`Context <target context>`, will be injected as usual, excepted where noted below. In this case, note that there are
 details about two actors: the actor for which the event occurred and the linked actor itself (which are always different,
 as self-links are not permitted).
 The former is described in the message itself with variables such as ``actor_id``, ``tenant_id``, etc., while the
@@ -1921,6 +1936,8 @@ may be added in subsequent releases.
 
 
 ----
+
+.. _target autoscaling:
 
 Autoscaling Actors
 ==================
