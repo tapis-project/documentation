@@ -36,7 +36,7 @@ Name                Method   UrlPath                                   Status
 Submit              POST     /submit                                   Implemented
 Resubmit            POST     /{JobUUID}/resubmit                       Implemented
 List                GET      /list                                     Implemented
-Search              GET      /search                                   Implemented                          
+Search              GET      /search                                   Implemented
 Get                 GET      /{JobUUID}                                Implemented
 Get Status          GET      /{JobUUID}/status                         Implemented
 Get History         GET      /{JobUUID}/history                        Implemented
@@ -282,15 +282,15 @@ Any URL protocol accepted by the Tapis Files_ service can be used in a *sourceUr
 
 The *targetPath* is the location to which data are copied from the *sourceUrl*.  The target is rooted at the *execSystemInputDir* except, possibly, when HOST_EVAL() is used, in which case it is still relative to the execution system's rootDir.
 
-A JobFileInput object is **complete** when its *sourceUrl* and *targetPath* are assigned; this provides the minimal information needed to effect a transfer.  If only the *sourceUrl* is set, Jobs will use the simple directory or file name from the URL to automatically assign the *targetPath*.  Specifying a *targetPath* as "*" results in the same automatic assignment.  Whether assigned by the user or Jobs, all job inputs that are not in-place and do not use the HOST_EVAL() function are copied into the *execSystemInputDir* subtree.  
+A JobFileInput object is **complete** when its *sourceUrl* and *targetPath* are assigned; this provides the minimal information needed to effect a transfer.  If only the *sourceUrl* is set, Jobs will use the simple directory or file name from the URL to automatically assign the *targetPath*.  Specifying a *targetPath* as "*" results in the same automatic assignment.  Whether assigned by the user or Jobs, all job inputs that are not in-place and do not use the HOST_EVAL() function are copied into the *execSystemInputDir* subtree.
 
-After application inputs are added to or merged with job request inputs, all complete JobFileInput objects are designated for staging.  Incomplete objects are ignored only if they were specified as OPTIONAL in the application definition.  Otherwise, an incomplete input object causes the job request to be rejected.  
+After application inputs are added to or merged with job request inputs, all complete JobFileInput objects are designated for staging.  Incomplete objects are ignored only if they were specified as OPTIONAL in the application definition.  Otherwise, an incomplete input object causes the job request to be rejected.
 
 
 In-Place Inputs (tapislocal)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Job inputs already present on an execution system do not need to be transferred, yet users may still want to declare them for documentation purposes or to control how they are mounted into containers.  It's common, for example, for large data sets that cannot reasonably be copied to be mounted directly onto execution systems.  The Jobs and Applications services provide custom syntax that allows such input to be declared, but instructs the Jobs service to **not** copy that input.    
+Job inputs already present on an execution system do not need to be transferred, yet users may still want to declare them for documentation purposes or to control how they are mounted into containers.  It's common, for example, for large data sets that cannot reasonably be copied to be mounted directly onto execution systems.  The Jobs and Applications services provide custom syntax that allows such input to be declared, but instructs the Jobs service to **not** copy that input.
 
 Tapis introduces a new URL scheme, *tapislocal*, that is only recognized by the Applications and Jobs services.  Here are example URLs:
 
@@ -299,13 +299,13 @@ Tapis introduces a new URL scheme, *tapislocal*, that is only recognized by the 
     tapislocal://exec.tapis/home/bud/mymri.dcm
     tapislocal://exec.tapis/corral/repl/shared
 
-Like the *tapis* scheme and all common schemes (https, sftp, etc.), the first segment following the double slashes designates a host.  For *tapislocal*, the host is always the literal **exec.tapis**, which serves as a placeholder for a job's execution system.  The remainder of the URL is the path on the Tapis system.  All paths on Tapis systems, including those using the HOST_EVAL() function and the tapislocal URL, are rooted at the Tapis system's rootDir. 
+Like the *tapis* scheme and all common schemes (https, sftp, etc.), the first segment following the double slashes designates a host.  For *tapislocal*, the host is always the literal **exec.tapis**, which serves as a placeholder for a job's execution system.  The remainder of the URL is the path on the Tapis system.  All paths on Tapis systems, including those using the HOST_EVAL() function and the tapislocal URL, are rooted at the Tapis system's rootDir.
 
-A *tapislocal* URL can only appear in the sourceUrl field of AppFileInput and JobFileInput parameters.  
+A *tapislocal* URL can only appear in the sourceUrl field of AppFileInput and JobFileInput parameters.
 
-The *tapislocal* scheme indicates to Jobs that a filepath already exists on the execution system and, therefore, does not require data transfer during job execution.  If targetPath is "*", the Jobs service will assign the target path inside the container to be the last segment of the tapislocal URL path (/mymri.dcm and /shared in the examples above). 
+The *tapislocal* scheme indicates to Jobs that a filepath already exists on the execution system and, therefore, does not require data transfer during job execution.  If targetPath is "*", the Jobs service will assign the target path inside the container to be the last segment of the tapislocal URL path (/mymri.dcm and /shared in the examples above).
 
-In container systems that require the explicit mounting of host filepaths, such as Docker, the Jobs service can mount the filepath into the container.  Both application definitions and job requests support the *autoMountLocal* boolean parameter.  This parameter is true by default, which causes Jobs to automatically mount the filepath into containers.  Setting autoMountLocal to false allows the user complete control over mounting using a *containerArgs* parameter. 
+In container systems that require the explicit mounting of host filepaths, such as Docker, the Jobs service can mount the filepath into the container.  Both application definitions and job requests support the *autoMountLocal* boolean parameter.  This parameter is true by default, which causes Jobs to automatically mount the filepath into containers.  Setting autoMountLocal to false allows the user complete control over mounting using a *containerArgs* parameter.
 
 
 .. _Files: https://tapis.readthedocs.io/en/latest/technical/files.html
@@ -318,7 +318,7 @@ In container systems that require the explicit mounting of host filepaths, such 
 FileInputArrays
 ---------------
 
-The *fileInputArrays* parameter provides an alternative syntax for specifying inputs in Applications_ and job requests.  This syntax is convenient for specifying multiple inputs destined for the same target directory, an I/O pattern sometimes refered to as *scatter-gather*.  Generally, input arrays support the same semantics as FileInputs_ with some restrictions.       
+The *fileInputArrays* parameter provides an alternative syntax for specifying inputs in Applications_ and job requests.  This syntax is convenient for specifying multiple inputs destined for the same target directory, an I/O pattern sometimes refered to as *scatter-gather*.  Generally, input arrays support the same semantics as FileInputs_ with some restrictions.
 
 The fileInputArrays parameter in job requests contains elements that conform to the following JSON schema.
 
@@ -330,17 +330,17 @@ The fileInputArrays parameter in job requests contains elements that conform to 
         "properties": {
             "name": { "type": "string", "minLength": 1, "maxLength": 80 },
             "description": { "type": "string", "minLength": 1, "maxLength": 8096},
-            "sourceUrls": { "type": ["array", "null"], 
-                            "items": { "type": "string", "format": "uri", "minLength": 1 } },       
+            "sourceUrls": { "type": ["array", "null"],
+                            "items": { "type": "string", "format": "uri", "minLength": 1 } },
             "targetDir": { "type": "string", "minLength": 1 }
         }
    }
 
-A fileInputArrays parameter is an array of JobFileInputArray objects, each of which contains an array of *sourceUrls* and a single *targetDir*.  One restriction is that *tapislocal* URLs cannot appear in *sourceUrls* fields.  
+A fileInputArrays parameter is an array of JobFileInputArray objects, each of which contains an array of *sourceUrls* and a single *targetDir*.  One restriction is that *tapislocal* URLs cannot appear in *sourceUrls* fields.
 
 An application's fileInputArrays are added to or merged with those in a job request following the same rules established for fileInputs in the previous section.  In particular, when names match, the *sourceUrls* defined in a job request override (i.e., completely replace) those defined in an application.  After merging, each JobFileInputArray must have a non-empty *sourceUrls* array.  See FileInputs_ and Applications_ for related information.
 
-Each *sourceUrls* entry is a location from which data is copied to the *targetDir*.  In Posix systems each URL can reference a file or a directory.  In the latter case, the complete directory subtree is transferred.  All URLs recognized by the Tapis Files_ service can be used (*tapislocal* is not recognized by Files).    
+Each *sourceUrls* entry is a location from which data is copied to the *targetDir*.  In Posix systems each URL can reference a file or a directory.  In the latter case, the complete directory subtree is transferred.  All URLs recognized by the Tapis Files_ service can be used (*tapislocal* is not recognized by Files).
 
 The *targetDir* is the directory into which all *sourceUrls* are copied.  The *targetDir* is always rooted at the *ExecSystemInputDir* and if *targetDir* is "*" or not specified, then it is assigned *ExecSystemInputDir*.  The simple name of each *sourceUrls* entry is the destination name used in *targetDir*.  Use different JobFileInputArrays with different targetDir's if name conflicts between *sourceUrls* entries exist.
 
@@ -365,21 +365,21 @@ Each of these objects can be specifed in Tapis application definitions and/or in
 appArgs
 ^^^^^^^
 
-Specify one or more command line arguments for the user application using the *appArgs* parameter.  Arguments specified in the application definition are appended to those in the submission request.  
+Specify one or more command line arguments for the user application using the *appArgs* parameter.  Arguments specified in the application definition are appended to those in the submission request.
 
 containerArgs
 ^^^^^^^^^^^^^
 
-Specify one or more command line arguments for the container runtime using the *containerArgs* parameter.  Arguments specified in the application definition are appended to those in the submission request.  
+Specify one or more command line arguments for the container runtime using the *containerArgs* parameter.  Arguments specified in the application definition are appended to those in the submission request.
 
 schedulerOptions
 ^^^^^^^^^^^^^^^^
 
-Specify HPC batch scheduler arguments for the container runtime using the *schedulerOptions* parameter.  Arguments specified in the application definition are appended to those in the submission request.  The arguments for each scheduler are passed using that scheduler's conventions.  
+Specify HPC batch scheduler arguments for the container runtime using the *schedulerOptions* parameter.  Arguments specified in the application definition are appended to those in the submission request.  The arguments for each scheduler are passed using that scheduler's conventions.
 
 Tapis defines a special scheduler option, **--tapis-profile**, to support local scheduler conventions.  Data centers sometimes customize their schedulers or restrict how those schedulers can be used.  The Systems_ service manages *SchedulerProfile* resources that are separate from any system definition, but can be referenced from system definitions.  The Jobs service uses directives contained in profiles to tailor application execution to local requirements.
 
-As an example, below is the JSON input used to create the TACC scheduler profile.  The *moduleLoadCommand* specifies the local command used to load (in order) each of the modules listed in *modulesToLoad*.  *hiddenOptions* identifies scheduler options that the local implementation prohibits.  In this case, "MEM" indicates that the *--mem* option should never be passed to Slurm. 
+As an example, below is the JSON input used to create the TACC scheduler profile.  The *moduleLoadCommand* specifies the local command used to load (in order) each of the modules listed in *modulesToLoad*.  *hiddenOptions* identifies scheduler options that the local implementation prohibits.  In this case, "MEM" indicates that the *--mem* option should never be passed to Slurm.
 
 ::
 
@@ -387,7 +387,7 @@ As an example, below is the JSON input used to create the TACC scheduler profile
         "name": "TACC",
         "owner": "user1",
         "description": "Test profile for TACC Slurm",
-        "moduleLoadCommand": "module load", 
+        "moduleLoadCommand": "module load",
         "modulesToLoad": ["tacc-singularity"],
         "hiddenOptions": ["MEM"]
     }
@@ -447,7 +447,7 @@ The *isMpi* parameter is specified in an application definition and/or job reque
 
 The *cmdPrefix* parameter provides generalized support for launchers and is available in application definitions and job submission requests.  Like *mpiCmd*, a *cmdPrefix* value is simply prepended to a program's pathname and arguments.  Being more general, *cmdPrefix* could specify an MPI launcher, but it's not supported in system definitions and does not have a toggle to control usage.
 
-*mpiCmd* and *cmdPrefix* are mutually exclusive; so if *isMpi* is true, then *cmdPrefix* must not be set.      
+*mpiCmd* and *cmdPrefix* are mutually exclusive; so if *isMpi* is true, then *cmdPrefix* must not be set.
 
 
 ExecSystemConstraints
@@ -466,7 +466,7 @@ Shared Components
 JobArgSpec
 ^^^^^^^^^^
 
-Simple argument strings can be specified in application definitions (AppArgSpec) and in job submission requests (JobArgSpec).  These argument strings are passed to specific components in the runtime system, such as the batch scheduler (schedulerOptions_), the container runtime (containerArgs_) or the user's application (appArgs_).  
+Simple argument strings can be specified in application definitions (AppArgSpec) and in job submission requests (JobArgSpec).  These argument strings are passed to specific components in the runtime system, such as the batch scheduler (schedulerOptions_), the container runtime (containerArgs_) or the user's application (appArgs_).
 
 The following rules govern how job arguments are calculated.
 
@@ -501,16 +501,16 @@ The *name* identifies the input argument.  If present, the name must start with 
 
 The *description* is used to convey usage information to job requester.  If both application and request descriptions are provided, then the request description is appended as a separate paragraph to the application description.
 
-The required *arg* value is an arbitrary string and is used as-is.  If this argument's name matches that of an application argument, this *arg* value overrides the application's value except when *inputMode=FIXED* in the application.    
+The required *arg* value is an arbitrary string and is used as-is.  If this argument's name matches that of an application argument, this *arg* value overrides the application's value except when *inputMode=FIXED* in the application.
 
-The *include* field applies only on named arguments that are also defined in the application definition with *inputMode* INCLUDE_ON_DEMAND or INCLUDE_BY_DEFAULT; this parameter is ignored on all other inputModes.  Argument inclusion is discussed in greater detail in following subsection.  
+The *include* field applies only on named arguments that are also defined in the application definition with *inputMode* INCLUDE_ON_DEMAND or INCLUDE_BY_DEFAULT; this parameter is ignored on all other inputModes.  Argument inclusion is discussed in greater detail in following subsection.
 
 Argument Processing
 ~~~~~~~~~~~~~~~~~~~
 
 Applications_ use their AppArgSpecs to pass default values to job requests.  The AppArgSpec's *inputMode* determines how to handle arguments during job processing.  An *inputMode* field can have these values:
 
-REQUIRED 
+REQUIRED
    The argument must be provided for the job to run.  If an arg value is not specified in the application       definition, then it must be specified in the job request.  When provided in both, the job request arg value overrides the one in application.
 
 FIXED
@@ -541,7 +541,7 @@ The truth table below defines how the AppArgSpec's *inputMode* and JobArgSpec's 
 | INCLUDE_BY_DEFAULT | undefined   | include arg |
 +--------------------+-------------+-------------+
 
-The JobArgSpec *include* value has no effect on REQUIRED or FIXED arguments.  In the cases where the value does apply, not specifying *include* in a named JobArgSpec that matches an AppArgSpec is effectively the same as setting *include=True*.  By setting *include=False*, a JobArgSpec can exclude any INCLUDE_ON_DEMAND or INCLUDE_BY_DEFAULT arguments. 
+The JobArgSpec *include* value has no effect on REQUIRED or FIXED arguments.  In the cases where the value does apply, not specifying *include* in a named JobArgSpec that matches an AppArgSpec is effectively the same as setting *include=True*.  By setting *include=False*, a JobArgSpec can exclude any INCLUDE_ON_DEMAND or INCLUDE_BY_DEFAULT arguments.
 
 KeyValuePair
 ^^^^^^^^^^^^
@@ -879,14 +879,14 @@ Get Jobs list
 
 With PySDK:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.jobs.getJobList(limit=2, orderBy='lastUpdated(desc),name(asc)', computeTotal=True)
 
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/list?limit=2&orderBy=lastUpdated(desc),name(asc)&computeTotal=true
 
@@ -945,7 +945,7 @@ Job Search
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
       $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/search?limit=2&status.eq=FINISHED&created.between=2021-07-01,2021-07-21&orderBy=lastUpdated(desc),name(asc)&computeTotal=True
 
@@ -1004,14 +1004,14 @@ Get Job Details
 
 With PySDK:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.jobs.getJob(jobUuid='ba34f946-8a18-44c4-9b25-19e21dfadf69-007')
 
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007
 
@@ -1094,14 +1094,14 @@ Get Job Status
 
 With PySDK:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.jobs.getJobStatus(jobUuid='ba34f946-8a18-44c4-9b25-19e21dfadf69-007')
 
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/status
 
@@ -1125,14 +1125,14 @@ Get Job History
 
 With PySDK:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.jobs.getJobHistory(jobUuid='ba34f946-8a18-44c4-9b25-19e21dfadf69-007')
 
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/history
 
@@ -1233,14 +1233,14 @@ Get Job Output Listing
 
 With PySDK:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ t.jobs.getJobOutputList(jobUuid='ba34f946-8a18-44c4-9b25-19e21dfadf69-007', outputPath='/')
 
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
         $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/output/list/
 
@@ -1329,14 +1329,14 @@ Get Job Output Download
 
 With PySDK:
 
-.. code-block:: plaintext
+.. code-block:: text
 
        $ t.jobs.getJobOutputDownload(jobUuid='ba34f946-8a18-44c4-9b25-19e21dfadf69-007', outputPath='/')
 
 
 With CURL:
 
-.. code-block:: plaintext
+.. code-block:: text
 
       $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/output/download/ --output joboutput.zip
 

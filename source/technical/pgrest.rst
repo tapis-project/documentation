@@ -1,4 +1,4 @@
-.. _pgrest
+.. _target pgrest:
 
 ======
 PgREST
@@ -22,7 +22,7 @@ API. The Data API is used to create, update, and read the rows within the corres
 
 Authentication and Tooling
 ==========================
-PgREST currently recognizes Tapis v2 and v3 authentication tokens and uses these for determining access levels. 
+PgREST currently recognizes Tapis v2 and v3 authentication tokens and uses these for determining access levels.
 A valid Tapis v2 OAuth token should be passec to all requests to PgREST using the header ``Tapis-v2-token``.
 For example, using curl:
 
@@ -172,7 +172,7 @@ If all works, the response should look something like this:
 
 
 Since the ``root_url`` attribute has value ``widgets``, an associated collection at URL ``/v3/pgrest/data/widgets``
-is automatically made available for managing and retrieving the data (rows) on the table. See the `Data API`_ section
+is automatically made available for managing and retrieving the data (rows) on the table. See the :ref:`Data API <target data api>` section
 below for more details.
 
 
@@ -185,12 +185,12 @@ fields, with the column field have a host of options to delegate how to create t
 * ``table_name`` - **required**
 
   * The name of the table in question.
-  
+
 * ``root_url``
-  
+
   * The root_url for PgRESTs /data endpoint.
   * Ex: root_url "table25" would be accessible via "http://pgrestURL/data/table25".
-  
+
 * ``enums``
 
   * Enum generation is done in table definitions.
@@ -200,18 +200,18 @@ fields, with the column field have a host of options to delegate how to create t
     * Creates an "accountrole" enum that can have values of "ADMIN" or "USER"
 
   * Deletion/Updates are not currently supported. Speak to developer if you're interested in a delete/update endpoint.
-  
+
 * ``comments``
-  
+
   * Field to allow for better readability of table json. Table comments are saved and outputted on /manage/tables/ endpoints.
-  
+
 * ``constraints``
-  
+
   * Specification of Postgres table constraints. Currently only allows multi-column unique constraints
   * Constraints available:
-  
+
     * ``unique``
-  
+
       * multi-column unique constraint that requires sets of column values to be unique.
       * Note: Unique constraint must have unique naming between tables. Constraints cannot be used more than once.
       * Ex: ``"constraints": {"unique": {"two_col_pair": ["col_one", "col_two"]}}``
@@ -226,7 +226,7 @@ fields, with the column field have a host of options to delegate how to create t
   * Columns arguments are as follows.
 
     * ``data_type`` - **required**
-  
+
       * Specifies the data type for values in this column.
       * Case insensitive.
       * Can be varchar, datetime, {enumName}, text, timestamp, serial, varchar[], boolean, integer, integer[].
@@ -243,7 +243,7 @@ fields, with the column field have a host of options to delegate how to create t
         * This is to get around the fact that the serial data type isn't that well received by Postgres
         * This also means that users can specify ``serial_start`` and ``serial_increment`` to adjust how it works.
 
-    * ``char_len`` 
+    * ``char_len``
 
       * Additional argument for varchar data_types. Required to set max value size.
       * Can be any value from 1 to 255.
@@ -254,7 +254,7 @@ fields, with the column field have a host of options to delegate how to create t
       * Integer that specifies the start of a SQL sequence.
 
     * ``serial_increment``
-    
+
       * Additional argument for serial data_types. Defaults to 1.
       * Integer that specifies the increment to use for serial data_types. Integer.
 
@@ -311,10 +311,10 @@ fields, with the column field have a host of options to delegate how to create t
         * ``on_event``
 
           * Only needed in the case that foreign_key is set to true.
-          * Case insensitive.          
+          * Case insensitive.
           * Specifies the event strategy when referencing a foreign key.
           * Can be set to an event of ``ON DELETE`` or ``ON UPDATE``, if the key gets deleted or updated, the ``event_action`` will be completed by postgres
-          
+
             * ``ON DELETE`` Sets off event_action if reference is deleted.
             * ``ON UPDATE`` Sets off event_action if reference is updated.
 
@@ -323,7 +323,7 @@ fields, with the column field have a host of options to delegate how to create t
           * Only needed in the case that foreign_key is set to true.
           * Case insensitive.
           * Specifies the event action to complete when a reference gets the ``on_event`` event.
-          
+
             * ``CASCADE`` deletes or updates this column when ``on_event`` occurs to reference.
             * ``SET NULL`` set this column to null when ``on_event`` occurs to reference.
             * ``SET DEFAULT`` set this column to column default when ``on_event`` occurs to reference.
@@ -458,7 +458,7 @@ The following is a working complex table definition using all parameters for use
         "data_type": "varchar",
         "char_len": 255
       },
-      "last_name": { 
+      "last_name": {
         "null": true,
         "data_type": "varchar",
         "char_len": 255
@@ -499,16 +499,16 @@ list of all PUT operations available and examples is as follows:
   * Ex. Change table with root_url ``all_people`` to ``some_people``.
 
     * Payload is ``{"root_url": "some_people"}``
-  
+
 * ``table_name``
-  
+
   * Operation to change the table_name currently associated with the table.
   * Ex: Change table with table_name ``all_people`` to ``some_people``.
 
     * Payload is ``{"table_name": "some_people"}``
 
 * ``comments``
-  
+
   * Operation to change the comments currently associated with the table (Overwrites existing).
   * Ex: Adding "This column is not case-sensitive" comment to table with table_id ``84``.
 
@@ -521,15 +521,15 @@ list of all PUT operations available and examples is as follows:
   * Ex: Changing table so all endpoints are available.
 
     * Payload is ``{"endpoints": ["ALL"]}``
-  
+
 * ``column_type``
-  
+
   * Operation to change the column_type of a particular column in table.
   * column_types available are "varchar", "boolean", "integer", "text", "timestamp", "serial", and "datetime".
   * Ex: Changing column ``names`` from type ``integer`` to ``varchar``.
 
     * Payload is ``{"column_type": "names, varchar"}``
-  
+
 * ``add_column``
 
   * Operation to add a column to a table.
@@ -544,16 +544,16 @@ list of all PUT operations available and examples is as follows:
   * Ex: Dropping column ``useless_archive_column``.
 
     * Payload is ``{"drop_column": "useless_archive_column"}``
-  
+
 * ``drop_default``
-  
+
   * Operation to drop a default currently set on a column in a table.
   * Ex: Dropping default for column ``i_no_longer_need_a_default``.
 
     * Payload is ``{"drop_default": "i_no_longer_need_a_default"}``
-  
+
 * ``set_default``
-  
+
   * Operation to set a new default on a column in a table.
   * Ex: Setting default on column ``names`` to ``no_name``.
 
@@ -592,7 +592,7 @@ the postgres error message returned to the API in cases of a postgres error, or 
 ``Table put successfully`` message.
 
 
-
+.. _target data api:
 
 Table User API
 ==============
@@ -685,7 +685,7 @@ Creating multiple rows at once
 
 The same as creating a single row, POST requests to the``/v3/pgrest/data/{root_url}`` URL containing lists of row definitions
 will create rows in bulk. POST message body should be a JSON list contain JSON documents providing values for each of the
-columns inside a single ``data`` object. This works exactly the same way as single row creation, but with a list input. 
+columns inside a single ``data`` object. This works exactly the same way as single row creation, but with a list input.
 The rows are then added to the table using pure SQL format and is fully ATOMIC.
 
 For example, the following JSON body could be used to create three rows on the widgets example table:
@@ -993,7 +993,7 @@ A post to the ``/v3/pgrest/manage/views`` endpoint to create a view expects a js
 definition can have the following rules.
 
 * ``view_name`` - **required**
-  
+
   * The name of the view in question.
 
 * ``select_query`` - **required**
@@ -1015,7 +1015,7 @@ definition can have the following rules.
 
 * ``comments``
 
-  * Field to allow for better readability of view json. Table comments are saved and outputted on ``/v3/pgrest/manage/views/ endpoints.
+  * Field to allow for better readability of view json. Table comments are saved and outputted on ``/v3/pgrest/manage/views/`` endpoints.
 
 * ``permission_rules``
 
@@ -1024,12 +1024,12 @@ definition can have the following rules.
 
 * ``raw_sql`` - **admins only**
 
-  * To allow for better use of postgres's feacilities there is a raw_sql view creation parameter.
+  * To allow for better use of postgres's facilities there is a raw_sql view creation parameter.
   * To use this parameter you must be an admin (talk to service admins)
   * When using this paramter, select_query, where_query, and from_table are no longer allowed, other parameters are fine.
   * The query follows ``CREATE OR REPLACE VIEW {tenant}.{view_name} {raw_sql}`` format.
   * Example data body:
-  
+
     .. code-block:: bash
 
       {"view_name": "my_new_test_view",
@@ -1043,7 +1043,7 @@ View Creation Example
 .. code-block:: bash
 
   # new_view.json
-  {'view_name': 'test_view', 
+  {'view_name': 'test_view',
    'root_url': 'just_a_cool_url',
    'select_query': '*',
    'from_table': 'initial_table_2',
@@ -1070,7 +1070,7 @@ If you then wanted to get information about the view, but not the result of the 
 
 
 Views User API
-=========
+===============
 
 Users have no way to change views or to modify anything dealing with them, but they are able to get views that they have
 sufficient permissions to view. The ``/v3/pgrest/views/{view_id}`` requires the user to have at least a PGREST_USER role,
@@ -1162,13 +1162,13 @@ Role Manage API
 ===================
 
 Role management is solely allowed for users in the PGREST_ROLE_ADMIN role, or PGREST_ADMIN. These endpoints allow users to
-create, grant, and revoke SK roles to users to match `view` ``permission_rules``. Modifiable roles all must start with 
+create, grant, and revoke SK roles to users to match `view` ``permission_rules``. Modifiable roles all must start with
 ``PGREST_``, this ensures users can't change roles that might matter to other services. Along with that, users cannot manage
 the ``PGREST_ADMIN``, ``PGREST_ROLE_ADMIN``, ``PGREST_WRITE``, or ``PGREST_READ`` roles. This might be changed, but for now,
 contact an admin to be given these roles. Note, users can grant or revoke the ``PGREST_USER`` role, so that role_admins can
 manage who can see views without unnecessary intervention.
 
-Users have no access to these endpoints or anything regarding roles. 
+Users have no access to these endpoints or anything regarding roles.
 
 Role Creation
 -------------
@@ -1193,8 +1193,8 @@ Role Creation Definition
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 * ``role_name`` - **required**
-  
-  * Name of the role to create, must start with ``PGREST_``. 
+
+  * Name of the role to create, must start with ``PGREST_``.
 
 * ``description`` - **required**
 
@@ -1224,7 +1224,7 @@ Role Management Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * ``method`` - **required**
-  
+
   * String of either "grant" or "revoke", specifying whether to revoke or grant the role to a user.
 
 * ``username`` - **required**

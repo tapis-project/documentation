@@ -16,9 +16,9 @@ Overview
 ----------
 
 All file operations act upon Tapis *System* resources. If you are unfamiliar with the Systems service, please refer to the
-systems_ section
+tapissystems_ section
 
-.. _systems:
+.. _tapissystems:
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Basic File Operations
@@ -90,7 +90,7 @@ The JSON response of the API will look something like this:
     ],
     "version": "1.1-84a31617",
     "metadata": {}
-}
+  }
 
 
 Move/Copy
@@ -188,9 +188,7 @@ Query Parameters
 
 Header Parameters
 
-:more: integer - Return 1 KB chunks of UTF-8 encoded text from a file starting after page *more*.  This call can be used to
-page through a text based file. Note that if the contents of the file are not textual (such as an image file or other binary
-format) the output will be bizarre.
+:more: integer - Return 1 KB chunks of UTF-8 encoded text from a file starting after page *more*.  This call can be used to page through a text based file. Note that if the contents of the file are not textual (such as an image file or other binary format) the output will be bizarre.
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -388,4 +386,3 @@ The JSON response should look something like :
         "version": "1.1-094fd38d",
         "metadata": {}
     }
-
