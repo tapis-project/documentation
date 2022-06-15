@@ -96,7 +96,7 @@ Create a local file named ``system_s3.json`` with json similar to the following:
   {
     "id":"tacc-bucket-sample-<userid>",
     "description":"My Bucket",
-    "host":"https://tapis-sample-test-<userid>.s3.us-east-1.amazonaws.com/",
+    "host":"tapis-sample-test-<userid>.s3.us-east-1.amazonaws.com",
     "systemType":"S3",
     "defaultAuthnMethod":"ACCESS_KEY",
     "effectiveUserId":"${owner}",
@@ -154,7 +154,12 @@ Using CURL::
 
    $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/credential/tacc-bucket-sample-<userid>/user/<userid> -d @cred_tmp.json
 
-Note that credentials are stored in the Security Kernel. Only specific Tapis services are authorized to retrieve credentials.
+An optional attribute *loginUser* may be included in the request body in order to map the Tapis user to a username to
+be used when accessing the system. If the login user is not provided then there is no mapping and the Tapis user is
+always used when accessing the system.
+Note that credentials are stored in the Security Kernel.
+Only specific Tapis services are authorized to retrieve credentials.
+
 
 Viewing Systems
 ~~~~~~~~~~~~~~~
@@ -283,11 +288,16 @@ Authentication Credentials
 --------------------------
 At system creation time the authentication credentials may be specified if the effective
 access user *effectiveUserId* is a specific user (such as a service account) and not
-a dynamic user, i.e. ``${apiUserId}``. If the effective access user is dynamic then
-authentication credentials for any user allowed to access the system must be registered in
-separate API calls. Note that the Systems service does not store credentials.
-Credentials are persisted by the Security Kernel service and only specific Tapis services
-are authorized to retrieve credentials.
+a dynamic user (i.e. not equal to ``${apiUserId}``).
+
+If the effective access user is dynamic (i.e. equal to ``${apiUserId}``) then authentication credentials for any
+user allowed to access the system must be registered in separate API calls. In this case the payload provided may
+contain the optional attribute *loginUser* which will be used to map the Tapis user to a username to be used when
+accessing the system. If the login user is not provided then there is no mapping and the Tapis user is always used
+when accessing the system.
+
+Note that the Systems service does not store credentials. Credentials are persisted by the Security Kernel service
+and only specific Tapis services are authorized to retrieve credentials.
 
 By default any credentials provided for LINUX type systems are verified. The query parameter
 skipCredentialCheck=true may be used to bypass the initial verification of credentials.
@@ -466,6 +476,9 @@ Credential Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | authnMethod         | String         | PKI_KEYS             | - Indicates the authentication method associated with a retrieved credential.        |
 |                     |                |                      | - When a credential is retrieved it is for a specific authentication method.         |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| loginUser           | String         |                      | - Optional native username valid on the system.                                      |
+|                     |                |                      | - May be used to map a Tapis user to a native login user.                            |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | password            | String         |                      | - Password for when authnMethod is PASSWORD.                                         |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
