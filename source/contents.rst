@@ -26,6 +26,7 @@ Welcome to Tapis's Documentation!
    technical/jobs
    technical/meta
    technical/pgrest
+   technical/pods
    technical/actors
    technical/security
    technical/streams
