@@ -11,6 +11,7 @@ The Technical Guide for Tapis provides a detailed reference to the primary servi
 - :doc:`jobs`: Running an application on a system.
 - :doc:`meta`: Storing and retrieving metadata pertaining to your projects.
 - :doc:`pgrest`: Hosted, HTTP RESTful API to a managed Postrges database instance.
+- :doc:`pods`: Create long-lived network enabled pods for databases or servers.
 - :doc:`streams`: Managing streaming data from sensors and other instruments.
 - :doc:`actors`: Execute containerized functions ("actors") in response to events or other messages.
 - :doc:`security`: Securing the digital assets comprising your project.
