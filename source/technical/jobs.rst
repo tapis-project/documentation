@@ -30,23 +30,33 @@ Implementation Status
 ---------------------
 The following table describes the current state of the Beta release of Jobs.  All UrlPaths shown start with /v3/jobs.  The unauthenticated health check, ready and hello APIs do not require a Tapis JWT in the request header.
 
-===============     ======   =======================================   ===========
-Name                Method   UrlPath                                   Status
-===============     ======   =======================================   ===========
-Submit              POST     /submit                                   Implemented
-Resubmit            POST     /{JobUUID}/resubmit                       Implemented
-List                GET      /list                                     Implemented
-Search              GET      /search                                   Implemented
-Get                 GET      /{JobUUID}                                Implemented
-Get Status          GET      /{JobUUID}/status                         Implemented
-Get History         GET      /{JobUUID}/history                        Implemented
-Get Output list     GET      /{JobUUID}/output/list/{outputPath}       Implemented
-Download Output     GET      /{JobUUID}/output/download/{outputPath}   Implemented
+================     ======   =======================================   ===========
+Name                 Method   UrlPath                                   Status
+================     ======   =======================================   ===========
+Submit               POST     /submit                                   Implemented
+Resubmit             POST     /{JobUUID}/resubmit                       Implemented
+List                 GET      /list                                     Implemented
+Search               GET      /search                                   Implemented
+Search               POST     /search                                   Implemented
+Get                  GET      /{JobUUID}                                Implemented
+Get Status           GET      /{JobUUID}/status                         Implemented
+Get History          GET      /{JobUUID}/history                        Implemented
+Get Output list      GET      /{JobUUID}/output/list/{outputPath}       Implemented
+Download Output      GET      /{JobUUID}/output/download/{outputPath}   Implemented
+Resubmit Request     GET      /{JobUUID}/resubmit_request               Implemented
 \
-Health Check        GET      /healthcheck                              Implemented
-Ready               GET      /ready                                    Implemented
-Hello               GET      /hello                                    Implemented
-===============     ======   =======================================   ===========
+Cancel               POST      /{JobUUID}/cancel                        Implemented
+Hide                 POST      /{JobUUID}/hide                          Implemented
+Unhide               POST      /{JobUUID}/unhide                        Implemented
+\
+Post Share           POST      /{JobUUID}/share                         Implemented
+Get Share            GET       /{JobUUID}/share                         Implemented
+Delete Share         DELETE    /{JobUUID}/share/{user}                  Implemented
+\
+Health Check         GET       /healthcheck                             Implemented
+Ready                GET       /ready                                   Implemented
+Hello                GET       /hello                                   Implemented
+================     ======   =======================================   ===========
 
 
 Job Processing Overview
@@ -1349,3 +1359,373 @@ All the files in the the requested outputPath get downloaded in a zip file.
 
 Job Actions
 ===========
+
+Job Cancel
+-----------
+A previously submitted job not in terminal state can be cancelled by its UUID.
+
+With PySDK:
+
+.. code-block:: text
+
+        $ t.jobs.cancelJob(jobUuid='19b06299-4e7c-4b27-ae77-2258e9dc4734-007')
+
+
+With CURL:
+
+.. code-block:: text
+
+        $ curl -X POST -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/19b06299-4e7c-4b27-ae77-2258e9dc4734-007/cancel
+
+The response will look something like the following:
+
+::
+
+    {
+    "result": {
+        "message": "JOBS_JOB_CANCEL_ACCEPTED Request to cancel job 19b06299-4e7c-4b27-ae77-2258e9dc4734-007 has been accepted. "
+    },
+    "status": "success",
+    "message": "JOBS_JOB_CANCEL_ACCEPTED_DETAILS Request to cancel job 19b06299-4e7c-4b27-ae77-2258e9dc4734-007 has been accepted. If the job is in a terminal state, the request will have no effect. If the job is transitioning between active and blocked states, another cancel request may need to be sent.",
+    "version": "1.2.1",
+    "metadata": null
+   }
+
+Hide Job
+---------
+
+With PySDK:
+
+.. code-block:: text
+
+        $ t.jobs.hideJob(jobUuid='19b06299-4e7c-4b27-ae77-2258e9dc4734-007')
+
+
+With CURL:
+
+.. code-block:: text
+
+        $ curl -X POST -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/19b06299-4e7c-4b27-ae77-2258e9dc4734-007/hide
+
+The response will look something like the following:
+
+::
+
+    {
+    "result": {
+        "message": "JOBS_JOB_CHANGED_VISIBILITY Job 19b06299-4e7c-4b27-ae77-2258e9dc4734-007 has been changed to hidden."
+    },
+    "status": "success",
+    "message": "JOBS_JOB_CHANGED_VISIBILITY Job 19b06299-4e7c-4b27-ae77-2258e9dc4734-007 has been changed to hidden.",
+    "version": "1.2.1",
+    "metadata": null
+   }
+
+Unhide Job
+-----------
+
+With PySDK:
+
+.. code-block:: text
+
+           $ t.jobs.unhideJob(jobUuid='19b06299-4e7c-4b27-ae77-2258e9dc4734-007')
+
+
+With CURL:
+
+.. code-block:: text
+
+           $ curl -X POST -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/19b06299-4e7c-4b27-ae77-2258e9dc4734-007/unhide
+
+The response will look something like the following:
+
+::
+
+    {
+    "result": {
+        "message": "JOBS_JOB_CHANGED_VISIBILITY Job 19b06299-4e7c-4b27-ae77-2258e9dc4734-007 has been changed to unhidden."
+    },
+    "status": "success",
+    "message": "JOBS_JOB_CHANGED_VISIBILITY Job 19b06299-4e7c-4b27-ae77-2258e9dc4734-007 has been changed to unhidden.",
+    "version": "1.2.1",
+    "metadata": null
+    }
+
+
+
+------------------------------------------------------------
+
+Job Sharing
+===========
+
+Share a Job
+------------
+A previously submitted job can be shared with a user in the same tenant. Job resources that can shared are: JOB_HISTORY, JOB_RESUBMIT_REQUEST, JOB_OUTPUT. Currently only READ permission on the resources are allowed.
+
+
+With PySDK:
+
+.. code-block:: text
+
+           $ t.jobs.shareJob(jobUuid='ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007',
+                jobResource=["JOB_HISTORY","JOB_RESUBMIT_REQUEST","JOB_OUTPUT"],
+                jobPermission='READ',
+                grantee='testuser6')
+
+
+With CURL:
+
+.. code-block:: text
+
+           $ curl -X POST -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007/share -d '{
+            "jobResource": ["JOB_HISTORY", "JOB_RESUBMIT_REQUEST", "JOB_OUTPUT"], "jobPermission": "READ", "grantee": "testuser6"}'
+
+The response will look something like the following:
+
+::
+
+    {
+    "result": {
+        "message": "JOBS_JOB_SHARED The job ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007 resource is shared by testuser2 to testuser6 in tenant dev"
+    },
+    "status": "success",
+    "message": "JOBS_JOB_SHARED The job ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007 resource is shared by testuser2 to testuser6 in tenant dev",
+    "version": "1.2.1",
+    "metadata": null
+   }
+
+Get Job Share Information
+--------------------------
+
+With PySDK:
+
+.. code-block:: text
+
+           $ t.jobs.getJobShare(jobUuid='ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007')
+
+
+With CURL:
+
+.. code-block:: text
+
+           $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007/share
+
+The response will look something like the following:
+
+::
+
+    {
+    "result": [
+        {
+            "tenant": "dev",
+            "createdby": "testuser2",
+            "jobUuid": "ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007",
+            "grantee": "testuser5",
+            "jobResource": "JOB_HISTORY",
+            "jobPermission": "READ",
+            "created": "2022-06-16T14:53:31.899199Z"
+        },
+        {
+            "tenant": "dev",
+            "createdby": "testuser2",
+            "jobUuid": "ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007",
+            "grantee": "testuser5",
+            "jobResource": "JOB_OUTPUT",
+            "jobPermission": "READ",
+            "created": "2022-06-16T14:53:32.004831Z"
+        },
+        {
+            "tenant": "dev",
+            "createdby": "testuser2",
+            "jobUuid": "ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007",
+            "grantee": "testuser6",
+            "jobResource": "JOB_HISTORY",
+            "jobPermission": "READ",
+            "created": "2022-06-16T17:17:50.981844Z"
+        },
+        {
+            "tenant": "dev",
+            "createdby": "testuser2",
+            "jobUuid": "ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007",
+            "grantee": "testuser6",
+            "jobResource": "JOB_RESUBMIT_REQUEST",
+            "jobPermission": "READ",
+            "created": "2022-06-16T17:17:51.059726Z"
+        },
+        {
+            "tenant": "dev",
+            "createdby": "testuser2",
+            "jobUuid": "ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007",
+            "grantee": "testuser6",
+            "jobResource": "JOB_OUTPUT",
+            "jobPermission": "READ",
+            "created": "2022-07-14T19:57:15.838019Z"
+        }
+    ],
+    "status": "success",
+    "message": "JOBS_JOB_SHARE_INFO_RETRIEVED Share information retrieved for the job ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007 for user testuser2 in tenant dev.",
+    "version": "1.2.1",
+    "metadata": {
+        "recordCount": 5,
+        "recordLimit": 100,
+        "recordsSkipped": 0,
+        "orderBy": null,
+        "startAfter": null,
+        "totalCount": 5
+    }
+    }
+
+Unshare Job
+-------------
+
+With PySDK:
+
+.. code-block:: text
+
+           $ t.jobs.deleteJobShare(jobUuid='ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007', user='testuser6')
+
+
+With CURL:
+
+.. code-block:: text
+
+           $ curl -X DELETE -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007/share/testuser6
+
+The response will look something like this:
+
+::
+
+  {
+  "result": {
+      "message": "JOBS_JOB_UNSHARED The job ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007 resource is unshared by testuser2 to testuser6 in tenant dev"
+  },
+  "status": "success",
+  "message": "JOBS_JOB_UNSHARED The job ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007 resource is unshared by testuser2 to testuser6 in tenant dev",
+  "version": "1.2.1",
+  "metadata": null
+  }
+
+List Shared Jobs
+-----------------
+
+The query parameter listType=SHARED_JOBS in the jobs list end-point allows to  list all shared jobs for a user, say testuser6, using testuser6's JWT. Note testuser6 is not the owner of the jobs listed. Default value for listType is MY_JOBS and to list all jobs including both shared and testuser6 owned job, listType=ALL_JOBS.
+
+With PySDK:
+
+.. code-block:: text
+
+           $ t.jobs.getJobList(listType='SHARED_JOBS')
+
+
+With CURL:
+
+.. code-block:: text
+
+           $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/list?listType=SHARED_JOBS
+
+The response will look something like this:
+
+::
+
+  {
+   "result": [
+    {
+        "uuid": "ccec730b-22ad-4088-a87e-bb8cfb2ab2e6-007",
+        "name": "SleepSeconds",
+        "owner": "testuser2",
+        "appId": "SleepSeconds",
+        "created": "2021-04-09T02:47:57.760Z",
+        "status": "FINISHED",
+        "remoteStarted": "2021-04-09T02:48:08.946Z",
+        "ended": "2021-04-09T02:48:16.669Z",
+        "tenant": "dev",
+        "execSystemId": "tapisv3-exec2",
+        "archiveSystemId": "tapisv3-exec",
+        "appVersion": "0.0.1",
+        "lastUpdated": "2021-04-09T02:48:16.669Z"
+    }
+    ],
+    "status": "success",
+    "message": "JOBS_LIST_RETRIVED Jobs list for the user testuser6 in the tenant dev retrived.",
+    "version": "1.2.1",
+    "metadata": {
+    "recordCount": 1,
+    "recordLimit": 100,
+    "recordsSkipped": 0,
+    "orderBy": null,
+    "startAfter": null,
+    "totalCount": -1
+    }
+    }
+
+Job Search on Shared Job
+-------------------------
+
+Job search on a list of jobs can be performed using the query parameter listType=SHARED_JOBS in the search end-point.
+
+In the following example, we use testuser5 JWT to do job search on list of jobs shared with testuser5.
+
+With CURL:
+
+.. code-block:: text
+
+           $ curl -H "X-Tapis-Token:$jwt" '$BASE_URL/v3/jobs/search?listType=SHARED_JOBS&name.eq=SleepSeconds&created.between=2022-07-05,2022-07-06'
+
+The response will look something like this:
+
+::
+
+    {
+    "result": [
+        {
+            "uuid": "3b9cb514-4962-44e8-a851-55e933e558c0-007",
+            "name": "SleepSeconds",
+            "owner": "testuser2",
+            "appId": "SleepSeconds",
+            "created": "2022-07-05T21:34:11.355Z",
+            "status": "FINISHED",
+            "remoteStarted": "2022-07-05T21:34:48.776Z",
+            "ended": "2022-07-05T21:35:31.808Z",
+            "tenant": "dev",
+            "execSystemId": "tapisv3-exec2",
+            "archiveSystemId": "tapisv3-exec",
+            "appVersion": "0.0.1",
+            "lastUpdated": "2022-07-05T21:35:31.808Z"
+        },
+        {
+            "uuid": "eacde4c4-1d93-4393-b220-63aea509b32c-007",
+            "name": "SleepSeconds",
+            "owner": "testuser2",
+            "appId": "SleepSeconds",
+            "created": "2022-07-05T21:43:05.371Z",
+            "status": "FINISHED",
+            "remoteStarted": "2022-07-05T21:43:44.899Z",
+            "ended": "2022-07-05T21:44:27.509Z",
+            "tenant": "dev",
+            "execSystemId": "tapisv3-exec2",
+            "archiveSystemId": "tapisv3-exec",
+            "appVersion": "0.0.1",
+            "lastUpdated": "2022-07-05T21:44:27.509Z"
+        }
+    ],
+    "status": "success",
+    "message": "JOBS_SEARCH_RESULT_LIST_RETRIEVED Jobs search list for the user testuser5 in the tenant dev retrieved.",
+    "version": "1.2.1",
+    "metadata": {
+        "recordCount": 2,
+        "recordLimit": 100,
+        "recordsSkipped": 0,
+        "orderBy": null,
+        "startAfter": null,
+        "totalCount": -1
+    }
+    }
+
+Share Job Output
+-----------------
+
+As shown in the previous example of share a job, job output resource can be shared with a user, say testuser5, in the same tenant. This includes testuser5 can do job output listing and job output download with its own JWT even though its not the owner of the job.
+
+Share Job History
+------------------
+As shown in the previous example of share a job, job history can be shared with a user, say testuser5, in the same tenant. This includes testuser5 can get job's history, status and job's detail information for jobs that are shared with it using its own JWT.
