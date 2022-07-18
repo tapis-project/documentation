@@ -5,11 +5,13 @@ Files
 =====
 
 The files service is the central point of interaction for doing all file operations in the Tapis ecosystem. Users can
-perform file listing, uploading, operations such as move/copy/delete and also transfer files between systems. All
-Tapis files APIs accept JSON as inputs.
+perform file listing, uploading, operations such as move/copy/delete and also transfer files between Tapis systems.
+All Tapis files APIs accept JSON as inputs.
 
 Currently the files service includes support for systems of type LINUX, S3 and IRODS. Other system types such as
 GLOBUS will be included in future releases.
+
+Note that supported functionality varies by system type.
 
 ----------
 Overview
@@ -28,7 +30,12 @@ Basic File Operations
 File Listings
 ++++++++++++++++++
 
-To list the files in the root directory of that system:
+Tapis supports listing files or objects on a Tapis system. Type for items will depend on system type.
+For example for LINUX they will be posix files and for S3 they will be storage objects. See section below for
+additional considerations for S3 type systems. For example, for S3 systems the recurse flag is ignored and all objects
+with keys matching the path as a prefix are always included.
+
+To list the files in the root directory of a system:
 
 Using the official Tapis Python SDK:
 
@@ -92,6 +99,27 @@ The JSON response of the API will look something like this:
     "metadata": {}
   }
 
+File Listings and S3 Support
++++++++++++++++++++++++++++++
+
+File listings on S3 type systems have some special considerations. Objects in an S3 bucket do not have a hierarchical
+structure. There are no directories. Everything is an object associated with a key.
+
+One thing to note is that, as mentioned above, for S3 the recurse flag is ignored and all objects with keys matching
+the path as a prefix are always included.
+
+Another item to note is how posix style paths and S3 keys are related in Tapis. Tapis uses the concept of a posix style
+absolute path where the path always starts with a "/" character. These paths are mapped to S3 keys by removing the
+initial "/" character. Put another way, the final fully resolved key to an object is absolute path with the
+initial "/" stripped off.
+
+Tapis does not support S3 keys beginning with a "/". Such objects may be shown in a listing but it will not be
+possible through Tapis to reference the object directly using the key.
+
+Note that for S3 this means a path of "/" or the empty string indicates all objects in the bucket with a prefix matching
+*rootDir*, with any preceding "/" stripped off of *rootDir*. This is especially important to keep in mind when using
+the delete operation to remove objects matching a path.
+
 
 Move/Copy
 ++++++++++++++++++
@@ -126,6 +154,12 @@ To delete a file or folder, issue a DELETE request on the path to the resource
 
 The request above would delete :code:`file1.txt`
 
+For an S3 system, the path will represent either a single object or all objects in the bucket with a prefix matching
+the system *rootDir* if the path is "/" or the empty string.
+
+**WARNING** For an S3 system if the path is "/" or the empty string then all objects in the bucket with a key matching
+the prefix *rootDir* will be deleted. So if the *rootDir* is "/" or the empty string then all objects in the
+bucket will be removed.
 
 
 File Uploads
@@ -150,6 +184,9 @@ Using the official Tapis Python SDK:
     curl -H "X-Tapis-Token: $JWT" -X POST -F "file=@someFile.txt" https://tacc.tapis.io/v3/files/ops/my-system/folderA/folderB/folderC/someFile.txt
 
 Any folders that do not exist in the specified path will automatically be created.
+
+Note that for an S3 system an object will be created with a key of *rootDir*/{path} without a preceding "/" character.
+
 
 Create a new directory
 ++++++++++++++++++++++++
@@ -231,8 +268,6 @@ be:
     }
 
 
-
-
 ++++++++++++++++++
 Revoke permissions
 ++++++++++++++++++
@@ -244,9 +279,6 @@ issue a DELETE request on the path that was shared and specify the username to r
 .. code-block:: shell
 
     curl -H "X-Tapis-Token: $JWT" -X DELETE https://tacc.tapis.io/v3/files/perms/aturing-storage/experiment1?username=aeinstein
-
-
-
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^

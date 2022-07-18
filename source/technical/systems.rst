@@ -39,15 +39,16 @@ Description
 Type of system
   LINUX or S3
 Owner
-  A specific user set at system creation. By default this is ``${apiUserId}``, the user making the request to
-  create the system.
+  A specific user set at system creation. By default this is the resolved value for *${apiUserId}*, the user making
+  the request to create the system.
 Host name or IP address.
   FQDN or IP address
 Enabled flag
-  Indicates if system is currently considered active and available for use. Default is *true*.
+  Indicates if system is currently considered active and available for use. By default this is *true*.
 Effective User
   The username to use when accessing the system. Referred to as *effectiveUserId.*
-  A specific user (such as a service account) or the dynamic user ``${apiUserId}``
+  A specific user (such as a service account) or the dynamic user ``${apiUserId}``.
+  By default this is ``${apiUserId}``.
 Default authentication method
   How access authentication is handled by default. Authentication method can also be
   specified as part of a request.
@@ -68,7 +69,7 @@ isDtn flag
 canExec flag
   Indicates if system can be used to execute jobs.
 canRunBatch flag
-  Indicates if system supports running jobs using a batch scheduler.
+  Indicates if system supports running jobs using a batch scheduler. By default this is *false*.
 Job related attributes
   Various attributes related to job execution such as *jobRuntimes*, *jobWorkingDir*,
   *batchScheduler*, *batchLogicalQueues*
@@ -355,13 +356,14 @@ System Attributes Table
 |                     |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | owner               | String         | jdoe                 | - username of *owner*.                                                               |
-|                     |                |                      | - Variable references: *${apiUserId}*                                                |
-|                     |                |                      |                                                                                      |
+|                     |                |                      | - Variable references: *${apiUserId}*. Resolved at create time.                      |
+|                     |                |                      | - By default this is the resolved value for *${apiUserId}*.                          |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | host                | String         | data.tacc.utexas.edu | - Host name or ip address of the system                                              |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | enabled             | boolean        | FALSE                | - Indicates if system currently enabled for use.                                     |
 |                     |                |                      | - May be updated using the enable/disable endpoints.                                 |
+|                     |                |                      | - By default this is *true*.                                                                 |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | effectiveUserId     | String         | tg869834             | - User to use when accessing the system.                                             |
 |                     |                |                      | - May be a static string or a variable reference.                                    |
@@ -410,10 +412,12 @@ System Attributes Table
 | dtnMountSourcePath  | String         | /gpfs/corral3/repl   | - Relative path defining DTN source directory relative to rootDir on *dtnSystemId.*  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | isDtn               | boolean        | FALSE                | - Indicates if system will be used as a data transfer node (DTN).                    |
+|                     |                |                      | - By default this is *false*.                                                                |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | canExec             | boolean        |                      | - Indicates if system will be used to execute jobs.                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | canRunBatch         | boolean        |                      | - Indicates if system supports running jobs using a batch scheduler.                 |
+|                     |                |                      | - By default this is *false*.                                                                |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobRuntimes         | [Runtime]      |                      | - List of runtime environments supported by the system.                              |
 |                     |                |                      | - At least one entry required if *canExec* is true.                                  |
