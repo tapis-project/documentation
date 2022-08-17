@@ -13,7 +13,7 @@ username/id and ``is_admin`` is a Boolean. Users with **admin** permissions i.e.
 remove users from a group. Only the **owner** of a group may add or delete other admin users.
 
 Group Attributes Table
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 +-----------+----------------+--------------------------------------+------------------------------------------------------------------------------------------------------------+
 | Attribute | Type           | Example                              | Notes                                                                                                      |

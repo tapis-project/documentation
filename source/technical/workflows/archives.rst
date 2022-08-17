@@ -7,7 +7,7 @@ the results produced by each task will be permanently deleted the the end of eac
 By default, archiving occurs at the end of a pipeline run when all tasks have reached a terminal state.
 
 Archive Attributes Table
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 This table contains all of the properties that are shared by all archives. Different types
 of archives will have other unique properties in addition to all of the properties in the table
@@ -23,10 +23,10 @@ below.
 | type        | Enum   | system, S3                |                                                                        |
 +-------------+--------+---------------------------+------------------------------------------------------------------------+
 
-.. _archivetypes:
-
 Archive Types
 ~~~~~~~~~~~~~
+
+.. _archivetypes:
 
 .. tabs::
 

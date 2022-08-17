@@ -100,6 +100,7 @@ Then submit the definition
 Create the second file named ``dockerhub-identity.json`` with the following json
 
 .. code-block:: json
+  
   {
       "type": "dockerhub",
       "name": "my-dockerhub-identity",

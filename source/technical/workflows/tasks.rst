@@ -184,8 +184,8 @@ along with all other attributes specific to the task type.
             "type": "dockerhub",
             "url": "nathandf/jscicd-kaniko-test",
             "credentials": {
-              "useranme": <username>,
-              "token": <token>
+              "useranme": "<username>",
+              "token": "<token>"
             }
           }
 
@@ -202,17 +202,17 @@ along with all other attributes specific to the task type.
 
         .. code-block:: json 
 
-          "destination": {
-            "type": "local",
-            "filename": "myimage.sif"
+          { 
+            "destination": {
+              "type": "local",
+              "filename": "myimage.sif"
+            }
           }
 
 
   .. tab:: Request (partial support)
     
     **Request**
-
-    ----
 
     Sends requests using various protocols to resources external to the workflow (Only HTTP protocol and GET currently fully supported)
 
@@ -239,8 +239,6 @@ along with all other attributes specific to the task type.
   .. tab:: Tapis Job (pending)
 
     **Tapis Job**
-
-    ----
 
     Submits a *Job* via the **Tapis Jobs Service**
 

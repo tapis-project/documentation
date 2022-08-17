@@ -13,10 +13,6 @@ tasks in the Tapis Ecosystem.
 
 ----
 
-.. include:: ./workflows/security-note.rst 
-
-----
-
 .. include:: ./workflows/quick-start.rst
 
 ----

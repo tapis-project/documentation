@@ -1,6 +1,7 @@
------------------
+--------
 Overview
------------------
+--------
+
 Before getting into the details about how to create and run a workflow, here are some important concepts you must understand in order to properly use *Tapis Workflows*
 
 Important Concepts
@@ -27,3 +28,7 @@ Important Concepts
   +---------------+-------------------------------------------------------------------------------------------------------------------------------------+-----------+
   | function      | Runs user-defined code in the language and runtime of their choice                                                                  | no        |
   +---------------+-------------------------------------------------------------------------------------------------------------------------------------+-----------+
+
+----
+
+.. include:: /technical/workflows/security-note.rst 

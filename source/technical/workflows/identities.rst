@@ -17,10 +17,10 @@ For example, if:
 We need to know which Tapis user(if any) corresponds to that Github user **jsmith** so we can determine
 if **jsmith** is permitted to trigger that pipeline.
 
-.. include:: ./workflows/security-note.rst
+.. include:: /technical/workflows/security-note.rst
 
 Identities Attribues Table
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +-------------+--------+----------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
 | Attribute   | Type   | Example                                                  | Notes                                                                                                      |
