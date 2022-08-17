@@ -30,4 +30,5 @@ Welcome to Tapis's Documentation!
    technical/actors
    technical/security
    technical/streams
+   technical/workflows
 
