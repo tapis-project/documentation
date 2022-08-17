@@ -15,3 +15,4 @@ The Technical Guide for Tapis provides a detailed reference to the primary servi
 - :doc:`streams`: Managing streaming data from sensors and other instruments.
 - :doc:`actors`: Execute containerized functions ("actors") in response to events or other messages.
 - :doc:`security`: Securing the digital assets comprising your project.
+- :doc:`workflows`: Create and execute workflows in the Tapis ecosystem.
