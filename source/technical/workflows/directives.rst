@@ -16,8 +16,13 @@ The directive string in a commit message must comply with the following regex(Py
 
 **Directive Usage Examples**
 
-`git commit -m "Some commit message [no_push]"`
-`git commit -m "Some commit message [cache|custom_tag:my-custom-tagV.1]"`
+.. code-block:: bash
+
+  git commit -m "Some commit message [no_push]"
+
+.. code-block:: bash
+  
+  git commit -m "Some commit message [cache|custom_tag:my-custom-tagV.1]"
 
 **List of Directives**
 
@@ -25,4 +30,4 @@ The directive string in a commit message must comply with the following regex(Py
   * ``commit_destination`` - Overrides the destination ``image_tag`` on an *image_build* task. Dynamically tags the image with the short commit sha of the last commit(and push) that triggered the pipeline.
   * ``no_push`` (pending) - Overrides the image build destination. Creates a local file
   * ``dry_run`` - prevents the pipeline from running. Used to test whether the desired Pipeline is matched.
-  * ``nocache`` (unsupported) - prevents the image builder in a "image_build" task from caching the image layers. This will result in longer build times for subsequent builds.
+  * ``nocache`` (unsupported) - prevents the image builder in an "image_build" task from caching the image layers. This will result in longer build times for subsequent builds.
