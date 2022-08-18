@@ -3,7 +3,7 @@ Archives
 --------
 
 Archives are the storage mechanisms for pipeline results. Without an archive, 
-the results produced by each task will be permanently deleted the the end of each pipeline run.
+the results produced by each task will be permanently deleted at the end of each pipeline run.
 By default, archiving occurs at the end of a pipeline run when all tasks have reached a terminal state.
 
 Archive Attributes Table
