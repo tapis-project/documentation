@@ -66,7 +66,7 @@ along with all other attributes specific to the task type.
 
     **Image Build**
 
-    Builds Docker and Singularity images from recipe files and pushes the to repositories or stores
+    Builds Docker and Singularity images from recipe files and pushes them to repositories or stores
     the resultant image in some archive(specified in the pipeline definition)
 
     **Image Build Task Attributes Table**
