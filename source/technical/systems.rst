@@ -363,7 +363,7 @@ System Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | enabled             | boolean        | FALSE                | - Indicates if system currently enabled for use.                                     |
 |                     |                |                      | - May be updated using the enable/disable endpoints.                                 |
-|                     |                |                      | - By default this is *true*.                                                                 |
+|                     |                |                      | - By default this is *true*.                                                         |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | effectiveUserId     | String         | tg869834             | - User to use when accessing the system.                                             |
 |                     |                |                      | - May be a static string or a variable reference.                                    |

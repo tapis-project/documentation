@@ -50,7 +50,15 @@ Submit the definition.
 
   .. code-tab:: python
 
-    currently unsupported
+    import json
+    from tapipy.tapis import Tapis
+
+
+    t = Tapis(base_url='https://tacc.tapis.io', username='<userid>', password='************')
+    with open('group.json', 'r') as openfile:
+      group = json.load(openfile)
+
+    t.workflows.createGroup(**group)
 
 ----
 

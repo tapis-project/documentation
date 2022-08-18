@@ -1,5 +1,6 @@
 sphinx
 sphinx-autobuild
 sphinx_rtd_theme
-sphinx_code_tabs
+# sphinx_code_tabs
+sphinx-tabs
 docutils==0.16
