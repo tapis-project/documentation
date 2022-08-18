@@ -199,7 +199,8 @@ Create a local file named ``pipeline.json`` with json similar to the following:
     "archives": [ "<archive_id>" ]
     "tasks": [
       {
-        "type": "image_build"
+        "id": "my-image-build",
+        "type": "image_build",
         "builder": "kaniko",
         "context": {
             "branch": "main",
@@ -267,3 +268,13 @@ Now it's time to run the pipeline.
 
 After the pipeline has finished running, take a look in your Dockerhub image repository
 and you will find you newly pushed image.
+
+If you SSH into the *Tapis System* that you selected as your archive, you will also find 
+that you have some new directories and files in your **rootDir**;
+
+``/workflows/archive/<UUID of the pipeline run>/my-image-build/output/.stdout``.
+
+If you want to find the output for any task for a given pipeline run, simply navigate
+to the archive directory, ``cd`` into directory with the pipline run UUID, then ``cd`` into
+the directory with that task's name. Inside the ``output/`` directory, you will find all of
+the data created by that task.
