@@ -12,11 +12,10 @@ needed  to  accomplish  it.  As part of work funded by the National Science Foun
 delivering a version 3 (“v3”) of its platform with several  new  capabilities,  including  a  multi-site  Security
 Kernel, Streaming  Data  APIs,  and  first-class  support  for  containerized applications.
 
-Tapis v3 is a new project with an initial "Beta" release that will be available late July, 2020. This documentation
-describes **Tapis v3**. If you are looking for documentation on the cuurent production Tapis v2 platform,
-please go here_.
+This documentation describes **Tapis v3**, the latest version of the project. If you are looking for documentation on the curent production Tapis v2 platform, please go here_.
 
-.. _here: https://tacc-cloud.readthedocs.io/projects/agave/en/latest/index.html.
+.. _here: https://tacc-cloud.readthedocs.io/projects/agave/en/latest/agave/introduction/introduction.html
+
 
 About This Documentation
 ________________________
