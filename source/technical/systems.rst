@@ -412,12 +412,12 @@ System Attributes Table
 | dtnMountSourcePath  | String         | /gpfs/corral3/repl   | - Relative path defining DTN source directory relative to rootDir on *dtnSystemId.*  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | isDtn               | boolean        | FALSE                | - Indicates if system will be used as a data transfer node (DTN).                    |
-|                     |                |                      | - By default this is *false*.                                                                |
+|                     |                |                      | - By default this is *false*.                                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | canExec             | boolean        |                      | - Indicates if system will be used to execute jobs.                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | canRunBatch         | boolean        |                      | - Indicates if system supports running jobs using a batch scheduler.                 |
-|                     |                |                      | - By default this is *false*.                                                                |
+|                     |                |                      | - By default this is *false*.                                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobRuntimes         | [Runtime]      |                      | - List of runtime environments supported by the system.                              |
 |                     |                |                      | - At least one entry required if *canExec* is true.                                  |
