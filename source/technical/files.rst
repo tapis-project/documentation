@@ -33,7 +33,7 @@ For example for LINUX they will be posix files and for S3 they will be storage o
 additional considerations for S3 type systems. For example, for S3 systems the recurse flag is ignored and all objects
 with keys matching the path as a prefix are always included.
 
-To list the files in the root directory of a system:
+To list the files in the effective *rootDir* directory of a Tapis system:
 
 Using the official Tapis Python SDK:
 
@@ -119,7 +119,7 @@ Note that for S3 this means a path of "/" or the empty string indicates all obje
 the delete operation to remove objects matching a path.
 
 
-Move/Copy
+Move or Copy
 ++++++++++++++++++
 
 To move or copy a file or directory using the files service, make a PUT request using the path to the current location
@@ -139,25 +139,6 @@ with a JSON body of
         "operation": "COPY",
         "newPath": "/subdir/file1.txt"
     }
-
-
-Delete
-++++++++++++++++++
-
-To delete a file or folder, issue a DELETE request for the path to be removed.
-
-.. code-block:: shell
-
-    curl -H "X-Tapis-Token: $JWT" -X DELETE "https://tacc.tapis.io/v3/files/ops/aturing-storage/file1.txt"
-
-The request above would delete :code:`file1.txt`
-
-For an S3 system, the path will represent either a single object or all objects in the bucket with a prefix matching
-the system *rootDir* if the path is "/" or the empty string.
-
-**WARNING** For an S3 system if the path is "/" or the empty string then all objects in the bucket with a key matching
-the prefix *rootDir* will be deleted. So if the *rootDir* is "/" or the empty string then all objects in the
-bucket will be removed.
 
 
 File Uploads
@@ -185,7 +166,26 @@ Any folders that do not exist in the specified path will automatically be create
 Note that for an S3 system an object will be created with a key of *rootDir*/{path} without a preceding "/" character.
 
 
-Create a new directory
+Delete
+++++++++++++++++++
+
+To delete a file or folder, issue a DELETE request for the path to be removed.
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" -X DELETE "https://tacc.tapis.io/v3/files/ops/aturing-storage/file1.txt"
+
+The request above would delete :code:`file1.txt`
+
+For an S3 system, the path will represent either a single object or all objects in the bucket with a prefix matching
+the system *rootDir* if the path is "/" or the empty string.
+
+**WARNING** For an S3 system if the path is "/" or the empty string then all objects in the bucket with a key matching
+the prefix *rootDir* will be deleted. So if the *rootDir* is "/" or the empty string then all objects in the
+bucket will be removed.
+
+
+Create a directory
 ++++++++++++++++++++++++
 
 To create a directory, use POST and provide the path to the new directory in the request body. Not all system types
@@ -204,11 +204,50 @@ with a JSON body of
     }
 
 
+Get StatInfo
+++++++++++++++++++
+
+Get native stat information for a file or directory for a system of type LINUX.
+
+For example, for `/subdir/file1.txt`
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" "https://tacc.tapis.io/v3/files/utils/linux/aturing-storage/subdir/file1.txt"
+
+
+Run Linux Native Operation
+++++++++++++++++++++++++++++++
+
+Run a native operation on a path. Operations are *chmod*, *chown* or *chgrp*. For a system of type LINUX.
+
+For example, to change the owner of a file located at `/file1.txt` to :code:`aeinstein`
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" -X POST -d @body.json "https://tacc.tapis.io/v3/files/utils/linux/aturing-storage/file1.txt"
+
+with a JSON body of
+
+.. code-block:: json
+
+    {
+        "operation": "CHOWN",
+        "argument": "aeinstein"
+    }
+
+
+^^^^^^^^^^^^^^^^^^^^^^^
+Content
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Get file or directory contents as a stream of data. Not supported for all system types.
+
 +++++++++++++++++++++++++++++++
 File Contents - Serving files
 +++++++++++++++++++++++++++++++
 
-To return the actual contents (raw bytes) of a file (Only files can be served, not folders):
+To return the actual contents (raw bytes) of a file:
 
 .. code-block:: shell
 
@@ -223,59 +262,6 @@ Query Parameters
 Header Parameters
 
 :more: integer - Return 1 KB chunks of UTF-8 encoded text from a file starting after page *more*. This call can be used to page through a text based file. Note that if the contents of the file are not textual (such as an image file or other binary format), the output will be bizarre.
-
-
-^^^^^^^^^^^^^^^^^^^^^^^
-File Permissions
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Permissions model - Only the system *owner* may grant or revoke Tapis permissions for paths on a system.
-The Tapis permissions are also *not* duplicated or otherwise implemented in the underlying storage system.
-
-
-++++++++++++++++++
-Grant permissions
-++++++++++++++++++
-
-Lets say our user :code:`aturing` has a system with ID :code:`aturing-storage`. Alan wishes to allow his collaborator
-:code:`aeinstein` to view the results of an experiment located at :code:`/experiment1`
-
-
-.. code-block:: shell
-
-    curl -H "X-Tapis-Token: $JWT" -d @body.json -X POST https://tacc.tapis.io/v3/files/perms/aturing-storage/experiment1/
-
-with a JSON body with the following shape:
-
-.. code-block:: json
-
-    {
-        "username": "aeinstein",
-        "permission": "READ"
-    }
-
-Other users can also be granted permission to write to the system by granting the :code:`MODIFY` permission.
-The JSON body would then be:
-
-.. code-block:: json
-
-    {
-        "username": "aeinstein",
-        "permission": "MODIFY"
-    }
-
-
-++++++++++++++++++
-Revoke permissions
-++++++++++++++++++
-
-Our user :code:`aturing` now wishes to revoke his former collaborators access to the folder he shared above. He can
-issue a DELETE request on the path that was shared and specify the username in order to revoke access:
-
-
-.. code-block:: shell
-
-    curl -H "X-Tapis-Token: $JWT" -X DELETE https://tacc.tapis.io/v3/files/perms/aturing-storage/experiment1?username=aeinstein
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -419,3 +405,156 @@ The JSON response should look something like :
         "version": "1.1-094fd38d",
         "metadata": {}
     }
+
+
+^^^^^^^^^^^^^^^^^^^^^^^
+File Permissions
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Permissions model - Only the system *owner* may grant or revoke Tapis permissions for paths on a system.
+The Tapis permissions are also *not* duplicated or otherwise implemented in the underlying storage system.
+
+
++++++++++++++++++++++
+Retrieve permissions
++++++++++++++++++++++
+
+Get the Tapis permissions for a user for the system and path. If no user specified then permissions are retrieved for
+the user making the request.
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/files/perms/aturing-storage/experiment1?username=aeinstein
+
+
+++++++++++++++++++
+Grant permissions
+++++++++++++++++++
+
+Lets say our user :code:`aturing` has a system with ID :code:`aturing-storage`. Alan wishes to allow his collaborator
+:code:`aeinstein` to view the results of an experiment located at :code:`/experiment1`
+
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" -d @body.json -X POST https://tacc.tapis.io/v3/files/perms/aturing-storage/experiment1/
+
+with a JSON body with the following shape:
+
+.. code-block:: json
+
+    {
+        "username": "aeinstein",
+        "permission": "READ"
+    }
+
+Other users can also be granted permission to write to the system by granting the :code:`MODIFY` permission.
+The JSON body would then be:
+
+.. code-block:: json
+
+    {
+        "username": "aeinstein",
+        "permission": "MODIFY"
+    }
+
+
+++++++++++++++++++
+Revoke permissions
+++++++++++++++++++
+
+Our user :code:`aturing` now wishes to revoke his former collaborators access to the folder he shared above. He can
+issue a DELETE request on the path that was shared and specify the username in order to revoke access:
+
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" -X DELETE https://tacc.tapis.io/v3/files/perms/aturing-storage/experiment1?username=aeinstein
+
+
+^^^^^^^^^^^^^^^^^^^^^^^
+File Sharing
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Manage Tapis sharing for file resources. Share and unshare with users. Share and unshare publicly.
+
+
+++++++++++++++++++++++++++++
+Retrieve share information
+++++++++++++++++++++++++++++
+
+Retrieve all sharing information for a path on a system. This includes all users with whom the path has been shared and
+whether or not the path has been made publicly available.
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/files/share/aturing-storage/experiment1
+
+++++++++++++++++++
+Share with users
+++++++++++++++++++
+
+Create or update sharing information for a path on a system. The path will be shared with the list of users provided in
+the request body. Requester must be owner of the system. For LINUX systems path sharing is hierarchical.
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" -d @body.json -X POST https://tacc.tapis.io/v3/files/share/aturing-storage/experiment1/
+
+with a JSON body with the following shape:
+
+.. code-block:: json
+
+    {
+        "users": [ "aeinstein", "rfeynman" ]
+    }
+
+++++++++++++++++++
+Share publicly
+++++++++++++++++++
+
+Share a path on a system with all users in the tenant. Requester must be owner of the system.
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" -X POST https://tacc.tapis.io/v3/files/share_public/aturing-storage/experiment1/
+
+
+++++++++++++++++++++
+Unshare with users
+++++++++++++++++++++
+
+Update sharing information for a path on a system. The path will be unshared with the list of users provided in the
+request body. Requester must be owner of the system.
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" -d @body.json -X POST https://tacc.tapis.io/v3/files/unshare/aturing-storage/experiment1/
+
+with a JSON body with the following shape:
+
+.. code-block:: json
+
+    {
+        "users": [ "rfeynman" ]
+    }
+
+++++++++++++++++++++
+Remove public access
+++++++++++++++++++++
+
+Remove public sharing for a path on a system. Requester must be owner of the system.
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" -X POST https://tacc.tapis.io/v3/files/unshare_public/aturing-storage/experiment1/
+
+++++++++++++++++++++
+Remove all shares
+++++++++++++++++++++
+
+Remove all shares for a path on a system including public access. This will also be done for all sub-paths.
+
+.. code-block:: shell
+
+    curl -H "X-Tapis-Token: $JWT" -X POST https://tacc.tapis.io/v3/files/unshare_all/aturing-storage/experiment1/
