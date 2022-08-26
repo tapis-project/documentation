@@ -4,9 +4,9 @@
 Files
 =====
 
-The files service is the central point of interaction for doing all file operations in the Tapis ecosystem. Users can
-perform file listing, uploading, operations such as move/copy/delete and also transfer files between Tapis systems.
-All Tapis files APIs accept JSON as inputs.
+The files service is the central point of interaction for all file operations in the Tapis ecosystem. Users can
+perform file listing, uploading, and various operations such as move, copy, mkdir and delete.
+The service also supports transferring files from one Tapis system to another.
 
 Currently the files service includes support for systems of type LINUX, S3 and IRODS. Other system types such as
 GLOBUS will be included in future releases.
@@ -16,11 +16,9 @@ Note that supported functionality varies by system type.
 ----------
 Overview
 ----------
+.. _Systems: https://tapis.readthedocs.io/en/latest/technical/systems.html
 
-All file operations act upon Tapis *System* resources. If you are unfamiliar with the Systems service, please refer to the
-tapissystems_ section
-
-.. _tapissystems:
+All file operations act upon Tapis *System* resources. For more information on the Systems service please see Systems_
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Basic File Operations
@@ -30,7 +28,7 @@ Basic File Operations
 File Listings
 ++++++++++++++++++
 
-Tapis supports listing files or objects on a Tapis system. Type for items will depend on system type.
+Tapis supports listing files or objects on a Tapis system. The type for items listed will depend on system type.
 For example for LINUX they will be posix files and for S3 they will be storage objects. See section below for
 additional considerations for S3 type systems. For example, for S3 systems the recurse flag is ignored and all objects
 with keys matching the path as a prefix are always included.
@@ -124,8 +122,8 @@ the delete operation to remove objects matching a path.
 Move/Copy
 ++++++++++++++++++
 
-To move or copy a file or directory using the files service, make a PUT request with
-the path to the current location of the file or folder.
+To move or copy a file or directory using the files service, make a PUT request using the path to the current location
+of the file or folder.
 
 For example, to copy a file located at `/file1.txt` to `/subdir/file1.txt`
 
@@ -146,7 +144,7 @@ with a JSON body of
 Delete
 ++++++++++++++++++
 
-To delete a file or folder, issue a DELETE request on the path to the resource
+To delete a file or folder, issue a DELETE request for the path to be removed.
 
 .. code-block:: shell
 
@@ -165,10 +163,9 @@ bucket will be removed.
 File Uploads
 ++++++++++++++++++
 
-To upload a new file to the files service, POST a file to the service. The file will be placed at
-the location specified in the `{path}` parameter in the request. Not all system types support this operation.
-For example, given the system `my-system`, and you want to insert the file in a folder located
-at `/folderA/folderB/folderC`:
+To upload a file use a POST request. The file will be placed at the location specified in the `{path}` parameter
+in the request. Not all system types support this operation.
+For example, given the system `my-system`, to insert a file in a folder located at `/folderA/folderB/folderC`:
 
 Using the official Tapis Python SDK:
 
@@ -221,26 +218,26 @@ Query Parameters
 
 :startByte: integer - Start at byte N of the file
 :count: integer - Return this number of bytes after startByte
-:zip: boolean - Zip the contents of the folder
+:zip: boolean - Zip the contents of a folder
 
 Header Parameters
 
-:more: integer - Return 1 KB chunks of UTF-8 encoded text from a file starting after page *more*.  This call can be used to page through a text based file. Note that if the contents of the file are not textual (such as an image file or other binary format) the output will be bizarre.
+:more: integer - Return 1 KB chunks of UTF-8 encoded text from a file starting after page *more*. This call can be used to page through a text based file. Note that if the contents of the file are not textual (such as an image file or other binary format), the output will be bizarre.
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 File Permissions
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Permissions model - Only the system *owner* may grant or revoke permissions on a storage system. The
-Tapis permissions are also *not* duplicated or otherwise implemented in the underlying storage system.
+Permissions model - Only the system *owner* may grant or revoke Tapis permissions for paths on a system.
+The Tapis permissions are also *not* duplicated or otherwise implemented in the underlying storage system.
 
 
 ++++++++++++++++++
 Grant permissions
 ++++++++++++++++++
 
-Lets say our user :code:`aturing` has a storage system with ID :code:`aturing-storage`. Alan wishes to allow his collaborator
+Lets say our user :code:`aturing` has a system with ID :code:`aturing-storage`. Alan wishes to allow his collaborator
 :code:`aeinstein` to view the results of an experiment located at :code:`/experiment1`
 
 
@@ -257,8 +254,8 @@ with a JSON body with the following shape:
         "permission": "READ"
     }
 
-Other users can also be granted permission to write to the system by granting the :code:`MODIFY` permission. The JSON body would then
-be:
+Other users can also be granted permission to write to the system by granting the :code:`MODIFY` permission.
+The JSON body would then be:
 
 .. code-block:: json
 
@@ -272,8 +269,8 @@ be:
 Revoke permissions
 ++++++++++++++++++
 
-Our user :code:`aturing` now wished to revoke his former collaborators access to the folder he shared above. He can just
-issue a DELETE request on the path that was shared and specify the username to revoke access:
+Our user :code:`aturing` now wishes to revoke his former collaborators access to the folder he shared above. He can
+issue a DELETE request on the path that was shared and specify the username in order to revoke access:
 
 
 .. code-block:: shell
@@ -285,7 +282,7 @@ issue a DELETE request on the path that was shared and specify the username to r
 Transfers
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-File transfers are used to move data between different storage systems, and also for bulk data operations that are too
+File transfers are used to move data between Tapis systems, and also for bulk data operations that are too
 large for the REST api to perform. Transfers occur *asynchronously*, and are parallelized where possible to increase
 performance. As such, the order in which the files are transferred to the target system is somewhat arbitrary.
 
@@ -299,13 +296,17 @@ system that are to be transferred. Unless otherwise specified, all files in the 
 for the overall transfer to be completed successfully. A transfer task has a STATUS which is updated as the transfer
 progresses. The states possible for a transfer are:
 
-ACCEPTED - The initial request has been processed and saved.
-IN_PROGRESS - The bill of materials has been created and transfers are either in flight or awaiting resources to begin
-FAILED - The transfer failed. There are many reasons
-COMPLETED - The transfer completed successfully, all files have been transferred to the target system
+ACCEPTED
+  The initial request has been processed and saved.
+IN_PROGRESS
+  The bill of materials has been created and transfers are either in flight or waiting to begin.
+FAILED
+  The transfer failed.
+COMPLETED
+  The transfer completed successfully, all files have been transferred to the target system.
 
-Unauthenticated HTTP endpoints are also possible to use as a source for transfers. This
-method can be utilized to include outputs from other APIs into Tapis jobs.
+Unauthenticated HTTP endpoints are also possible to use as a source for transfers.
+This method can be utilized to include outputs from other APIs into Tapis jobs.
 
 
 ++++++++++++++++++
@@ -358,7 +359,7 @@ a job to run are from a separate web service, or perhaps stored in an S3 bucket 
     }
 
 The request above will place the output of the source URI into a file called  :code:`inputs.csv` in the
-:code:`aturing-compute` storage system.
+:code:`aturing-compute` system.
 
 
 ++++++++++++++++++++++++++
@@ -389,7 +390,7 @@ The JSON response should look something like :
             "status": "COMPLETED",
             "parentTasks": [
                 {
-                    "id": 1,
+                    "id": 17,
                     "tenantId": "tacc",
                     "username": "aturing",
                     "sourceURI": "tapis://sourceSystem/file1.txt",
