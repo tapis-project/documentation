@@ -411,8 +411,11 @@ The JSON response should look something like :
 File Permissions
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Permissions model - Only the system *owner* may grant or revoke Tapis permissions for paths on a system.
-The Tapis permissions are also *not* duplicated or otherwise implemented in the underlying storage system.
+The permissions model allows for fine grained access control of paths on a Tapis system. The system owner
+may grant READ and MODIFY permission to specific users.
+
+Please note that MODIFY does not imply READ. Also, note that Tapis permissions are independent of native permissions
+enforced by the underlying system host.
 
 
 +++++++++++++++++++++
@@ -463,8 +466,8 @@ The JSON body would then be:
 Revoke permissions
 ++++++++++++++++++
 
-Our user :code:`aturing` now wishes to revoke his former collaborators access to the folder he shared above. He can
-issue a DELETE request on the path that was shared and specify the username in order to revoke access:
+Our user :code:`aturing` now wishes to revoke his former collaborators access to the folder above. He can
+issue a DELETE request on the path and specify the username in order to revoke access:
 
 
 .. code-block:: shell
@@ -476,8 +479,11 @@ issue a DELETE request on the path that was shared and specify the username in o
 File Sharing
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Manage Tapis sharing for file resources. Share and unshare with users. Share and unshare publicly.
+In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
+This approach is known simply as *sharing*. The sharing API allows you to share a path with a set of users
+as well as share publicly with all users in a tenant. Sharing a path grants READ access to the path.
 
+Please note that the underlying host associated with a system typically also has it's own access controls.
 
 ++++++++++++++++++++++++++++
 Retrieve share information

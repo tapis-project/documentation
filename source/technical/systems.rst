@@ -270,11 +270,10 @@ The restrictions are:
 -----------------
 Permissions
 -----------------
-At system creation time the owner is given full system authorization. If the effective
-access user *effectiveUserId* is a specific user (such as a service account) then this
-user is given the same authorizations. If the effective access user is the dynamic user
-``${apiUserId}`` then the authorizations for each user must be granted and credentials created in separate API calls.
-Permissions for a system may be granted and revoked through the systems API. Please
+The permissions model allows for fine grained access control of Tapis systems.
+
+At system creation time the owner is given full access to the system.
+Permissions for other users may be granted and revoked through the systems API. Please
 note that grants and revokes through this service only impact the default role for the
 user. A user may still have access through permissions in another role. So even after
 revoking permissions through this service when permissions are retrieved the access may
@@ -283,6 +282,13 @@ still be listed. This indicates access has been granted via another role.
 Permissions are specified as either ``*`` for all permissions or some combination of the
 following specific permissions: ``("READ","MODIFY","EXECUTE")``. Specifying permissions in all
 lower case is also allowed. Having ``MODIFY`` implies ``READ``.
+
+-----------------
+Sharing
+-----------------
+In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
+This approach is known simply as *sharing*. The sharing API allows you to share a system with a set of users
+as well as share publicly with all users in a tenant. Sharing grants READ access.
 
 --------------------------
 Authentication Credentials

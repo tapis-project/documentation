@@ -302,9 +302,10 @@ the Jobs Service. Here are some examples of variables that may be used when spec
 -----------------
 Permissions
 -----------------
-At application creation time the owner is given full authorization. Authorizations for other users must be granted
-in separate API calls.
-Permissions may be granted and revoked through the applications API. Please
+The permissions model allows for fine grained access control of Tapis applications.
+
+At application creation time the owner is given full access to the application.
+Permissions for other users may be granted and revoked through the applications API. Please
 note that grants and revokes through this service only impact the default role for the
 user. A user may still have access through permissions in another role. So even after
 revoking permissions through this service when permissions are retrieved the access may
