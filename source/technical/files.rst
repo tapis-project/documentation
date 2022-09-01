@@ -412,10 +412,9 @@ File Permissions
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 The permissions model allows for fine grained access control of paths on a Tapis system. The system owner
-may grant READ and MODIFY permission to specific users.
+may grant READ and MODIFY permission to specific users. MODIFY implies READ.
 
-Please note that MODIFY does not imply READ. Also, note that Tapis permissions are independent of native permissions
-enforced by the underlying system host.
+Please note that Tapis permissions are independent of native permissions enforced by the underlying system host.
 
 
 +++++++++++++++++++++

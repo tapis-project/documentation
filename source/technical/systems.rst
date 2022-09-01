@@ -32,43 +32,43 @@ associated with the request to the service.
 
 At a high level a system represents the following information:
 
-Id
+*id*
   A short descriptive name for the system that is unique within the tenant.
-Description
+*description*
   An optional more verbose description for the system.
-Type of system
-  LINUX or S3
-Owner
+*systemType* - Type of system
+  LINUX, S3 or IRODS
+*owner*
   A specific user set at system creation. By default this is the resolved value for *${apiUserId}*, the user making
   the request to create the system.
-Host name or IP address.
+*host* - Host name or IP address
   FQDN or IP address
-Enabled flag
+*enabled* - Enabled flag
   Indicates if system is currently considered active and available for use. By default this is *true*.
-Effective User
+*effectiveUserId* - Effective User
   The username to use when accessing the system. Referred to as *effectiveUserId.*
   A specific user (such as a service account) or the dynamic user ``${apiUserId}``.
   By default this is ``${apiUserId}``.
-Default authentication method
+*defaultAuthnMethod* - Default authentication method
   How access authentication is handled by default. Authentication method can also be
   specified as part of a request.
   Supported methods: PASSWORD, PKI_KEYS, ACCESS_KEY.
-Bucket name
+*bucketName* - Bucket name
   For an S3 system this is the name of the bucket.
-Effective root directory
+*rootDir* - Effective root directory
   Directory to be used when listing files or moving files to and from the system.
-DTN system Id
+*dtnSystemId* - DTN system Id
   An alternate system to use as a Data Transfer Node (DTN).
-DTN mount point
+*dtnMountPoint* - DTN mount point
   Mount point (aka target) used when running the mount command on this system.
-DTN mount source path
+*dtnMountSourcePath* - DTN mount source path
   The path exported by *dtnSystemId* that matches the *dtnMountPoint* on this system. This will be relative to
   *rootDir* on *dtnSystemId*.
-isDtn flag
+*isDtn*
   Indicates if system will be used as a data transfer node (DTN). By default this is *false*.
-canExec flag
+*canExec*
   Indicates if system can be used to execute jobs.
-canRunBatch flag
+*canRunBatch*
   Indicates if system supports running jobs using a batch scheduler. By default this is *false*.
 Job related attributes
   Various attributes related to job execution such as *jobRuntimes*, *jobWorkingDir*,
