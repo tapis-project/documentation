@@ -4,17 +4,15 @@
 Systems
 =======================================
 
-Once you are authorized to make calls to the various services, one of first
-things you may want to do is view storage and execution resources available
-to you or create your own. In Tapis a storage or execution resource is referred
-to as a **system**.
+Once you are authorized to make calls to the various services, one of first things you may want to do is view
+storage and execution resources available to you or create your own. In Tapis a storage or execution resource
+is referred to as a **system**.
 
 -----------------
 Overview
 -----------------
-A Tapis system represents a server or collection of servers exposed through a
-single host name or IP address. Each system is associated with a specific tenant.
-A system can be used for the following purposes:
+A Tapis system represents a server or collection of servers exposed through a single host name or IP address.
+Each system is associated with a specific tenant. A system can be used for the following purposes:
 
 * Running a job, including:
 

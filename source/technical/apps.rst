@@ -37,54 +37,52 @@ varies by version.
 Non-Versioned Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Id
+*id*
   A short descriptive name for the application that is unique within the tenant.
-Latest Version
-  Applications are expected to evolve over time. This is the latest version of the application. The value is
-  updated by the service as new versions are created.
-Owner
+*owner*
   A specific user set at application creation. Default is ``${apiUserId}``, the user making the request to
   create the application.
-Enabled flag
+*enabled*
   Indicates if application is currently considered active and available for use. Default is *true*.
-Containerized flag
-  Indicates if application has been fully containerized.
-
-.. note::
-  Currently only containerized applications are supported
+*deleted*
+  Indicates if application has been soft deleted.
+*created*
+  When the application was created. Maintained by service.
+*updated*
+  When the application was last updated. Maintained by service.
 
 Versioned Attributes
 ~~~~~~~~~~~~~~~~~~~~
 
-Version
+*version*
   Applications are expected to evolve over time. ``Id`` + ``version`` must be unique within a tenant.
-Description
+*description*
   An optional more verbose description for the application.
-Runtime
+*runtime*
   Runtime to be used when executing the application. DOCKER, SINGULARITY. Default is DOCKER.
-Runtime version
+*runtimeVersion*
   Runtime version to be used when executing the application.
-Container image
+*runtimeOptions*
+  Options that apply to the runtime. Currently only applicable for SINGULARITY runtime.
+*containerImage*
   Reference to be used when running the container image.
-Interactive flag
-  Indicates if the application is interactive. Default is *false*.
-Job type
+*jobType*
   FORK or BATCH. Jobs submitted will be of this type by default. May be overridden in the job submit request.
   This allows an application designer to test an application run as a FORK job, for example, and then move on to
   running as a BATCH job which typically involves further design work. Default is FORK.
-Max jobs
+*maxJobs*
   Maximum total number of jobs that can be queued or running for this application on a given execution system at
   a given time. Note that the execution system may also limit the number of jobs on the system which may further
   restrict the total number of jobs. Set to -1 for unlimited. Default is unlimited.
-Max jobs per user
+*mJobsPerUser*
   Maximum total number of jobs associated with a specific job owner that can be queued or running for this application
   on a given execution system at a given time. Note that the execution system may also limit the number of jobs on the
   system which may further restrict the total number of jobs. Set to -1 for unlimited. Default is unlimited.
-Strict file inputs flag
+*strictFileInputs*
   Indicates if a job request is allowed to have unnamed file inputs. If set to true then a job request may only use
   the named file inputs defined in the application. See attribute *fileInputs* in the JobAttributes table.
   Default is *false*.
-Job related attributes
+*Job related attributes*
   Various attributes related to job execution such as *execSystemId*, *execSystemExecDir*, *execSystemInputDir*,
   *execSystemLogicalQueue* *archiveSystemId*, *fileInputs*, etc.
 
@@ -133,7 +131,7 @@ where <userid> is replaced with your user name.
 
 .. note::
   If specified, ``execSystemId`` must reference a system that exists and has ``canExec`` set to true. If
-  ``execSystemId`` not specified, then it must be provided as part of the job submit request.
+  ``execSystemId`` is not specified, then it must be provided as part of the job submit request.
 
 Using PySDK:
 
@@ -198,6 +196,9 @@ The response should look similar to the following::
             "archiveSystemId": null,
             "archiveSystemDir": null,
             "archiveOnAppError": false,
+            "isMpi": false,
+            "mpiCmd": null,
+            "cmdPrefix": null,
             "parameterSet": {
                 "appArgs": [],
                 "containerArgs": [],
@@ -263,12 +264,12 @@ The restrictions are:
 ------------------
 Version
 ------------------
-Versioning scheme is at the discretion of the application author. The combination of ``tenant+id+version`` uniquely
+The versioning scheme is at the discretion of the application author. The combination of ``tenant+id+version`` uniquely
 identifies an application in the Tapis environment. It is recommended that a two or three level form of
 semantic versioning be used. The fully qualified application reference within a tenant is constructed by appending
 a hyphen to the name followed by the version string. For example, the first two versions of an application might
-be myapp-0.0.1 and myapp-0.0.2. If a version is not specified when retrieving an application then by default the most
-recently created version of the application will be returned.
+be *myapp-0.0.1* and *myapp-0.0.2*. If a version is not specified when retrieving an application then by default the
+most recently created version of the application will be returned.
 
 -------------------------
 Containerized Application
@@ -284,8 +285,9 @@ the container when running the container image.
 Directory Semantics and Macros
 ------------------------------
 At job submission time the Jobs service supports the use of macros based on template variables. These variables may be
-referenced when specifying directories in an application definition. For a full list of supported variables please see
-the Jobs Service. Here are some examples of variables that may be used when specifying directories for an application:
+referenced when specifying directories in an application definition. For a full list of supported variables and more
+information please see the Jobs Service documentation.
+Here are some examples of variables that may be used when specifying directories for an application:
 
 * *JobUUID* - The Id of the job determined at job submission.
 * *JobOwner* - The owner of the job determined at job submission.
@@ -319,10 +321,14 @@ lower case is also allowed. Having ``MODIFY`` implies ``READ``.
 Deletion
 -----------------
 An application may be deleted and undeleted. Deletion means the application is marked as deleted and is no longer
-available for use. By default deleted applications will not be included in searches and operations on deleted
-applications will not be allowed. When listing applications the query parameter *showDeleted* may be used in order to
-include deleted applications in the results. Note that deletion applies to all version of an application. It is not
-possible to delete a specific version.
+available for use. Note that although this is a soft delete the operation is intended for use when an application
+is to be permanently made unavailable for use. To temporarily make an application unavailable for use please use
+support for enabling and disabling an application.
+
+By default deleted applications will not be included in searches and operations on deleted applications will not be
+allowed. When listing applications the query parameter *showDeleted* may be used in order to include deleted
+applications in the results. Note that deletion applies to all version of an application. It is not possible to delete
+a specific version.
 
 -----------------------------
 Application Attributes Table
@@ -445,6 +451,16 @@ JobAttributes Table
 +---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
 | archiveOnAppError   | boolean          |                    | - Indicates if outputs should be archived if there is an error while running job.    |
 |                     |                  |                    | - The default is TRUE.                                                               |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| isMpi               | boolean          |                    | - Indicates that application is to be executed as an MPI job.                        |
+|                     |                  |                    | - The default is FALSE.                                                              |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| mpiCmd              | String           |  "mpirun"          | - Command used to launch MPI jobs.                                                   |
+|                     |                  |  "ibrun -n 4"      | - Prepended to the command used to execute the application.                          |
+|                     |                  |                    | - Conflicts with cmdPrefix if isMpi is set.                                          |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| cmdPrefix           | String           |                    | - String prepended to the application invocation command.                            |
+|                     |                  |                    | - Conflicts with mpiCmd if isMpi is set.                                             |
 +---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
 | parameterSet        | ParameterSet     |                    | - Various collections used during job execution.                                     |
 |                     |                  |                    | - App arguments, container arguments, scheduler options, environment variables, etc. |
@@ -590,8 +606,12 @@ parameters for a GET call or a list of conditions in a request body for a POST c
 Search using GET
 ~~~~~~~~~~~~~~~~
 To search when using a GET request to the ``apps`` endpoint a list of search conditions may be specified
-using a query parameter named ``search``. Each search condition must be surrounded with parentheses, have three parts
-separated by the character ``.`` and be joined using the character ``~``.
+using a query parameter named ``search``. Each search condition must be:
+
+ * surrounded with parentheses
+ * have three parts separated by the character ``.``
+ * be joined using the character ``~``.
+
 All conditions are combined using logical AND. The general form for specifying the query parameter is as follows::
 
   ?search=(<attribute_1>.<op_1>.<value_1>)~(<attribute_2>.<op_2>.<value_2>)~ ... ~(<attribute_N>.<op_N>.<value_N>)
