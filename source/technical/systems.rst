@@ -22,13 +22,8 @@ Each system is associated with a specific tenant. A system can be used for the f
 
 * Storing and retrieving files and data.
 
-Each system is of a specific type (such as LINUX or S3) and owned by a specific user who has special
-privileges for the system. The system definition also includes the user that is used to access the system,
-referred to as *effectiveUserId*. This access user can be a specific user (such as a service account) or dynamically
-specified as ``${apiUserId}``. For the case of ``${apiUserId}``, the username is extracted from the identity
-associated with the request to the service.
-
-At a high level a system represents the following information:
+Each system is of a specific type (such as LINUX or S3) and owned by a specific Tapis user who has special
+privileges for the system. At a high level a system represents the following information:
 
 *id*
   A short descriptive name for the system that is unique within the tenant.
@@ -37,16 +32,17 @@ At a high level a system represents the following information:
 *systemType* - Type of system
   LINUX, S3 or IRODS
 *owner*
-  A specific user set at system creation. By default this is the resolved value for *${apiUserId}*, the user making
-  the request to create the system.
+  A specific Tapis user set at system creation. By default this is the resolved value for *${apiUserId}*,
+  the user making the request to create the system.
 *host* - Host name or IP address
   FQDN or IP address
 *enabled* - Enabled flag
   Indicates if system is currently considered active and available for use. By default this is *true*.
 *effectiveUserId* - Effective User
-  The username to use when accessing the system. Referred to as *effectiveUserId.*
-  A specific user (such as a service account) or the dynamic user ``${apiUserId}``.
-  By default this is ``${apiUserId}``.
+  The username to use when accessing the system host. This may be a static value specifying a user on the host
+  (such as a service account) or the dynamic user ``${apiUserId}``.
+  When dynamic the user ``${apiUserId}`` must exist on the host. By default this is ``${apiUserId}``.
+  For more information please see the section below titled *Effective User*.
 *defaultAuthnMethod* - Default authentication method
   How access authentication is handled by default. Authentication method can also be
   specified as part of a request.
@@ -54,7 +50,8 @@ At a high level a system represents the following information:
 *bucketName* - Bucket name
   For an S3 system this is the name of the bucket.
 *rootDir* - Effective root directory
-  Directory to be used when listing files or moving files to and from the system.
+  Effective root directory to use when operating on files through the Tapis Files service. As with *effectiveUserId*
+  this may be static or dynamic. For more information please see the section below titled *Effective Root Directory*.
 *dtnSystemId* - DTN system Id
   An alternate system to use as a Data Transfer Node (DTN).
 *dtnMountPoint* - DTN mount point
@@ -77,6 +74,51 @@ Depending on the type of system and specific values for certain attributes there
 
 Note that a system may be created as a storage-only resource (*canExec=false*) or as a system that can be used for both
 execution and storage (*canExec=true*).
+
+Two very important attributes to understand are *effectiveUserId* and *rootDir*. The next two sections cover these
+attributes in more detail.
+
+--------------------------------
+Effective User
+--------------------------------
+The attribute *effectiveUserId* determines the user that is used to access the underlying host.
+The attribute can be set to a static string indicating a specific user (such as a service account) or dynamically
+specified as ``${apiUserId}``. For the case of ``${apiUserId}``, the service resolves the variable by extracting the
+identity from the request to the service (i.e. the JWT). Note that the resolved username must exist on the host.
+
+When retrieving a system you may set the query parameter *resolveEffective* to false in order to see the unresolved
+value of *effectiveUserId*.
+
+By default the value of *effectiveUserId* is ``${apiUserId}``.
+
+--------------------------------
+Effective Root Directory
+--------------------------------
+The attribute *rootDir* serves as an effective root directory when operating on files through the Tapis Files service.
+When using Files to list, copy, move, mkdir, etc. all paths are relative to this directory. This attribute may be a
+static string or may contain variables or the macro function ``HOST_EVAL()``.
+
+Some variables are resolved at create time and some are not.
+
+These variables are resolved at create time: ``${apiUserId}``, ``${owner}`` and ``${tenant}``.
+
+If *rootDir* contains ``${effectiveUserId}`` or ``HOST_EVAL()`` then it is considered a dynamic *rootDir* since the path
+is not resolved until the System is retrieved.
+
+The full list of macros and variables supported for *rootDir* are:
+
+ * HOST_EVAL()
+ * ${effectiveUserId}
+ * ${apiUserId}
+ * ${owner}
+ * ${tenant}
+
+Note that *rootDir* must always be specified as an absolute path starting with ``/``. If ``HOST_EVAL()`` is used then it
+still must begin with ``/`` and it must be the first element of the path, e.g.
+``/HOST_EVAL($WORK)/project_root/${effectiveUserId}``.
+
+When retrieving a system you may set the query parameter *resolveEffective* to false in order to see the unresolved
+value of *rootDir*.
 
 --------------------------------
 Getting Started
@@ -392,7 +434,7 @@ System Attributes Table
 |                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or *isDtn* = true.                               |
-|                     |                |                      | - Must be an absolute path, i.e. must begin with ``/``.                              |
+|                     |                | /HOST_EVAL($WORK)    | - Must be an absolute path, i.e. must begin with ``/``.                              |
 |                     |                |                      | - Variable references are resolved at create time and *rootDir* may not be changed.  |
 |                     |                |                      | - Serves as effective root directory when listing or moving files.                   |
 |                     |                |                      | - For DTN must be source location used in mount command.                             |

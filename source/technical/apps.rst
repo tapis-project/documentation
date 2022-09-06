@@ -327,7 +327,7 @@ support for enabling and disabling an application.
 
 By default deleted applications will not be included in searches and operations on deleted applications will not be
 allowed. When listing applications the query parameter *showDeleted* may be used in order to include deleted
-applications in the results. Note that deletion applies to all version of an application. It is not possible to delete
+applications in the results. Note that deletion applies to all versions of an application. It is not possible to delete
 a specific version.
 
 -----------------------------
