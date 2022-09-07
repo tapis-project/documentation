@@ -81,10 +81,14 @@ attributes in more detail.
 --------------------------------
 Effective User
 --------------------------------
-The attribute *effectiveUserId* determines the user that is used to access the underlying host.
+The attribute *effectiveUserId* determines the username that is used to access the underlying host.
 The attribute can be set to a static string indicating a specific user (such as a service account) or dynamically
-specified as ``${apiUserId}``. For the case of ``${apiUserId}``, the service resolves the variable by extracting the
-identity from the request to the service (i.e. the JWT). Note that the resolved username must exist on the host.
+specified as ``${apiUserId}``.
+
+For the case of ``${apiUserId}``, the service resolves the variable by extracting the identity from the request to the
+service (i.e. the JWT). Note that either the resolved username must exist on the host or a mapping of the Tapis user
+to a *loginUser* must be created when credentials are registered. For more information about mapping a Tapis user
+to a login user please see the section below entitled *Authentication Credentials*.
 
 When retrieving a system you may set the query parameter *resolveEffective* to false in order to see the unresolved
 value of *effectiveUserId*.
