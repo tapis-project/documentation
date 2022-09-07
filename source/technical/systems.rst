@@ -85,10 +85,10 @@ The attribute *effectiveUserId* determines the username that is used to access t
 The attribute can be set to a static string indicating a specific user (such as a service account) or dynamically
 specified as ``${apiUserId}``.
 
-For the case of ``${apiUserId}``, the service resolves the variable by extracting the identity from the request to the
-service (i.e. the JWT). Note that either the resolved username must exist on the host or a mapping of the Tapis user
-to a *loginUser* must be created when credentials are registered. For more information about mapping a Tapis user
-to a login user please see the section below entitled *Authentication Credentials*.
+For the dynamic case of ``${apiUserId}``, the service resolves the variable by extracting the identity from the request
+to the service (i.e. the JWT). Note that either the resolved username must exist on the host or a mapping of the
+Tapis user to a *loginUser* must be created when credentials are registered. For more information about mapping a
+Tapis user to a login user please see the section below entitled *Authentication Credentials*.
 
 When retrieving a system you may set the query parameter *resolveEffective* to false in order to see the unresolved
 value of *effectiveUserId*.
@@ -151,8 +151,8 @@ Create a local file named ``system_s3.json`` with json similar to the following:
   }
 
 where *<userid>* is replaced with your username, your S3 host name is updated appropriately. Note that although
-credentials may be included in the definition we have not done so here. For security reasons, it is recommended that
-login credentials be updated using a separate API call as discussed below.
+credentials may be included in the definition we have not done so here. For security reasons and better re-use of
+system definitions, it is recommended that login credentials be updated using a separate API call as discussed below.
 
 Using PySDK:
 
@@ -174,7 +174,8 @@ Registering Credentials for a System
 
 Now that you have registered a system you will need to register credentials so you can use Tapis to access the host.
 Various authentication methods can be used to access a system, such as PASSWORD and PKI_KEYS. Here we will cover
-registering a ssh keys.
+registering ssh keys. For more information about credentials, please see the section below entitled
+*Authentication Credentials*.
 
 Create a local file named ``cred_tmp.json`` with json similar to the following::
 
@@ -188,6 +189,8 @@ with embedded newline characters. You may find the following linux command usefu
 key into a single line::
 
   cat $privateKeyFile | awk -v ORS='\\n' '1'
+
+where, for example, ``privateKeyFile="~/.ssh/ida_rsa"``
 
 Using PySDK:
 
@@ -337,11 +340,14 @@ as well as share publicly with all users in a tenant. Sharing grants READ access
 --------------------------
 Authentication Credentials
 --------------------------
-At system creation time the authentication credentials may be specified if the effective
-access user *effectiveUserId* is a specific user (such as a service account) and not
-a dynamic user (i.e. not equal to ``${apiUserId}``).
+In order to make use of a Tapis system, login credentials must be registered for each user that will be accessing
+the system.
 
-If the effective access user is dynamic (i.e. equal to ``${apiUserId}``) then authentication credentials for any
+In the case of a static *effectiveUserId*, the credentials may be included at system creation time. However,
+for security reasons and better re-use of system definitions, it is recommended that credentials always be updated
+using separate API calls.
+
+In the case of a dynamic *effectiveUserId* (i.e. equal to ``${apiUserId}``), authentication credentials for any
 user allowed to access the system must be registered in separate API calls. In this case the payload provided may
 contain the optional attribute *loginUser* which will be used to map the Tapis user to a username to be used when
 accessing the system. If the login user is not provided then there is no mapping and the Tapis user is always used
@@ -431,7 +437,7 @@ System Attributes Table
 |                     |                |                      | - Returned credential contains relevant information based on *authnMethod*.          |
 |                     |                |                      | - Credentials may be updated using the systems credentials endpoint.                 |
 |                     |                |                      | - By default for LINUX the credentials are verified during create or update.         |
-|                     |                |                      | - Use query parameter skipCredentialCheck=true to bypass initial verification.       |
+|                     |                |                      | - Use query parameter skipCredentialCheck=true to bypass the verification check.     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | bucketName          | String         | tapis-ds1-jdoe       | - Name of bucket for an S3 system.                                                   |
 |                     |                |                      | - Required if *systemType* is S3.                                                    |
