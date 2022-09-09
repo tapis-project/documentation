@@ -445,11 +445,12 @@ System Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or *isDtn* = true.                               |
 |                     |                | /HOST_EVAL($WORK)    | - Must be an absolute path, i.e. must begin with ``/``.                              |
-|                     |                |                      | - Variable references are resolved at create time and *rootDir* may not be changed.  |
 |                     |                |                      | - Serves as effective root directory when listing or moving files.                   |
 |                     |                |                      | - For DTN must be source location used in mount command.                             |
 |                     |                |                      | - Optional for an S3 system but may be used for a similar purpose.                   |
-|                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
+|                     |                |                      | - May begin with macro /HOST_EVAL()                                                  |
+|                     |                |                      | - May contain *${effectiveUserId}* which is resolved when system retrieved.          |
+|                     |                |                      | - Variable references resolved at create: *${apiUserId}*, *${owner}*, *${tenant}*    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | port                | int            | 22                   | - Port number used to access the system                                              |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
