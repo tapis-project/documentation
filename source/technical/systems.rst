@@ -100,26 +100,17 @@ Effective Root Directory
 --------------------------------
 The attribute *rootDir* serves as an effective root directory when operating on files through the Tapis Files service.
 When using Files to list, copy, move, mkdir, etc. all paths are relative to this directory. This attribute may be a
-static string or may contain variables or the macro function ``HOST_EVAL()``.
+static string or may contain the macro function ``HOST_EVAL()``.
 
-Some variables are resolved at create time and some are not.
+Some variables are resolved at create time and are allowed in the definition at system creation time.
+These variables are: ``${apiUserId}``, ``${owner}`` and ``${tenant}``.
+If *rootDir* begins with ``HOST_EVAL($env_variable)`` then it is considered a dynamic *rootDir* since the path is not
+resolved until the System is retrieved.
 
-These variables are resolved at create time: ``${apiUserId}``, ``${owner}`` and ``${tenant}``.
-
-If *rootDir* contains ``${effectiveUserId}`` or ``HOST_EVAL()`` then it is considered a dynamic *rootDir* since the path
-is not resolved until the System is retrieved.
-
-The full list of macros and variables supported for *rootDir* are:
-
- * HOST_EVAL()
- * ${effectiveUserId}
- * ${apiUserId}
- * ${owner}
- * ${tenant}
-
-Note that *rootDir* must always be specified as an absolute path starting with ``/``. If ``HOST_EVAL()`` is used then it
-still must begin with ``/`` and it must be the first element of the path, e.g.
-``/HOST_EVAL($WORK)/project_root/${effectiveUserId}``.
+Note that *rootDir* will always be an absolute path starting with ``/``. If it is static then the provided value
+must begin with ``/``. If it is dynamic (i.e. contains ``$HOST_EVAL($env_variable)``) then a ``/`` will be prepended if
+the resolved environment variable does not begin with a ``/``. If ``HOST_EVAL`` is present then it must be the first
+element of the path and there must be only one occurrence, e.g. ``HOST_EVAL($WORK)/project_root``.
 
 When retrieving a system you may set the query parameter *resolveEffective* to false in order to see the unresolved
 value of *rootDir*.
@@ -448,8 +439,7 @@ System Attributes Table
 |                     |                |                      | - Serves as effective root directory when listing or moving files.                   |
 |                     |                |                      | - For DTN must be source location used in mount command.                             |
 |                     |                |                      | - Optional for an S3 system but may be used for a similar purpose.                   |
-|                     |                |                      | - May begin with macro /HOST_EVAL()                                                  |
-|                     |                |                      | - May contain *${effectiveUserId}* which is resolved when system retrieved.          |
+|                     |                |                      | - May begin with macro HOST_EVAL()                                                  |
 |                     |                |                      | - Variable references resolved at create: *${apiUserId}*, *${owner}*, *${tenant}*    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | port                | int            | 22                   | - Port number used to access the system                                              |
