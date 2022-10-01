@@ -4,32 +4,34 @@
 Files
 =====
 
-The files service is the central point of interaction for all file operations in the Tapis ecosystem. Users can
-perform file listing, uploading, and various operations such as move, copy, mkdir and delete.
-The service also supports transferring files from one Tapis system to another.
+The files service is the central point of interaction for all file operations in the Tapis ecosystem.
+
+----------
+Overview
+----------
+
+Through the Files service users can perform file listing, uploading, and various operations such as move, copy, mkdir
+and delete. The service also supports transferring files from one Tapis system to another.
 
 Currently the files service includes support for systems of type LINUX, S3 and IRODS. Other system types such as
 GLOBUS will be included in future releases.
 
 Note that supported functionality varies by system type.
 
-----------
-Overview
-----------
 .. _Systems: https://tapis.readthedocs.io/en/latest/technical/systems.html
 
-All file operations act upon Tapis *System* resources. For more information on the Systems service please see Systems_
+All file operations act upon Tapis *System* resources. [#]_
+For more information on the Systems service please see Systems_
 
-^^^^^^^^^^^^^^^^^^^^^^^
+---------------------
 Basic File Operations
-^^^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
-++++++++++++++++++
-File Listings
-++++++++++++++++++
+Listing
+~~~~~~~
 
 Tapis supports listing files or objects on a Tapis system. The type for items listed will depend on system type.
-For example for LINUX they will be posix files and for S3 they will be storage objects. See section below for
+For example for LINUX they will be posix files and for S3 they will be storage objects. See the next section below for
 additional considerations for S3 type systems. For example, for S3 systems the recurse flag is ignored and all objects
 with keys matching the path as a prefix are always included.
 
@@ -69,36 +71,36 @@ The JSON response of the API will look something like this:
     "message": "ok",
     "result": [
         {
-            "mimeType": "text/plain",
-            "type": "file",
-            "owner": "1003",
-            "group": "1003",
-            "nativePermissions": "drwxrwxr-x",
-            "uri": "tapis://dev/aturing-storage/file1.txt",
-            "lastModified": "2021-04-29T16:55:57Z",
-            "name": "file1.txt",
-            "path": "file1.txt",
-            "size": 313
+          "mimeType": "text/plain",
+          "type": "file",
+          "owner": "1003",
+          "group": "1003",
+          "nativePermissions": "drwxrwxr-x",
+          "uri": "tapis://dev/aturing-storage/file1.txt",
+          "lastModified": "2021-04-29T16:55:57Z",
+          "name": "file1.txt",
+          "path": "file1.txt",
+          "size": 313
         },
         {
-            "mimeType": "text/plain",
-            "type": "file",
-            "owner": "1003",
-            "group": "1003",
-            "nativePermissions": "-rw-rw-r--",
-            "uri": "tapis://dev/aturing-storage/file2.txt",
-            "lastModified": "2020-12-17T22:46:29Z",
-            "name": "file2.txt",
-            "path": "file2.txt",
-            "size": 21
+          "mimeType": "text/plain",
+          "type": "file",
+          "owner": "1003",
+          "group": "1003",
+          "nativePermissions": "-rw-rw-r--",
+          "uri": "tapis://dev/aturing-storage/file2.txt",
+          "lastModified": "2020-12-17T22:46:29Z",
+          "name": "file2.txt",
+          "path": "file2.txt",
+          "size": 21
         }
     ],
     "version": "1.1-84a31617",
     "metadata": {}
   }
 
-File Listings and S3 Support
-+++++++++++++++++++++++++++++
+Listings and S3 Support
+^^^^^^^^^^^^^^^^^^^^^^^
 
 File listings on S3 type systems have some special considerations. Objects in an S3 bucket do not have a hierarchical
 structure. There are no directories. Everything is an object associated with a key.
@@ -108,7 +110,7 @@ the path as a prefix are always included.
 
 Another item to note is how posix style paths and S3 keys are related in Tapis. Tapis uses the concept of a posix style
 absolute path where the path always starts with a "/" character. These paths are mapped to S3 keys by removing the
-initial "/" character. Put another way, the final fully resolved key to an object is absolute path with the
+initial "/" character. Put another way, the final fully resolved key to an object is the absolute path with the
 initial "/" stripped off.
 
 Tapis does not support S3 keys beginning with a "/". Such objects may be shown in a listing but it will not be
@@ -119,8 +121,8 @@ Note that for S3 this means a path of "/" or the empty string indicates all obje
 the delete operation to remove objects matching a path.
 
 
-Move or Copy
-++++++++++++++++++
+Move and Copy
+~~~~~~~~~~~~~
 
 To move or copy a file or directory using the files service, make a PUT request using the path to the current location
 of the file or folder.
@@ -135,14 +137,14 @@ with a JSON body of
 
 .. code-block:: json
 
-    {
-        "operation": "COPY",
-        "newPath": "/subdir/file1.txt"
-    }
+  {
+    "operation": "COPY",
+    "newPath": "/subdir/file1.txt"
+  }
 
 
-File Uploads
-++++++++++++++++++
+Uploading
+~~~~~~~~~
 
 To upload a file use a POST request. The file will be placed at the location specified in the `{path}` parameter
 in the request. Not all system types support this operation.
@@ -161,13 +163,13 @@ Using the official Tapis Python SDK:
 
     curl -H "X-Tapis-Token: $JWT" -X POST -F "file=@someFile.txt" https://tacc.tapis.io/v3/files/ops/my-system/folderA/folderB/folderC/someFile.txt
 
-Any folders that do not exist in the specified path will automatically be created.
+For some system types (such as LINUX) any folders that do not exist in the specified path will automatically be created.
 
 Note that for an S3 system an object will be created with a key of *rootDir*/{path} without a preceding "/" character.
 
 
-Delete
-++++++++++++++++++
+Deleting
+~~~~~~~~
 
 To delete a file or folder, issue a DELETE request for the path to be removed.
 
@@ -185,8 +187,8 @@ the prefix *rootDir* will be deleted. So if the *rootDir* is "/" or the empty st
 bucket will be removed.
 
 
-Create a directory
-++++++++++++++++++++++++
+Creating a directory
+~~~~~~~~~~~~~~~~~~~~
 
 To create a directory, use POST and provide the path to the new directory in the request body. Not all system types
 support this operation.
@@ -199,13 +201,13 @@ with a JSON body of
 
 .. code-block:: json
 
-    {
-        "path": "/path/to/new/directory/"
-    }
+  {
+    "path": "/path/to/new/directory/"
+  }
 
 
-Get StatInfo
-++++++++++++++++++
+Getting Linux stat information
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Get native stat information for a file or directory for a system of type LINUX.
 
@@ -216,8 +218,8 @@ For example, for `/subdir/file1.txt`
     curl -H "X-Tapis-Token: $JWT" "https://tacc.tapis.io/v3/files/utils/linux/aturing-storage/subdir/file1.txt"
 
 
-Run Linux Native Operation
-++++++++++++++++++++++++++++++
+Running a Linux native operation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Run a native operation on a path. Operations are *chmod*, *chown* or *chgrp*. For a system of type LINUX.
 
@@ -231,21 +233,20 @@ with a JSON body of
 
 .. code-block:: json
 
-    {
-        "operation": "CHOWN",
-        "argument": "aeinstein"
-    }
+  {
+    "operation": "CHOWN",
+    "argument": "aeinstein"
+  }
 
 
-^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------
 Content
-^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------
 
 Get file or directory contents as a stream of data. Not supported for all system types.
 
-+++++++++++++++++++++++++++++++
 File Contents - Serving files
-+++++++++++++++++++++++++++++++
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To return the actual contents (raw bytes) of a file:
 
@@ -264,23 +265,24 @@ Header Parameters
 :more: integer - Return 1 KB chunks of UTF-8 encoded text from a file starting after page *more*. This call can be used to page through a text based file. Note that if the contents of the file are not textual (such as an image file or other binary format), the output will be bizarre.
 
 
-^^^^^^^^^^^^^^^^^^^^^^^
+--------------------
 Transfers
-^^^^^^^^^^^^^^^^^^^^^^^
+--------------------
 
-File transfers are used to move data between Tapis systems, and also for bulk data operations that are too
+File transfers are used to move data between Tapis systems. They should be used for bulk data operations that are too
 large for the REST api to perform. Transfers occur *asynchronously*, and are parallelized where possible to increase
-performance. As such, the order in which the files are transferred to the target system is somewhat arbitrary.
+performance. As such, the order in which the files are transferred is not deterministic.
 
-Notice in the above examples that the Files services works identically regardless of whether
+Notice in the above examples that for some system types the Files services works identically regardless of whether
 the source is a file or directory. If the source is a file, it will copy the file.
-If the source is a directory, it will recursively process the contents until
-everything has been copied.
+If the source is a directory, it will recursively process the contents until everything has been copied.
+Please note that not all protocols and Tapis system types support the transfer of a directory.
 
-When a transfer is initiated, a "Bill of materials" is created that creates a record of all the files on the target
-system that are to be transferred. Unless otherwise specified, all files in the bill of materials must successfully transfer
-for the overall transfer to be completed successfully. A transfer task has a STATUS which is updated as the transfer
-progresses. The states possible for a transfer are:
+When a transfer is initiated, a *bill of materials* is created that creates a record of all the files from the
+*sourceUri* that are to be transferred to the *destinationUri*. Unless otherwise specified, all files in the
+*bill of materials* must transfer successfully in order for the overall transfer to be considered successful.
+A transfer task has an attribute named *status* which is updated as the transfer progresses.
+The possible states for a transfer are:
 
 ACCEPTED
   The initial request has been processed and saved.
@@ -295,9 +297,8 @@ Unauthenticated HTTP endpoints are also possible to use as a source for transfer
 This method can be utilized to include outputs from other APIs into Tapis jobs.
 
 
-++++++++++++++++++
 Creating Transfers
-++++++++++++++++++
+~~~~~~~~~~~~~~~~~~
 
 Lets say our user :code:`aturing` needs to transfer data between two systems that are registered in tapis. The source system
 has an id of :code:`aturing-storage` with the results of an experiment located in directory :code:`/experiments/experiment-1/`
@@ -309,24 +310,25 @@ that should be transferred to a system with id :code:`aturing-compute`
 
 .. code-block:: json
 
-    {
-        "tag": "An optional identifier",
-        "elements": [
-            {
-                "sourceUri": "tapis://aturing-storage/experiments/experiment-1/",
-                "destinationUri": "tapis://aturing-compute/"
-            }
-        ]
-    }
+  {
+    "tag": "An optional identifier",
+    "elements": [
+      {
+        "sourceUri": "tapis://aturing-storage/experiments/experiment-1/",
+        "destinationUri": "tapis://aturing-compute/"
+      }
+    ]
+  }
 
 The request above will initiate a transfer that copies all files and folders in the :code:`experiment-1` folder on the source
 system to the root directory of the destination system :code:`aturing-compute`
 
-HTTP Inputs
-++++++++++++++++++++++++++
+HTTP Source
+^^^^^^^^^^^
 
-Unauthenticated HTTP endpoints can also be used as a source to a file transfer. This can be useful when, for instance, the inputs for
-a job to run are from a separate web service, or perhaps stored in an S3 bucket on AWS.
+Unauthenticated HTTP/S endpoints can also be used as a source for a file transfer request.
+This can be useful, for instance, when the inputs for a job are from a separate web service, or perhaps stored in a
+public S3 bucket. Note that in this case the *sourceUri* does not refer to a Tapis system.
 
 .. code-block:: shell
 
@@ -334,26 +336,25 @@ a job to run are from a separate web service, or perhaps stored in an S3 bucket 
 
 .. code-block:: json
 
-    {
-        "tag": "An optional identifier",
-        "elements": [
-            {
-                "sourceUri": "https://some-web-application.io/calculations/12345/",
-                "destinationUri": "tapis://aturing-compute/inputs.csv"
-            }
-        ]
-    }
+  {
+    "tag": "An optional identifier",
+    "elements": [
+      {
+        "sourceUri": "https://some-web-application.io/calculations/12345/results.csv",
+        "destinationUri": "tapis://aturing-compute/inputs.csv"
+      }
+    ]
+  }
 
 The request above will place the output of the source URI into a file called  :code:`inputs.csv` in the
 :code:`aturing-compute` system.
 
 
-++++++++++++++++++++++++++
-Get transfer information
-++++++++++++++++++++++++++
+Getting transfer information
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To retrieve information about a transfer such as its status, bytes transferred, etc
-just make a GET request to the transfers API with the UUID of the transfer.
+To retrieve information about a transfer including status and bytes transferred, simply make a GET request to the
+transfers API with the UUID of the transfer.
 
 .. code-block:: shell
 
@@ -364,52 +365,51 @@ The JSON response should look something like :
 
 .. code-block:: json
 
-    {
-        "status": "success",
-        "message": "ok",
-        "result": {
-            "id": 1,
-            "username": "aturing",
-            "tenantId": "tacc",
-            "tag": "some tag",
-            "uuid": "b2dcf71a-bb7b-409a-8c01-1bbs97e749fb",
-            "status": "COMPLETED",
-            "parentTasks": [
-                {
-                    "id": 17,
-                    "tenantId": "tacc",
-                    "username": "aturing",
-                    "sourceURI": "tapis://sourceSystem/file1.txt",
-                    "destinationURI": "tapis://destSystem/folderA/",
-                    "totalBytes": 100000,
-                    "bytesTransferred": 100000,
-                    "taskId": 1,
-                    "children": null,
-                    "errorMessage": null,
-                    "uuid": "8fdccda6-a504-4ddf-9464-7b22sa66bcc4",
-                    "status": "COMPLETED",
-                    "created": "2021-04-22T14:21:58.933851Z",
-                    "startTime": "2021-04-22T14:21:59.862356Z",
-                    "endTime": "2021-04-22T14:22:09.389847Z"
-                }
-            ],
-            "estimatedTotalBytes": 100000,
-            "totalBytesTransferred": 100000,
-            "totalTransfers": 1,
-            "completeTransfers": 1,
-            "errorMessage": null,
-            "created": "2021-04-22T14:21:58.933851Z",
-            "startTime": "2021-04-22T14:21:59.838928Z",
-            "endTime": "2021-04-22T14:22:09.376740Z"
-        },
-        "version": "1.1-094fd38d",
-        "metadata": {}
-    }
+  {
+    "status": "success",
+    "message": "ok",
+    "result": {
+      "id": 1,
+      "username": "aturing",
+      "tenantId": "tacc",
+      "tag": "some tag",
+      "uuid": "b2dcf71a-bb7b-409a-8c01-1bbs97e749fb",
+      "status": "COMPLETED",
+      "parentTasks": [
+        {
+          "id": 17,
+          "tenantId": "tacc",
+          "username": "aturing",
+          "sourceURI": "tapis://sourceSystem/file1.txt",
+          "destinationURI": "tapis://destSystem/folderA/",
+          "totalBytes": 100000,
+          "bytesTransferred": 100000,
+          "taskId": 1,
+          "children": null,
+          "errorMessage": null,
+          "uuid": "8fdccda6-a504-4ddf-9464-7b22sa66bcc4",
+          "status": "COMPLETED",
+          "created": "2021-04-22T14:21:58.933851Z",
+          "startTime": "2021-04-22T14:21:59.862356Z",
+          "endTime": "2021-04-22T14:22:09.389847Z"
+        }
+      ],
+      "estimatedTotalBytes": 100000,
+      "totalBytesTransferred": 100000,
+      "totalTransfers": 1,
+      "completeTransfers": 1,
+      "errorMessage": null,
+      "created": "2021-04-22T14:21:58.933851Z",
+      "startTime": "2021-04-22T14:21:59.838928Z",
+      "endTime": "2021-04-22T14:22:09.376740Z"
+    },
+    "version": "1.1-094fd38d",
+    "metadata": {}
+  }
 
-
-^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------
 File Permissions
-^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------
 
 The permissions model allows for fine grained access control of paths on a Tapis system. The system owner
 may grant READ and MODIFY permission to specific users. MODIFY implies READ.
@@ -417,9 +417,8 @@ may grant READ and MODIFY permission to specific users. MODIFY implies READ.
 Please note that Tapis permissions are independent of native permissions enforced by the underlying system host.
 
 
-+++++++++++++++++++++
-Retrieve permissions
-+++++++++++++++++++++
+Getting permissions
+~~~~~~~~~~~~~~~~~~~
 
 Get the Tapis permissions for a user for the system and path. If no user specified then permissions are retrieved for
 the user making the request.
@@ -429,9 +428,8 @@ the user making the request.
     curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/files/perms/aturing-storage/experiment1?username=aeinstein
 
 
-++++++++++++++++++
-Grant permissions
-++++++++++++++++++
+Granting permissions
+~~~~~~~~~~~~~~~~~~~~
 
 Lets say our user :code:`aturing` has a system with ID :code:`aturing-storage`. Alan wishes to allow his collaborator
 :code:`aeinstein` to view the results of an experiment located at :code:`/experiment1`
@@ -445,25 +443,24 @@ with a JSON body with the following shape:
 
 .. code-block:: json
 
-    {
-        "username": "aeinstein",
-        "permission": "READ"
-    }
+  {
+    "username": "aeinstein",
+    "permission": "READ"
+  }
 
 Other users can also be granted permission to write to the system by granting the :code:`MODIFY` permission.
 The JSON body would then be:
 
 .. code-block:: json
 
-    {
-        "username": "aeinstein",
-        "permission": "MODIFY"
-    }
+  {
+    "username": "aeinstein",
+    "permission": "MODIFY"
+  }
 
 
-++++++++++++++++++
-Revoke permissions
-++++++++++++++++++
+Revoking permissions
+~~~~~~~~~~~~~~~~~~~~
 
 Our user :code:`aturing` now wishes to revoke his former collaborators access to the folder above. He can
 issue a DELETE request on the path and specify the username in order to revoke access:
@@ -474,9 +471,9 @@ issue a DELETE request on the path and specify the username in order to revoke a
     curl -H "X-Tapis-Token: $JWT" -X DELETE https://tacc.tapis.io/v3/files/perms/aturing-storage/experiment1?username=aeinstein
 
 
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------
 File Sharing
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------
 
 In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
 This approach is known simply as *sharing*. The sharing API allows you to share a path with a set of users
@@ -484,9 +481,8 @@ as well as share publicly with all users in a tenant. Sharing a path grants READ
 
 Please note that the underlying host associated with a system typically also has it's own access controls.
 
-++++++++++++++++++++++++++++
-Retrieve share information
-++++++++++++++++++++++++++++
+Getting share information
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Retrieve all sharing information for a path on a system. This includes all users with whom the path has been shared and
 whether or not the path has been made publicly available.
@@ -495,9 +491,8 @@ whether or not the path has been made publicly available.
 
     curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/files/share/aturing-storage/experiment1
 
-++++++++++++++++++
-Share with users
-++++++++++++++++++
+Sharing a path with users
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Create or update sharing information for a path on a system. The path will be shared with the list of users provided in
 the request body. Requester must be owner of the system. For LINUX systems path sharing is hierarchical.
@@ -510,13 +505,12 @@ with a JSON body with the following shape:
 
 .. code-block:: json
 
-    {
-        "users": [ "aeinstein", "rfeynman" ]
-    }
+  {
+    "users": [ "aeinstein", "rfeynman" ]
+  }
 
-++++++++++++++++++
-Share publicly
-++++++++++++++++++
+Sharing a path publicly
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Share a path on a system with all users in the tenant. Requester must be owner of the system.
 
@@ -525,9 +519,8 @@ Share a path on a system with all users in the tenant. Requester must be owner o
     curl -H "X-Tapis-Token: $JWT" -X POST https://tacc.tapis.io/v3/files/share_public/aturing-storage/experiment1/
 
 
-++++++++++++++++++++
-Unshare with users
-++++++++++++++++++++
+Unsharing a path with users
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Update sharing information for a path on a system. The path will be unshared with the list of users provided in the
 request body. Requester must be owner of the system.
@@ -540,13 +533,12 @@ with a JSON body with the following shape:
 
 .. code-block:: json
 
-    {
-        "users": [ "rfeynman" ]
-    }
+  {
+    "users": [ "rfeynman" ]
+  }
 
-++++++++++++++++++++
-Remove public access
-++++++++++++++++++++
+Unsharing a path publicly
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Remove public sharing for a path on a system. Requester must be owner of the system.
 
@@ -554,12 +546,16 @@ Remove public sharing for a path on a system. Requester must be owner of the sys
 
     curl -H "X-Tapis-Token: $JWT" -X POST https://tacc.tapis.io/v3/files/unshare_public/aturing-storage/experiment1/
 
-++++++++++++++++++++
-Remove all shares
-++++++++++++++++++++
+Removing all shares for a path
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Remove all shares for a path on a system including public access. This will also be done for all sub-paths.
+Remove all shares for a path on a system including public access.
+If the path is a directory this will also be done for all sub-paths.
 
 .. code-block:: shell
 
     curl -H "X-Tapis-Token: $JWT" -X POST https://tacc.tapis.io/v3/files/unshare_all/aturing-storage/experiment1/
+
+.. rubric:: Footnotes
+
+.. [#] With the exception of the *sourceUri* in a transfer request when the protocol is *http* or *https*.
