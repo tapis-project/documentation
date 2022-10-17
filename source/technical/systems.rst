@@ -159,6 +159,27 @@ always used when accessing the system.
 Note that credentials are stored in the Security Kernel.
 Only specific Tapis services are authorized to retrieve credentials.
 
+Use of PKI_KEYS as credentials
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When using an ssh keypair as credentials there are several important points to keep in mind. As discussed above, the
+public key and private key must be encoded on a single line. This can sometimes be challenging. For example, copying
+and pasting may convert newline characters in a way that is not compatible with processing in Tapis. You may find the
+following linux command useful in converting a multi-line private key into a single line::
+
+  cat $privateKeyFile | awk -v ORS='\\n' '1'
+
+Also, Tapis does not currently support OPENSSH type keys. After generating the keypair, please inspect the first few
+lines of the private key file and confirm that it is not of type OPENSSH. Typically, a valid private key file will
+start with the line ``-----BEGIN RSA PRIVATE KEY-----``.
+If your private key is of type OPENSSH please use a command similar to the following to generate your keypair::
+
+  ssh-keygen -t rsa -b 4096 -m PEM
+
+When generating the keypair, do not use a passphrase. This can interfere with non-interactive use of the keypair.
+
+Finally, please be aware that if the host has multi-factor authentication (MFA) enabled this may prevent Tapis from
+communicating with the host. Tapis does not currently support MFA.
 
 Viewing Systems
 ~~~~~~~~~~~~~~~
