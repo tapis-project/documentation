@@ -54,7 +54,10 @@ At a high level a system represents the following information:
 *bucketName* - Bucket name
   For an S3 system this is the name of the bucket.
 *rootDir* - Effective root directory
-  Directory to be used when listing files or moving files to and from the system.
+  Directory to be used when listing files or moving files to and from the system. For LINUX and IRODS this is required
+  and must begin with ``/``.
+  For S3 this is optional and typically will not begin with ``/``.
+  May not be updated. Contact support to request a change.
 *dtnSystemId* - DTN system Id
   An alternate system to use as a Data Transfer Node (DTN).
 *dtnMountPoint* - DTN mount point
@@ -90,21 +93,20 @@ or perhaps both.
 Creating a System
 ~~~~~~~~~~~~~~~~~
 
-Create a local file named ``system_s3.json`` with json similar to the following::
+Create a local file named ``system_example.json`` with json similar to the following::
 
   {
-    "id":"tacc-bucket-sample-<userid>",
-    "description":"My Bucket",
-    "host":"tapis-sample-test-<userid>.s3.us-east-1.amazonaws.com",
-    "systemType":"S3",
-    "defaultAuthnMethod":"ACCESS_KEY",
-    "effectiveUserId":"${owner}",
-    "bucketName":"tapis-tacc-bucket-<userid>",
+    "id":"tacc-sample-<userid>",
+    "description":"My storage system",
+    "host":"tapis-vm.tacc.utexas.edu",
+    "systemType":"LINUX",
+    "defaultAuthnMethod":"PKI_KEYS",
+    "effectiveUserId":"${apiUserId}",
     "rootDir":"/",
     "canExec": false
   }
 
-where *<userid>* is replaced with your username, your S3 host name is updated appropriately. Note that although
+where *<userid>* is replaced with your username, and your host name is updated appropriately. Note that although
 credentials may be included in the definition we have not done so here. For security reasons, it is recommended that
 login credentials be updated using a separate API call as discussed below.
 
@@ -115,20 +117,20 @@ Using PySDK:
  import json
  from tapipy.tapis import Tapis
  t = Tapis(base_url='https://tacc.tapis.io', username='<userid>', password='************')
- with open('system_s3.json', 'r') as openfile:
-     my_s3_system = json.load(openfile)
- t.systems.createSystem(**my_s3_system)
+ with open('system_example.json', 'r') as openfile:
+     my_storage_system = json.load(openfile)
+ t.systems.createSystem(**my_storage_system)
 
 Using CURL::
 
-   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems -d @system_s3.json
+   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems -d @system_example.json
 
 Registering Credentials for a System
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now that you have registered a system you will need to register credentials so you can use Tapis to access the host.
 Various authentication methods can be used to access a system, such as PASSWORD and PKI_KEYS. Here we will cover
-registering a ssh keys.
+registering ssh keys.
 
 Create a local file named ``cred_tmp.json`` with json similar to the following::
 
@@ -147,11 +149,11 @@ Using PySDK:
 
 .. code-block:: python
 
- t.systems.createUserCredential(systemId='tacc-bucket-sample-<userid>', userName='<userid>', publicKey='<ssh_public_key>', privateKey='<ssh_private_key>'))
+ t.systems.createUserCredential(systemId='tacc-sample-<userid>', userName='<userid>', publicKey='<ssh_public_key>', privateKey='<ssh_private_key>'))
 
 Using CURL::
 
-   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/credential/tacc-bucket-sample-<userid>/user/<userid> -d @cred_tmp.json
+   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/credential/tacc-sample-<userid>/user/<userid> -d @cred_tmp.json
 
 An optional attribute *loginUser* may be included in the request body in order to map the Tapis user to a username to
 be used when accessing the system. If the login user is not provided then there is no mapping and the Tapis user is
@@ -193,29 +195,28 @@ Using PySDK:
 
 .. code-block:: python
 
- t.systems.getSystem(systemId='tacc-bucket-sample-<userid>')
+ t.systems.getSystem(systemId='tacc-sample-<userid>')
 
 Using CURL::
 
- $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/tacc-bucket-sample-<userid>
+ $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/tacc-sample-<userid>
 
 The response should look similar to the following::
 
  {
     "result": {
         "tenant": "dev",
-        "id": "tacc-bucket-sample-<userid>",
-        "description": "My Bucket",
-        "systemType": "S3",
+        "id": "tacc-sample-<userid>",
+        "description": "My storage system",
+        "systemType": "LINUX",
         "owner": "<userid>",
-        "host": "tapis-sample-test-<userid>.s3.us-east-1.amazonaws.com",
+        "host": "tapis-vm.tacc.utexas.edu",
         "enabled": true,
         "effectiveUserId": "<userid>",
-        "defaultAuthnMethod": "ACCESS_KEY",
+        "defaultAuthnMethod": "PKI_KEYS",
         "authnCredential": null,
-        "bucketName": "tapis-tacc-bucket-<userid>",
         "rootDir": "/",
-        "port": 9000,
+        "port": 22,
         "useProxy": false,
         "proxyHost": "",
         "proxyPort": -1,
@@ -242,7 +243,7 @@ The response should look similar to the following::
         "updated": "2021-04-26T18:45:40.771Z"
     },
     "status": "success",
-    "message": "TAPIS_FOUND System found: tacc-bucket-sample-<userid>",
+    "message": "TAPIS_FOUND System found: tacc-sample-<userid>",
     "version": "0.0.1",
     "metadata": null
  }
@@ -253,8 +254,6 @@ Retrieving details for all systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To see the current list of systems that you are authorized to view:
-
-(NOTE: See the section below on searching and filtering to find out how to control the amount of information returned)
 
 Using PySDK:
 
@@ -268,6 +267,9 @@ Using CURL::
 
 The response should contain a list of items similar to the single listing shown above.
 
+.. note::
+  See the section below on searching and filtering to find out how to control the amount of information returned.
+
 -----------------------------------
 Minimal Definition and Restrictions
 -----------------------------------
@@ -276,7 +278,7 @@ Depending on the type of system and specific values for certain attributes there
 The restrictions are:
 
 * If *systemType* is S3 then *bucketName* is required, *canExec* and *isDtn* must be false.
-* If *systemType* is LINUX is true then *rootDir* is required. Note that *rootDir* must be an absolute path starting with ``/``.
+* If *systemType* is LINUX or IRODS then *rootDir* is required and must begin with ``/``.
 * If *effectiveUserId* is ``${apiUserId}`` (i.e. it is not static) then *authnCredential* may not be specified.
 * If *isDtn* is true then *rootDir* is required, *canExec* must be false and following may not be specified: *dtnSystemId*, *dtnMountSourcePath*, *dtnMountPoint*, all job execution related attributes.
 * If *canExec* is true then *jobWorkingDir* is required and *jobRuntimes* must have at least one entry.
@@ -295,7 +297,7 @@ At system creation time the owner is given full access to the system.
 Permissions for other users may be granted and revoked through the systems API. Please
 note that grants and revokes through this service only impact the default role for the
 user. A user may still have access through permissions in another role. So even after
-revoking permissions through this service when permissions are retrieved the access may
+revoking permissions through this service, when permissions are retrieved the access may
 still be listed. This indicates access has been granted via another role.
 
 Permissions are specified as either ``*`` for all permissions or some combination of the
@@ -307,7 +309,7 @@ Sharing
 -----------------
 In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
 This approach is known simply as *sharing*. The sharing API allows you to share a system with a set of users
-as well as share publicly with all users in a tenant. Sharing grants READ access.
+as well as share publicly with all users in a tenant. Sharing grants ``READ+EXECUTE`` access.
 
 --------------------------
 Authentication Credentials
@@ -326,7 +328,7 @@ Note that the Systems service does not store credentials. Credentials are persis
 and only specific Tapis services are authorized to retrieve credentials.
 
 By default any credentials provided for LINUX type systems are verified. The query parameter
-skipCredentialCheck=true may be used to bypass the initial verification of credentials.
+*skipCredentialCheck=true* may be used to bypass the initial verification of credentials.
 
 --------------------------
 Runtime
@@ -377,7 +379,7 @@ System Attributes Table
 | description         | String         | Default storage      | - Description                                                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | systemType          | enum           | LINUX                | - Type of system.                                                                    |
-|                     |                |                      | - Types: LINUX, S3                                                                   |
+|                     |                |                      | - Types: LINUX, S3, IRODS                                                            |
 |                     |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | owner               | String         | jdoe                 | - username of *owner*.                                                               |
@@ -412,12 +414,12 @@ System Attributes Table
 |                     |                |                      | - Required if *systemType* is S3.                                                    |
 |                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or *isDtn* = true.                               |
-|                     |                |                      | - Must be an absolute path, i.e. must begin with ``/``.                              |
-|                     |                |                      | - Variable references are resolved at create time and *rootDir* may not be changed.  |
+| rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or IRODS or *isDtn* = true.                      |
+|                     |                |                      | - For LINUX or IRODS must begin with ``/``.                                          |
+|                     |                |                      | - Optional for S3 and will typically not begin with ``/``.                           |
+|                     |                |                      | - Variable references are resolved at create time.                                   |
 |                     |                |                      | - Serves as effective root directory when listing or moving files.                   |
-|                     |                |                      | - For DTN must be source location used in mount command.                             |
-|                     |                |                      | - Optional for an S3 system but may be used for a similar purpose.                   |
+|                     |                |                      | - May not be updated. Contact support to request a change.                           |
 |                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | port                | int            | 22                   | - Port number used to access the system                                              |
@@ -785,7 +787,7 @@ The response should look similar to the following::
     ],
     "status": "success",
     "message": "TAPIS_FOUND Systems found: 12 systems",
-    "version": "0.0.1-SNAPSHOT",
+    "version": "1.0.0",
     "metadata": {
         "recordCount": 3,
         "recordLimit": 100,
@@ -885,7 +887,7 @@ Response::
   ],
   "status": "success",
   "message": "TAPIS_FOUND Systems found: 2 systems",
-  "version": "0.0.1-SNAPSHOT",
+  "version": "1.0.0",
   "metadata": {
     "recordCount": 2,
     "recordLimit": 2,

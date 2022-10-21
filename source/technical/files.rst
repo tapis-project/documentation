@@ -31,9 +31,11 @@ Listing
 ~~~~~~~
 
 Tapis supports listing files or objects on a Tapis system. The type for items listed will depend on system type.
-For example for LINUX they will be posix files and for S3 they will be storage objects. See the next section below for
-additional considerations for S3 type systems. For example, for S3 systems the recurse flag is ignored and all objects
+For example, for LINUX they will be posix files and for S3 they will be storage objects. See the next section below for
+additional considerations for S3 type systems. On S3 systems, for example, the recurse flag is ignored and all objects
 with keys matching the path as a prefix are always included.
+
+For system types that support directory hierarchies the maximum recursion depth is 20.
 
 To list the files in the effective *rootDir* directory of a Tapis system:
 
@@ -76,7 +78,7 @@ The JSON response of the API will look something like this:
           "owner": "1003",
           "group": "1003",
           "nativePermissions": "drwxrwxr-x",
-          "uri": "tapis://dev/aturing-storage/file1.txt",
+          "url": "tapis://dev/aturing-storage/file1.txt",
           "lastModified": "2021-04-29T16:55:57Z",
           "name": "file1.txt",
           "path": "file1.txt",
@@ -88,7 +90,7 @@ The JSON response of the API will look something like this:
           "owner": "1003",
           "group": "1003",
           "nativePermissions": "-rw-rw-r--",
-          "uri": "tapis://dev/aturing-storage/file2.txt",
+          "url": "tapis://dev/aturing-storage/file2.txt",
           "lastModified": "2020-12-17T22:46:29Z",
           "name": "file2.txt",
           "path": "file2.txt",
@@ -108,18 +110,16 @@ structure. There are no directories. Everything is an object associated with a k
 One thing to note is that, as mentioned above, for S3 the recurse flag is ignored and all objects with keys matching
 the path as a prefix are always included.
 
-Another item to note is how posix style paths and S3 keys are related in Tapis. Tapis uses the concept of a posix style
-absolute path where the path always starts with a "/" character. These paths are mapped to S3 keys by removing the
-initial "/" character. Put another way, the final fully resolved key to an object is the absolute path with the
-initial "/" stripped off.
+Note that for S3 this means that when the path is an empty string all objects in the bucket with a prefix matching
+*rootDir* will be included. This is especially important to keep in mind when using the delete operation to remove
+objects matching a path.
 
-Tapis does not support S3 keys beginning with a "/". Such objects may be shown in a listing but it will not be
-possible through Tapis to reference the object directly using the key.
+The attribute *rootDir* is optional for S3 type systems. When defined it will be prepended to all paths and the
+resulting path will become the key.
 
-Note that for S3 this means a path of "/" or the empty string indicates all objects in the bucket with a prefix matching
-*rootDir*, with any preceding "/" stripped off of *rootDir*. This is especially important to keep in mind when using
-the delete operation to remove objects matching a path.
-
+.. note::
+  When *rootDir* is defined for an S3 system it typically should not begin with ``/``.
+  For S3 keys are typically created and manipulated using URLs and do not have a leading ``/``.
 
 Move and Copy
 ~~~~~~~~~~~~~
@@ -165,7 +165,7 @@ Using the official Tapis Python SDK:
 
 For some system types (such as LINUX) any folders that do not exist in the specified path will automatically be created.
 
-Note that for an S3 system an object will be created with a key of *rootDir*/{path} without a preceding "/" character.
+Note that for an S3 system an object will be created with a key of *rootDir*/{path}.
 
 
 Deleting
@@ -180,11 +180,12 @@ To delete a file or folder, issue a DELETE request for the path to be removed.
 The request above would delete :code:`file1.txt`
 
 For an S3 system, the path will represent either a single object or all objects in the bucket with a prefix matching
-the system *rootDir* if the path is "/" or the empty string.
+the system *rootDir* if the path is the empty string.
 
-**WARNING** For an S3 system if the path is "/" or the empty string then all objects in the bucket with a key matching
-the prefix *rootDir* will be deleted. So if the *rootDir* is "/" or the empty string then all objects in the
-bucket will be removed.
+.. warning::
+  For an S3 system if the path is the empty string, then all objects in the bucket with a key matching
+  the prefix *rootDir* will be deleted. So if the *rootDir* is also the empty string, then all objects in the
+  bucket will be removed.
 
 
 Creating a directory
@@ -202,7 +203,7 @@ with a JSON body of
 .. code-block:: json
 
   {
-    "path": "/path/to/new/directory/"
+    "path": "path/to/new/directory/"
   }
 
 
@@ -270,13 +271,8 @@ Transfers
 --------------------
 
 File transfers are used to move data between Tapis systems. They should be used for bulk data operations that are too
-large for the REST api to perform. Transfers occur *asynchronously*, and are parallelized where possible to increase
-performance. As such, the order in which the files are transferred is not deterministic.
-
-Notice in the above examples that for some system types the Files services works identically regardless of whether
-the source is a file or directory. If the source is a file, it will copy the file.
-If the source is a directory, it will recursively process the contents until everything has been copied.
-Please note that not all protocols and Tapis system types support the transfer of a directory.
+large for the REST api to perform. Transfers occur *asynchronously*, and are executed concurrently where possible to
+increase performance. As such, the order in which the files are transferred is not deterministic.
 
 When a transfer is initiated, a *bill of materials* is created that creates a record of all the files from the
 *sourceUri* that are to be transferred to the *destinationUri*. Unless otherwise specified, all files in the
@@ -295,6 +291,40 @@ COMPLETED
 
 Unauthenticated HTTP endpoints are also possible to use as a source for transfers.
 This method can be utilized to include outputs from other APIs into Tapis jobs.
+
+The number of files included in the *bill of materials* will depend on the system types and the *sourceUri* values
+provided in the transfer request. If the source system supports directories and *sourceUri* is a directory then
+the directory will be processed recursively and all files will be added to the *bill of materials*. If the source
+system is of type S3 then all objects matching the *sourceUri* path as a prefix will be included.
+
+System types and supported functionality
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As discussed above the files included in a transfer will depend on the source system types and the *sourceUri* values
+provided in the transfer request. Here is a summary of the behavior:
+
+*LINUX/IRODS to LINUX/IRODS*
+  When the *sourceUri* is a directory a recursive listing is made and the files and directory structure are replicated
+  on the *destinationUri* system.
+
+*S3 to LINUX/IRODS*
+  All objects matching the *sourceUri* path as a prefix will be created as files on the *destinationUri* system.
+
+*LINUX/IRODS to S3*
+  When the *sourceUri* is a directory a recursive listing is made. For each entry in the listing the path relative to
+  the source system rootDir is mapped to a key for the S3 destination system. In other words, a recursive listing is
+  made for the directory on the *sourceUri* system and for each non-directory entry an object is created on the S3
+  *destinationUri* system.
+
+*S3 to S3*
+  All objects matching the *sourceUri* path as a prefix will be re-created as objects on the *destinationUri* system.
+
+*HTTP/S to ANY*
+  Transfer of a directory is not supported. The content of the object from the *sourceUri* URL is used to create a
+  single file or object on the *destinationUri* system.
+
+*ANY to HTTP/S*
+  Transfers not supported. Tapis does not support the use of protocol http/s for the *destinationUri*.
 
 
 Creating Transfers
