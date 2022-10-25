@@ -190,6 +190,22 @@ When generating the keypair, do not use a passphrase. This can interfere with no
 Finally, please be aware that if the host has multi-factor authentication (MFA) enabled this may prevent Tapis from
 communicating with the host. Tapis does not currently support MFA.
 
+When encountering problems here are some suggestions on what to check:
+
+* Public and private keys are each on one line in the json file. Newline characters in private key are properly encoded.
+* Keypair is not of type OPENSSH
+* Keypair does not have a passphrase
+* Public key has been added to the authorized_keys file for the target user. File ~/.ssh/authorized_keys
+* File ~/.ssh/authorized_keys has proper permissions.
+* MFA is not enabled for the target host.
+
+If problems persist you can also attempt to manually validate the keypair using a command similar to this::
+
+  ssh -i /tmp/my_private_key testuser@myhost.com
+
+where /tmp/my_private_key contains the original multi-line private key. If everything is set up correctly and the
+keypair is valid you should be logged into the host without being prompted for a password.
+
 Viewing Systems
 ~~~~~~~~~~~~~~~
 
