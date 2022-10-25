@@ -157,7 +157,14 @@ Using CURL::
 
 An optional attribute *loginUser* may be included in the request body in order to map the Tapis user to a username to
 be used when accessing the system. If the login user is not provided then there is no mapping and the Tapis user is
-always used when accessing the system.
+always used when accessing the system. When a *loginUser* is provided the json would be similar to the following::
+
+  {
+    "publicKey": "<ssh_public_key>",
+    "privateKey": "<ssh_private_key>",
+    "loginUser": "<linux_host_username>"
+  }
+
 Note that credentials are stored in the Security Kernel.
 Only specific Tapis services are authorized to retrieve credentials.
 
