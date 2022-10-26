@@ -3,7 +3,6 @@
 =======================================
 Applications
 =======================================
-
 In order to run a job on a system you will need to create or have access to a Tapis **application**.
 
 -----------------
@@ -36,7 +35,6 @@ varies by version.
 
 Non-Versioned Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~
-
 *id*
   A short descriptive name for the application that is unique within the tenant.
 *owner*
@@ -53,7 +51,6 @@ Non-Versioned Attributes
 
 Versioned Attributes
 ~~~~~~~~~~~~~~~~~~~~
-
 *version*
   Applications are expected to evolve over time. ``Id`` + ``version`` must be unique within a tenant.
 *description*
@@ -92,7 +89,6 @@ Versioned Attributes
 
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
-
 When creating a application the required attributes are: ``id``, ``version`` and  ``containerImage``.
 Depending on the type of application and specific values for certain attributes there are other requirements.
 
@@ -100,10 +96,22 @@ The restrictions are:
 
 * If ``archiveSystemId`` is specified then ``archiveSystemDir`` must be specified.
 
+
+Attributes and the Job Execution Environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The runtime environment of a Tapis job is determined by values in the job submit request, the application definition
+and the execution system definition. Generally speaking, for values that can be assigned in multiple places, the
+values in the job submit request override those in the application definition, which in turn override those in the
+system definition. There are special cases, however, where the values from different definitions are merged.
+
+See the jobs/apps/systems parameter matrix_ for a detailed description of how each attribute is handled.
+
+.. _matrix: https://drive.google.com/file/d/1BrY6tHzOegwsgDMrhcKE7RHH7HRAA0Do/view?usp=sharing
+
+
 --------------------------------
 Getting Started
 --------------------------------
-
 Before going into further details about applications, here we give some examples of how to create and view applications.
 In the examples below we assume you are using the TACC tenant with a base URL of ``tacc.tapis.io`` and that you have
 authenticated using PySDK or obtained an authorization token and stored it in the environment variable JWT,
@@ -111,7 +119,6 @@ or perhaps both.
 
 Creating an application
 ~~~~~~~~~~~~~~~~~~~~~~~
-
 Create a local file named ``app_sample.json`` with json similar to the following::
 
   {
@@ -153,7 +160,6 @@ Viewing Applications
 
 Retrieving details for an application
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 To retrieve details for a specific application, such as the one above:
 
 Using PySDK:
@@ -234,7 +240,6 @@ The response should look similar to the following::
 
 Retrieving details for all applications
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 To see the current list of applications that you are authorized to view:
 
 .. comment
@@ -333,7 +338,6 @@ a specific version.
 -----------------------------
 Application Attributes Table
 -----------------------------
-
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | Attribute           | Type           | Example              | Notes                                                                                |
 +=====================+================+======================+======================================================================================+
@@ -409,7 +413,6 @@ Application Attributes Table
 ------------------------
 JobAttributes Table
 ------------------------
-
 ..
     | dynamicExecSystem   | boolean        |                      | - Indicates if constraints are to be used to select an execution system.             |
     |                     |                |                      | - The default is FALSE.                                                              |
@@ -493,7 +496,6 @@ JobAttributes Table
 -----------------------------
 ParameterSet Attributes Table
 -----------------------------
-
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | Attribute           | Type           | Example              | Notes                                                                                |
 +=====================+================+======================+======================================================================================+
@@ -517,7 +519,6 @@ ParameterSet Attributes Table
 ------------------------------
 ArchiveFilter Attributes Table
 ------------------------------
-
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | Attribute           | Type           | Example              | Notes                                                                                |
 +=====================+================+======================+======================================================================================+
@@ -534,7 +535,6 @@ ArchiveFilter Attributes Table
 ------------------------
 Arg Attributes Table
 ------------------------
-
 +---------------------+------------+----------------------+--------------------------------------------------------------------------------------+
 | Attribute           | Type       | Example              | Notes                                                                                |
 +=====================+============+======================+======================================================================================+
@@ -554,7 +554,6 @@ Arg Attributes Table
 --------------------------
 FileInput Attributes Table
 --------------------------
-
 +-----------------+-----------+----------------------+--------------------------------------------------------------------------------------+
 | Attribute       | Type      | Example              | Notes                                                                                |
 +=================+===========+======================+======================================================================================+
@@ -580,7 +579,6 @@ FileInput Attributes Table
 -------------------------------
 FileInputArray Attributes Table
 -------------------------------
-
 +-----------------+-----------+----------------------+--------------------------------------------------------------------------------------+
 | Attribute       | Type      | Example              | Notes                                                                                |
 +=================+===========+======================+======================================================================================+
