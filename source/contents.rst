@@ -31,4 +31,5 @@ Welcome to Tapis's Documentation!
    technical/security
    technical/streams
    technical/workflows
+   technical/sharing 
 

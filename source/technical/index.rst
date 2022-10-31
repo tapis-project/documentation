@@ -16,3 +16,4 @@ The Technical Guide for Tapis provides a detailed reference to the primary servi
 - :doc:`actors`: Execute containerized functions ("actors") in response to events or other messages.
 - :doc:`security`: Securing the digital assets comprising your project.
 - :doc:`workflows`: Create and execute workflows in the Tapis ecosystem.
+- :doc:`sharing`: Sharing Tapis resources with colleagues.
