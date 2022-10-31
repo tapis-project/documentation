@@ -51,6 +51,8 @@ For convenience, each user is automatically assigned a default role that is impl
 Implementations of Roles and Permissions
 ----------------------------------------
 
+Below are links to the roles and permissions APIs for each service.  Also see the individual services' roles and permissions discussions in this online documentation.
+
 - Systems-rbac_
 - Applications-rbac_
 - Files-rbac_
@@ -143,6 +145,8 @@ If an execution system, for instance, is specified in a shared application defin
 
 Implementations of Tapis Sharing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Below are links to the sharing APIs for each service.  Also see the individual services' sharing discussions in this online documentation.
 
 - Systems-Sharing_
 - Applications-Sharing_

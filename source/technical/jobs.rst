@@ -719,7 +719,9 @@ Normal processing of a successfully executing job proceeds as follows:
 Notifications
 -------------
 
-Not implemented yet.
+Notifications are the messages sent to subscribers who have registered interest in certain job events.  See Subscriptions_ for details.
+
+..  _Subscriptions: #subscriptions
 
 
 Dynamic Execution System Selection
