@@ -31,11 +31,13 @@ The first facility is implemented using *roles and permissions*.  These controls
 Roles and Permissions
 =====================
 
-The Security Kernel (SK) implements a distributed, role-based access control (RBAC) facility_ in which users are assigned roles that limit or allow access to resources.  At its most basic, a role is simply a named entity with an owner.  Tenant administrators can manage roles in their tenant and Tapis services can manage roles in any tenant.  Typically, services only create roles in the administrative tenant at a site_ (each site defines a restricted administrative tenant for that site).  
+The Security Kernel (SK) implements a distributed, role-based access control (RBAC) facility_ in which users are assigned roles that limit or allow access to resources.  At its most basic, a role is simply a named entity with an owner.  Tenant administrators can manage roles in their tenant and Tapis services can manage roles in any tenant.  Typically, services only create roles in the administrative tenant at a site_ (each site defines a restricted administrative tenant).  
 
-By assigning roles to users access to specific resources can be controlled.  Tapis supports user-based_ APIs that check if a user has a certain role.  Service and other software that performs these checks determines what membership or non-membership in a role means.  
+Access to specific resources is controlled by assigning roles to users.  Tapis supports user-based_ APIs that check if a user has a certain role.  Services and other software that perform these checks are free to determine what membership in a role means.  
 
-To make managing user authorizations more flexible and convenient, a role can contain zero or more other roles.  The contained role is the *child* of the containing role.  A child role can have any number of *parents*, that is, be contained in any number of other roles.  When checking whether a user has been assigned a particular role, SK APIs check whether the user has that role directly or any of its parent roles.  When a user is assigned a role, the user is also implicitly assigned all the children of that role.
+To make managing user authorizations more flexible and convenient, a role can contain zero or more other roles.  A contained role is the *child* of the containing role.  A child role can have any number of *parents*, that is, be contained in any number of other roles.  Roles form a forest of directed acyclic graphs.  
+
+When checking whether a user has been assigned a particular role, SK APIs check whether the user has been assigned that role or any of its parent roles.  When a user is assigned a role, the user is also implicitly assigned all the children of that role.
 
 In addition, roles can contain *permissions*, which are case-sensitive strings that follow the format defined by Apache Shiro_.  The permission-creation_ API adds a permission to a role. The permission-checking_ API takes a required permission and determines if a user has a matching permission in any of its roles.  
 
@@ -51,7 +53,7 @@ For convenience, each user is automatically assigned a default role that is impl
 Implementations of Roles and Permissions
 ----------------------------------------
 
-Below are links to the roles and permissions APIs for each service.  Also see the individual services' roles and permissions discussions in this online documentation.
+Below are links to the roles and permissions APIs for each service.  Also see the roles and permissions discussions in each service's documentation.
 
 - Systems-rbac_
 - Applications-rbac_
@@ -87,7 +89,7 @@ Below are links to the roles and permissions APIs for each service.  Also see th
 Tapis Shared Resources
 ======================
 
-The roles and permissions discussed in the last section allow fine-grained authorization to Tapis resources, such as to systems or applications.  Although the semantics of a role or permission can authorize access to multiple resources of the same type, they cannot easily authorize access to all the resources encountered in a complex workflow such as job execution.  To get a deeper understanding of the challenge, let's look at the authorizations needed to run a job.  As job progresses, these Tapis authorizations are needed:
+The roles and permissions discussed in the last section allow fine-grained authorization to Tapis resources, such as to systems or applications.  Although the semantics of a role or permission can authorize access to multiple resources of the same type, they cannot easily authorize access to all the resources encountered in a complex workflow such as job execution.  To get a deeper understanding of the challenge, consider the authorizations needed to run a job:
 
 #. Read access to the application definition.
 #. Read access to the execution system definition.
@@ -97,35 +99,35 @@ The roles and permissions discussed in the last section allow fine-grained autho
 #. Read access to the job's archive system definition.
 #. Write access to the job's archive system's archive path.
 
-If a user simply wants to share an application with another user so that the latter can execute the application, many individual role or permission grants would have to be in place across multiple services.  
+If a user simply wants to share an application with another user so that the latter can execute it, many individual role or permission grants would have to be put in place across multiple services.  
 
-To solve this problem, *Tapis sharing* grants access to all resources needed to perform an action.  Tapis sharing defines a *context* in which Tapis authorization is implicitly granted to users performing an action.  This context can span multiple services.  For example, if a file is shared with a user, then access to Tapis system on which the file resides is implicitly granted when the user attempts access through the Files service.  
+To solve this problem, *Tapis sharing* grants access to all resources needed to perform an *action*.  Tapis sharing defines a runtime *context* in which Tapis authorization is implicitly granted to users performing an action.  This context can span multiple services.  For example, if a file is shared with a user, then access to Tapis system on which the file resides is implicitly granted when the user attempts access through the Files service.  
 
 An important aspect of sharing is that implicit access applies within a certain context and does not apply outside of that context.  In the case of a shared file, for instance, read access to the required system definition is only valid when accessing that file through the Files API.  If the user tries to access the system definition directly through the Systems API, the request will be rejected as unauthorized (assuming no other authorizations apply).
 
-Another characteristic of sharing is that implicit authorizations apply only to Tapis resources.  In the file sharing scenario, the system definition that is part of the shared context is an artifact defined within and under the complete control of Tapis.  Tapis is the controlling agent.  Access to the file itself, however, is ultimately under the control of the file system on which the file resides, such as a Posix file system.  Tapis sharing has no effect on authorizations enforced by external systems.  For example, a user could share a file in their home directory, but unless a grantee already has Posix access to that file, requests to access it will be denied by the operating system.
+Another characteristic of sharing is that implicit authorizations apply only to Tapis resources.  In the file sharing scenario, the system definition that is part of the shared context is an artifact defined within and under the control of Tapis.  Tapis is the controlling agent.  Access to the file itself, however, is ultimately under the control of the file system on which the file resides, such as a Posix file system.  Tapis sharing has no effect on authorizations enforced by external systems.  For example, a user could share a file in their home directory, but unless the grantee already has Posix access to that file, requests to access it will be denied by the operating system.
 
-In addition to sharing resources with individual users, Tapis sharing also supports granting public access to resources.  The *public-grantee* access designation allows all users in a tenant access to the shared resource.  Where supported, the *public-grantee-no-authn* access designation grants access to all users, even users that have not authenticated with Tapis.  See individual service documentation for details on public access support. 
+In addition to sharing resources with individual users, Tapis sharing also supports granting public access to resources.  The *public-grantee* access designation allows all users in a tenant access to the shared resource.  Where supported, the *public-grantee-no-authn* access designation grants access to all users, even those that have not authenticated with Tapis.  See individual service documentation for details on public access support. 
 
 Shared Application Contexts (SACs)
 ----------------------------------
 
-The concept of a *Shared Application Context (SAC)* recognizes that applications run in the context of a Tapis job.  This context is leveraged by multiple, cooperating services that to allow implicit access to resources .  Specifically, users are able to access systems and files to which they have not been given explicit Tapis permission when they run in a SAC.
+The concept of a *Shared Application Context (SAC)* recognizes that applications run in the context of a Tapis job.  This context is leveraged by multiple, cooperating services to allow implicit access to all the resources needed to run a job.  Specifically, users are able to access systems and files to which they have not been given explicit Tapis permission when they run in a SAC.
 
-Specifically, when a job runs in a SAC services skip Tapis authorization checking on **resources explicitly referenced in the application definition**.  Important characteristics of a SAC are:
+When a job runs in a SAC services skip Tapis authorization checking on **resources explicitly specified in the application definition**.  Important characteristics of a SAC are:
 
 1. The SAC-aware services are Systems, Applications, Jobs and Files.
     a) These services know when they are running in a SAC and how to alter their behavior.
 2. SAC-aware services skip Tapis authorization only during Job execution of a shared application.
-    a) Users are not conferred any special privileges on application-referenced resources outside of job execution.
+    a) Users are not conferred any special privileges on application-specified resources outside of job execution.
     b) Relaxed authorization checking applies only to systems and files referenced in the application definition.
 3. SSH authentication to a host is not affected by SAC processing.
     a) The Tapis system definition still determines the credentials used to login to a host.
     b) The host operating system still authorizes access to host resources.
 4. File system and object store authorization is not affected by SAC processing.
-    a) The authenticated user is still authorized by the actual persistent storage systems.
+    a) The authenticated user must still be authorized by the persistent storage systems.
 
-A user can share an application with another user and the Tapis file and system resources referenced in the application definition are also implicitly shared.  This implicit sharing is implemented by simply not performing Tapis authorization checks on these resources (and only these resources).  The underlying operating systems' and persistent storage systems' authentication and authorization mechanisms are unchanged, so users have no more low-level access than they would otherwise.  We simply remove Tapis access constraints only *during job execution*. 
+In summary, a user can share an application with another user and the Tapis file and system resources referenced in the application definition are also implicitly shared.  This implicit sharing is implemented by simply not performing Tapis authorization checks on these resources (and only these resources).  The underlying operating systems' and persistent storage systems' authentication and authorization mechanisms are unchanged, so users have no more low-level access than they would otherwise.  Tapis simply relaxes its access constraints *during job execution*, but all host authorizations are still enforced. 
 
 SAC-Eligible Attributes
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -141,12 +143,12 @@ The following attributes of application definitions are SAC-eligible, meaning th
 #. fileInputs sourceUrl
 #. fileInputs targetPath
 
-If an execution system, for instance, is specified in a shared application definition, and that *system is not overridden in the job submission request*, then jobs running in a SAC will be granted implicit access to the system's definition.  The same goes for the other SAC-eligible attributes:  If their values are specified in the application and those values are not overridden when a job is submitted, Tapis implicitly grants access to the designated resource. 
+If an execution system, for instance, is specified in a shared application definition, *and that system is not overridden in the job submission request*, then jobs running in a SAC will be granted implicit access to the system's definition.  The same goes for the other SAC-eligible attributes:  If their values are specified in the application and those values are not overridden when a job is submitted, Tapis implicitly grants access to the designated Tapis resource. 
 
 Implementations of Tapis Sharing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Below are links to the sharing APIs for each service.  Also see the individual services' sharing discussions in this online documentation.
+Below are links to the sharing APIs for each service.  Also see the sharing discussions in each serivce's documentation.
 
 - Systems-Sharing_
 - Applications-Sharing_
