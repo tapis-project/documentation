@@ -214,6 +214,9 @@ Retrieving details for a system
 
 To retrieve details for a specific system, such as the one above:
 
+.. note::
+  See the section below on `Selecting`_ to find out how to control the amount of information returned.
+
 Using PySDK:
 
 .. code-block:: python
@@ -276,7 +279,7 @@ Note that authnCredential is *null*. Only specific Tapis services are authorized
 Retrieving details for all systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To see the current list of systems that you are authorized to view:
+To see the list of systems that you own:
 
 Using PySDK:
 
@@ -291,7 +294,8 @@ Using CURL::
 The response should contain a list of items similar to the single listing shown above.
 
 .. note::
-  See the section below on searching and filtering to find out how to control the amount of information returned.
+  See the sections below on `Searching`_, `Selecting`_, `Sorting`_ and `Limiting`_ to find out how to control the
+  amount of information returned.
 
 -----------------------------------
 Minimal Definition and Restrictions
@@ -333,6 +337,11 @@ Sharing
 In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
 This approach is known simply as *sharing*. The sharing API allows you to share a system with a set of users
 as well as share publicly with all users in a tenant. Sharing grants ``READ+EXECUTE`` access.
+
+The most common use case for sharing a system is to publicly share the system with all users in the tenant.
+This would allow any user to use the system for execution or storage when running an application.
+
+For more information on sharing please see :doc:`sharing`
 
 --------------------------
 Authentication Credentials
@@ -654,7 +663,7 @@ Notes:
 * Attribute names may be specified using Camel Case or Snake Case.
 * Following complex attributes not supported when searching:
 
-   * ``authnCredential`` ``jobRuntimes`` ``jobEnvVariables`` ``batchLogicalQueues``  ``tags``  ``notes``
+   * ``authnCredential`` ``jobRuntimes`` ``jobEnvVariables`` ``batchLogicalQueues``  ``notes``
 
 Dedicated Search Endpoint
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -759,12 +768,16 @@ Map of SQL operators to Tapis operators
 | NOT IN         | nin            |
 +----------------+----------------+
 
------------------------
-Sort, Limit and Select
------------------------
-When a list of Systems is being retrieved the service provides for sorting and limiting the results. When retrieving
-either a list of resources or a single resource the service also provides a way to *select* which fields (i.e.
-attributes) are included in the results. Sorting, limiting and attribute selection are supported using query parameters.
+--------------------------------
+Sort, Limit, Select and ListType
+--------------------------------
+When a list of Systems is retrieved the service provides for sorting, filtering and limiting the results.
+By default, only resources owned by you will be included. The service provides a way for you to request that
+all resources accessible to you be included. This is determined by the query parameter *listType*.
+
+When retrieving either a list of resources or a single resource the service also provides a way to *select* which
+fields (i.e. attributes) are included in the results. Sorting, limiting and attribute selection are supported using
+query parameters.
 
 Selecting
 ~~~~~~~~~
@@ -862,6 +875,20 @@ than ``limit+skip``. Sorting should always be included since returned results ar
 for each call. The combination of ``limit+startAfter`` is preferred because ``limit+skip`` is more likely to result in
 inconsistent results as records are added and removed. Using ``limit+startAfter`` works best when the attribute has a
 natural sequential ordering such as when an attribute represents a timestamp or a sequential ID.
+
+ListType
+~~~~~~~~
+By default, you will only see the resources that you own. The query parameter *listType* allows you to see additional
+resources that are available to you.
+
+Options:
+
+*OWNED*
+  Include only items owned by you (Default)
+*SHARED_PUBLIC*
+  Include only items shared publicly
+*ALL*
+  Include all items you are authorized to view.
 
 ---------------
 Tapis Responses

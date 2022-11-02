@@ -162,6 +162,9 @@ Retrieving details for an application
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 To retrieve details for a specific application, such as the one above:
 
+.. note::
+  See the section below on `Selecting`_ to find out how to control the amount of information returned.
+
 Using PySDK:
 
 .. code-block:: python
@@ -240,10 +243,7 @@ The response should look similar to the following::
 
 Retrieving details for all applications
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-To see the current list of applications that you are authorized to view:
-
-.. comment
-.. comment (NOTE: See the section below on searching and filtering to find out how to control the amount of information returned)
+To see the list of applications that you own:
 
 Using PySDK:
 
@@ -256,6 +256,10 @@ Using CURL::
  $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/apps?select=allAttributes
 
 The response should contain a list of items similar to the single listing shown above.
+
+.. note::
+  See the sections below on `Searching`_, `Selecting`_, `Sorting`_ and `Limiting`_ to find out how to control the
+  amount of information returned.
 
 -----------------------------------
 Minimal Definition and Restrictions
@@ -321,6 +325,19 @@ still be listed. This indicates access has been granted via another role.
 Permissions are specified as either ``*`` for all permissions or some combination of the
 following specific permissions: ``("READ","MODIFY","EXECUTE")``. Specifying permissions in all
 lower case is also allowed. Having ``MODIFY`` implies ``READ``.
+
+-----------------
+Sharing
+-----------------
+In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
+This approach is known simply as *sharing*. The sharing API allows you to share an application with a set of users
+as well as share publicly with all users in a tenant. Sharing grants ``READ+EXECUTE`` access.
+
+Sharing an application gives a user certain implicit access to resources in the context of running a job.
+When a properly designed application is shared it may be used by many users to run jobs without the need to explicitly
+grant permissions to associated resources such as systems and file paths.
+
+For more information on sharing please see :doc:`sharing`
 
 -----------------
 Deletion
@@ -639,7 +656,7 @@ Notes:
 * Attribute names may be specified using Camel Case or Snake Case.
 * Following complex attributes not supported when searching:
 
-  * ``jobAttributes`` ``tags``  ``notes``
+  * ``jobAttributes`` ``notes``
 
 
 Dedicated Search Endpoint
@@ -745,12 +762,16 @@ Map of SQL operators to Tapis operators
 | NOT IN         | nin            |
 +----------------+----------------+
 
------------------------
-Sort, Limit and Select
------------------------
-When a list of applications is being retrieved the service provides for sorting and limiting the results. When retrieving
-either a list of resources or a single resource the service also provides a way to *select* which fields (i.e.
-attributes) are included in the results. Sorting, limiting and attribute selection are supported using query parameters.
+--------------------------------
+Sort, Limit, Select and ListType
+--------------------------------
+When a list of Applications is retrieved the service provides for sorting, filtering and limiting the results.
+By default, only resources owned by you will be included. The service provides a way for you to request that
+all resources accessible to you be included. This is determined by the query parameter *listType*.
+
+When retrieving either a list of resources or a single resource the service also provides a way to *select* which
+fields (i.e. attributes) are included in the results. Sorting, limiting and attribute selection are supported using
+query parameters.
 
 Selecting
 ~~~~~~~~~
@@ -853,6 +874,20 @@ than ``limit+skip``. Sorting should always be included since returned results ar
 for each call. The combination of ``limit+startAfter`` is preferred because ``limit+skip`` is more likely to result in
 inconsistent results as records are added and removed. Using ``limit+startAfter`` works best when the attribute has a
 natural sequential ordering such as when an attribute represents a timestamp or a sequential ID.
+
+ListType
+~~~~~~~~
+By default, you will only see the resources that you own. The query parameter *listType* allows you to see additional
+resources that are available to you.
+
+Options:
+
+*OWNED*
+  Include only items owned by you (Default)
+*SHARED_PUBLIC*
+  Include only items shared publicly
+*ALL*
+  Include all items you are authorized to view.
 
 ---------------
 Tapis Responses
