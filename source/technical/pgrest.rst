@@ -947,6 +947,8 @@ examples are detailed below.
 +-----------+---------------------+-----------------------+
 | .nbetween | NOT BETWEEN         | Not between set       |
 +-----------+---------------------+-----------------------+
+| .null     | IS NULL             | Set to TRUE/FALSE     |
++-----------+---------------------+-----------------------+
 
 
 These operators are used in an endpoint's query parameters. For example if I had a table with root_url
