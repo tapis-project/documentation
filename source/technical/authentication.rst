@@ -424,7 +424,7 @@ authorization code grant type flow.
   * The redirect request should include the following query parameters:
 
     * ``client_id``: the id of your client.
-    * ``client_redirect_uri``: the URI to redirect back to with the authorization code. This must match the
+    * ``redirect_uri``: the URI to redirect back to with the authorization code. This must match the
       ``callback_url`` parameter associated with your client.
     * ``response_type``: should always have the value ``code``.
 
