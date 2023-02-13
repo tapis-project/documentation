@@ -1038,6 +1038,21 @@ definition can have the following rules.
        "raw_sql": "AS SELECT * FROM tenant.my_table WHERE col_name >= 600;",
        "comments": "An example of creating my_new_test_view."}
 
+* ``materialized_view_raw_sql`` - **admins only**
+
+  * To allow for better use of postgres's facilities there is a materialized_view_raw_sql view creation parameter.
+  * To use this parameter you must be an admin (talk to service admins)
+  * When using this paramter, select_query, raw_sql, where_query, and from_table are no longer allowed, other parameters are fine.
+  * The query follows ``CREATE MATERIALIZED VIEW {tenant}.{view_name} {materialized_view_raw_sql}`` format.
+  * Refresh the materialized view data by GET ``https://tenant.tapis.io/v3/pgrest/manage/views/{view_id}/refresh``. Detailed later in these docs.
+  * Data is only updated at creation and during manual refreshes from users.
+  * Example data body:
+
+    .. code-block:: bash
+
+      {"view_name": "my_new_materialized_test_view",
+       "materialized_view_raw_sql": "AS SELECT * FROM tenant.my_table WHERE col_name >= 600;",
+       "comments": "An example of creating my_new_materialized_test_view."}
 
 View Creation Example
 ---------------------
@@ -1069,6 +1084,17 @@ If you then wanted to get information about the view, but not the result of the 
 
   $ curl -H "tapis-v2-token: $TOKEN" \
     https://<tenant>.tapis.io/v3/pgrest/manage/views/just_a_cool_url
+
+Materialized View Refresh Example
+---------------------------------
+
+If you had earlier created a view using the ``materialized_view_raw_sql`` attribute, you'd have a materialized view that you
+can refresh the data of manually. Data for materialized views is updated at creation, and at refreshes, there is not other
+automatic refreshing of the data.
+
+.. code-block:: bash
+
+  $ curl -H "tapis-v2-token: $TOKEN" https://<tenant>.tapis.io/v3/pgrest/manage/views/{view_id}/refresh
 
 
 Views User API
@@ -1131,6 +1157,8 @@ examples are detailed below.
 | .between  | BETWEEN             | Between set           |
 +-----------+---------------------+-----------------------+
 | .nbetween | NOT BETWEEN         | Not between set       |
++-----------+---------------------+-----------------------+
+| .null     | IS NULL             | Set to TRUE/FALSE     |
 +-----------+---------------------+-----------------------+
 
 
