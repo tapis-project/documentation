@@ -148,14 +148,14 @@ Uploading
 
 To upload a file use a POST request. The file will be placed at the location specified in the `{path}` parameter
 in the request. Not all system types support this operation.
-For example, given the system `my-system`, to insert a file in a folder located at `/folderA/folderB/folderC`:
+For example, given the system `my-system`, to upload file `someFile.txt` to directory `/folderA/folderB/folderC`:
 
 Using the official Tapis Python SDK:
 
 .. code-block:: python
 
     with open("experiment-results.hd5", "r") as f:
-        t.files.upload("my-system", "/folderA/folderB/folderC/someFile.txt", f)
+        t.files.insert("my-system", "/folderA/folderB/folderC/someFile.txt", f)
 
 
 
@@ -264,6 +264,26 @@ Query Parameters
 Header Parameters
 
 :more: integer - Return 1 KB chunks of UTF-8 encoded text from a file starting after page *more*. This call can be used to page through a text based file. Note that if the contents of the file are not textual (such as an image file or other binary format), the output will be bizarre.
+
+Download using ZIP
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The query parameter *zip* may be used to request a stream compressed using the ZIP file format. This is not allowed
+if system *rootDir* plus *path* would result in all files on the host being included. Please download individual
+directories, files or objects.
+
+For example, on a linux system a directory may be downloaded as a compressed archive using a command  similar to the
+following:
+
+.. code-block:: shell
+
+    $ curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/files/content/my-linux-system/my_dir > my_dir.zip
+
+The program *unzip* may then be used to extract the contents.
+
+If the path being downloaded is a single file and the contents are placed in a file ending in the extension *.gz* then
+the *gunzip* utility may also be used to extract the contents.
+
+
 
 
 --------------------
