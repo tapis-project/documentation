@@ -177,6 +177,8 @@ Parameters that do not need to be set are marked *Not Required*.  Finally, param
   Specify the MPI launch command.  Conflicts with cmdPrefix if isMpi is set.  *Inherit*.
 **cmdPrefix**
   String prepended to the application invocation command.  Conflicts with mpiCmd if isMpi is set.  *Inherit*.
+**notes**
+  Optional JSON object containing arbitrary user data, maximum length 65536 bytes.  *Inherit*.
 
 The following subsections discuss the meaning and usage of each of the parameters available in a job request.  The schema_ and its referenced library_ comprise the actual JSON schema definition for job requests.
 
@@ -211,6 +213,9 @@ Directories
 
 The execution and archive system directories are calculated before the submission response is sent.  This calculation can include the use of macro definitions that get replaced by values at submission request time.  The `Macro Substitution`_ section discusses what macro defintions are available and how substitution works.  In this section, we document the default directory assignments which may include macro definitions.
 
+.. _dir-definitions:
+
+
 Directory Definitions
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -232,6 +237,7 @@ The directories assigned in application definitions and/or in a job submission r
    execSystemInputDir
    execSystemOutputDir
    archiveSystemDir
+
 
 Directory Assignments
 ^^^^^^^^^^^^^^^^^^^^^
@@ -394,7 +400,7 @@ Specify HPC batch scheduler arguments for the container runtime using the *sched
 
 Tapis defines a special scheduler option, **--tapis-profile**, to support local scheduler conventions.  Data centers sometimes customize their schedulers or restrict how those schedulers can be used.  The Systems_ service manages *SchedulerProfile* resources that are separate from any system definition, but can be referenced from system definitions.  The Jobs service uses directives contained in profiles to tailor application execution to local requirements.
 
-As an example, below is the JSON input used to create the TACC scheduler profile.  The *moduleLoadCommand* specifies the local command used to load (in order) each of the modules listed in *modulesToLoad*.  *hiddenOptions* identifies scheduler options that the local implementation prohibits.  In this case, "MEM" indicates that the *--mem* option should never be passed to Slurm.
+As an example, below is the JSON input used to create the TACC scheduler profile.  The *moduleLoads* array contains one or more objects. Each object contains a *moduleLoadCommand*, which specifies the local command used to load each of the modules (in order) in its *modulesToLoad* list.  *hiddenOptions* identifies scheduler options that the local implementation prohibits.  In this case, "MEM" indicates that the *--mem* option should never be passed to Slurm.
 
 ::
 
@@ -402,11 +408,18 @@ As an example, below is the JSON input used to create the TACC scheduler profile
         "name": "TACC",
         "owner": "user1",
         "description": "Test profile for TACC Slurm",
-        "moduleLoadCommand": "module load",
-        "modulesToLoad": ["tacc-singularity"],
+        "moduleLoads": [
+            {
+                "moduleLoadCommand": "module load",
+                "modulesToLoad": ["tacc-singularity"]
+            }
+        ],
         "hiddenOptions": ["MEM"]
     }
 
+**Scheduler-Specific Processing**
+
+Jobs will perform :ref:`macro-substition` on Slurm scheduler options *--job-name* or *-J*.  This substitution allows Slurm job names to be dynamically generated before submitting them.
 
 envVariables
 ^^^^^^^^^^^^
@@ -474,6 +487,8 @@ Subscriptions
 -------------
 
 Users can subscribe to job execution events.  Subscriptions specified in the application definition and those specified in the job request are merged to produce a job's initial subscription list.  New subscriptions can be added while a job is running, but not after the job has terminated.  A job's subscriptions can be listed and deleted.  Only job owners or tenant administrators can subscribe to a job, see the subscription_ APIs for details.
+
+When creating a subscription the *ttlminutes* parameter can specify up to 4 weeks.  If the parameter is not specified or if it's set to 0, a default value of 1 week is used.  
 
 Subscribers are notified of job events by the Notifications_ service.  Currently, only email and webhook delivery methods are supported.  The event types to which users can subscribe are:
 
@@ -649,6 +664,8 @@ The following standard environment variables are passed into each application co
     _tapisSysHost - the IP address or DNS name of the exec system
     _tapisSysRootDir - the root directory on the exec system
     _tapisTenant - the tenant in which the job runs
+
+.. _macro-substition:
 
 Macro Substitution
 ------------------
@@ -861,7 +878,17 @@ The docker run-command_ options *--cidfile*, *-d*, *-e*, *--env*, *--name*, *--r
 #. The container name is set to the job UUID.
 #. The container's user is set to the user ID used to establish the SSH session.
 #. The container ID file is specified as *<JobUUID>.cid* in the execSystemExecDir, i.e., the directory from which the container is launched.
-#. The *-rm* option is always set to remove the container after execution.
+#. The container is removed after execution using the *-rm* option or by calling *docker rm*.
+
+Logging
+^^^^^^^
+
+Logging should be considered up front when defining Tapis applications to run under Docker.  Since Jobs removes Docker containers after they execute, the container's log is lost under the default Docker logging_ configuration.  Typically, Docker pipes *stdout* and *stderr* to the container's log, which requires the application to take deliberate steps to preserve these outputs.
+
+An application can maintain control over its log output by logging to a file outside of the container.  The application can do this by redirecting *stdout* and *stderr* or by explicitly writing to a file.  As discussed in :ref:`dir-definitions`, the application always has read/write access to the host's *execSystemOutputDir*, which is mounted at /TapisOutput in the container (see next section).
+
+On the other hand, applications can run on machines where the default Docker log driver is configured to write to files or services outside of containers.  In addition, Tapis passes any user-specified *log-driver* and *log-opts* options to *docker run*, so all customizations_ supported by Docker are possible.   
+
 
 Volume Mounts
 ^^^^^^^^^^^^^
@@ -876,6 +903,8 @@ In addition to the above conventions, bind_ mounts are used to mount the executi
 
 .. _bind: https://docs.docker.com/storage/bind-mounts/
 .. _run-command: https://docs.docker.com/engine/reference/commandline/run/
+.. _logging: https://docs.docker.com/config/containers/logging/
+.. _customizations: https://docs.docker.com/config/containers/logging/configure/
 
 Singularity
 -----------
