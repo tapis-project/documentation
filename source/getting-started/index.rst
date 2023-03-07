@@ -43,7 +43,7 @@ create a `TACC account <https://portal.tacc.utexas.edu/account-request>`__ .
 
 
 Tapis Quickstart
-========================
+================
 
 In this guide, we will use the Tapis APIs to list files on the Amazon AWS S3 storage system using the
 *tacc* instance of Tapis (an instance of Tapis is called a **tenant**; since Tapis is open source any organization can install it and run their own tenant) with base URL *https://tacc.tapis.io*. We will work the example in two ways: using cURL from the command line and using a Python script. Pick the path that most closely matches your needs.
@@ -56,7 +56,7 @@ Getting a Tapis Token
 ^^^^^^^^^^^^^^^^^^^^^
 
 To begin we use our TACC account credentials to get a Tapis token from the authenticator. A valid token is needed
-to interact with Tapis. You will note that that your token is returned with an expiration date and time. If
+to interact with Tapis. You will note that your token is returned with an expiration date and time. If
 you want to continue to use Tapis after your token expires, you will need to get a new one following the same
 steps.
 
@@ -67,7 +67,9 @@ In Python code below you will replace *your_tacc_username* and *your_tacc_passwo
   from tapipy.tapis import Tapis
 
   # Create python Tapis client for user
-  t = Tapis(base_url= "https://tacc.tapis.io", username="your_tacc_username", password="your_tacc_password")
+  t = Tapis(base_url= "https://tacc.tapis.io",
+            username="your_tacc_username",
+            password="your_tacc_password")
 
 This call does not produce output. However you can use the following code to see the access token you just created.
 
@@ -95,16 +97,16 @@ Now that we have an access token, we are ready to create a Tapis ``system`` obje
 
 .. code-block:: python
 
-    #To register the S3 bucket with Tapis
+    # To register the S3 bucket with Tapis
     # the description of an S3 bucket
     s3_bucket = {
-    "id":"your_tapis_system_id",
-    "description":"Tapis Test Bucket",
-    "host":"tapisbucket.s3.amazonaws.com",
-    "systemType":"S3",
-    "defaultAuthnMethod":"ACCESS_KEY",
-    "bucketName":"tapisbucket",
-    "canExec": False,
+      "id":"your_tapis_system_id",
+      "description":"Tapis Test Bucket",
+      "host":"tapisbucket.s3.amazonaws.com",
+      "systemType":"S3",
+      "defaultAuthnMethod":"ACCESS_KEY",
+      "bucketName":"tapisbucket",
+      "canExec": False,
     }
 
     # create the system in Tapis
@@ -170,7 +172,7 @@ Getting a Tapis Token
 ^^^^^^^^^^^^^^^^^^^^^
 
 To begin we use our TACC account credentials to get a Tapis token from the authenticator. A valid token is needed
-to interact with Tapis. You will note that that your token is returned with an expiration date and time. If
+to interact with Tapis. You will note that your token is returned with an expiration date and time. If
 you want to continue to use Tapis after your token expires, you will need to get a new one following the same
 steps.
 

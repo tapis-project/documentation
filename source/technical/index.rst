@@ -17,3 +17,4 @@ The Technical Guide for Tapis provides a detailed reference to the primary servi
 - :doc:`security`: Securing the digital assets comprising your project.
 - :doc:`workflows`: Create and execute workflows in the Tapis ecosystem.
 - :doc:`sharing`: Sharing Tapis resources with colleagues.
+- :doc:`pythondev`: Tapipy and Tapisservice usage, special attributes, and examples for Python development.

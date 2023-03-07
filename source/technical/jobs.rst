@@ -674,7 +674,7 @@ Tapis defines macros or template variables that get replaced with actual values 
 
 There is a close relationship between these macro definitions and the Tapis environment variables just discussed:  Macros that have values assigned are passed as environment variables into application containers.  This makes macros used during job creation available to applications at runtime.
 
-Most macro definitions are *ground* definitions because their values do not depend on any other macros.  On the other hand, *derived* macro definitions can include other macro definitions.  For example, in `Directory Assignments`_ we that that the default input file directory is constructed with two macro definitions:
+Most macro definitions are *ground* definitions because their values do not depend on any other macros.  On the other hand, *derived* macro definitions can include other macro definitions.  For example, in `Directory Assignments`_ the default input file directory is constructed with two macro definitions:
 
 ::
 

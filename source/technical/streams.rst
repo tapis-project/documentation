@@ -3,7 +3,7 @@ Streams
 ==============
 
 
-.. image:: tapis-v3-streams-api.png
+.. image:: images/tapis-v3-streams-api.png
 
 
 Projects
