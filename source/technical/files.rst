@@ -609,3 +609,342 @@ If the path is a directory this will also be done for all sub-paths.
 .. rubric:: Footnotes
 
 .. [#] With the exception of the *sourceUri* in a transfer request when the protocol is *http* or *https*.
+
+-----------------------------
+PostIts
+-----------------------------
+
+The PostIts service is a URL service that allows you to create pre-authenticated, disposable
+URLs to files, directories, buckets, etc in the Tapis Platform's Files service. You have
+control over the lifetime and number of times the URL can be redeemed, and you can expire a
+PostIt at any time. The most common use of PostIts is to create URLs to files so that you
+can share with others without having to upload them to a third-party service.
+
+Creating PostIts
+~~~~~~~~~~~~~~~~~~~
+
+To create a PostIt, send a POST request to the Files service's Create PostIt endpoint.  The url
+will contain the systemId and the path that will be shared.  The body of the post will contain
+a json document which describes how long the PostIt is valid, and how many times it can be
+redeemed.  There are default values for each of these parameters if they are not included.
+If the number of times the PostIt may be redeemed (allowedUses) is set to -1, the PostIt may
+be redeemed an unlimited number of times. The expiration (validSeconds) must always contain
+a value.  If one is not provided, there is a default that is used.  The maximum value of
+'validSeconds' is the maximum integer value in Java (Integer.MAX_VALUE = 2147483647).
+
+.. note::
+  The maximum value would result in a PostIt that would be valid for nearly 70 years,
+  however it is important to remember that the authentication and authorization are built
+  into the PostIt redeem url.  This means anyone who has the url could redeem it.  For
+  this reason, it's advisable to keep the uses and expiration times to the minimum required.
+
+Default parameters:
+
+* allowedUses:  1 (One use)
+* validSeconds: 2592000 (30 days)
+
+APPLICATION/JSON examples
+
+Creating a postit with the default expiration and uses on a system called "tapisv3-storage"
+for the path "/myDirectory/myFile.txt"
+
+Using curl
+
+.. code-block:: shell
+
+    curl -X POST "https://tacc.tapis.io/v3/files/postits/tapisv3-storage/myDirectory/myFile.txt" -H "X-Tapis-Token: $JWT" -H "Content-Type: application/json"
+
+Using python
+
+.. code-block:: python
+
+    tapis.files.createPostIt(systemId="tapisv3-storage", path="myDirectory/myFile.txt")
+
+Creating a postit supplying expiration (validSeconds 600) and uses (allowedUses 3) on a
+system called "tapisv3-storage" for the path "/myDirectory/myFile.txt"
+
+Using curl
+
+.. code-block:: shell
+
+    curl -X POST "https://tacc.tapis.io/v3/files/postits/tapisv3-storage/myDirectory/myFile.txt" -H "X-Tapis-Token: $JWT" -H "Content-Type: application/json" -d '{"allowedUses": 3, "validSeconds": 600}'
+
+Using python
+
+.. code-block:: python
+
+    tapis.files.createPostIt(systemId="tapisv3-storage", path="myDirectory/myFile.txt", allowedUses=3, validSeconds=600)
+
+Creating a postit supplying allowing unlimited uses (allowedUses -1) and the default value
+for expiration (default value for validSeconds is 30 days) on a system called
+"tapisv3-storage" for the path "/myDirectory/myFile.txt"
+
+Using curl
+
+.. code-block:: shell
+
+    curl -X POST "https://tacc.tapis.io/v3/files/postits/tapisv3-storage/myDirectory/myFile.txt" -H "X-Tapis-Token: $JWT" -H "Content-Type: application/json" -d '{"allowedUses": -1}'
+
+Using python
+
+.. code-block:: python
+
+    tapis.files.createPostIt(systemId="tapisv3-storage", path="myDirectory/myFile.txt", allowedUses=-1)
+
+Example Postit Creation Response
+
+.. code-block:: shell
+
+ {
+   "status": "success",
+   "message": "FAPI_POSTITS_OP_COMPLETE Operation completed. jwtTenant: tacc jwtUser: example_user OboTenant: tacc OboUser: examaple_user Operation: createPostIt System: tapisv3-storage Path: myDirectory/myFile.txt Id: e614ce8e-447c-4195-a3f7-55f5dec5d243-010",
+   "result": {
+     "id": "e614ce8e-447c-4195-a3f7-55f5dec5d243-010",
+     "systemId": "tapisv3-storage",
+     "path": "myDirectory/myFile.txt",
+     "allowedUses": 3,
+     "timesUsed": 0,
+     "jwtUser": "example_user",
+     "jwtTenantId": "tacc",
+     "owner": "example_user",
+     "tenantId": "tacc",
+     "redeemUrl": "https://tacc.tapis.io/v3/files/postits/redeem/e614ce8e-447c-4195-a3f7-55f5dec5d243-010",
+     "expiration": "2023-03-08T15:37:28.533641Z",
+     "created": "2023-03-08T15:27:28.534250Z",
+     "updated": "2023-03-08T15:27:28.534250Z"
+   },
+   "version": "1.3.1",
+   "commit": "0c13ee3c",
+   "build": "2023-03-07T21:56:41Z\n",
+   "metadata": {}
+ }
+
+.. note::
+  The PostIt returned by the create will contain the redeemUrl.  This url may be used to download the
+  content pointed to by the PostIt.  No Authentication will be done during this call.  The credentials
+  used to access this content will be the credentials of the PostIt owner.  If the owner's permissions
+  change between creating the PostIt and redeeming the PostIt so that the owner is no longer allowed
+  to read the content, redeeming the PostIt will fail.
+
+Create PostIt parameters
+^^^^^^^^^^^^^^^^^^^^^^^^
+
++---------------+---------+----------+------------+--------------------------------------------------------------+
+| Name          | Type    | Location | Default    | Description                                                  |
++===============+=========+==========+============+==============================================================+
+| systemId      | String  | url      | <none>     | The systemId of the system containing the path to create     |
+|               |         |          |            | the PostIt for.                                              |
++---------------+---------+----------+------------+--------------------------------------------------------------+
+| path          | String  | url      | <none>     | The path to create the PostIt for.                           |
++---------------+---------+----------+------------+--------------------------------------------------------------+
+| allowedUses   | integer | body     | 1          | The number of times a postit can be redeemed. Valid  values  |
+|               |         |          |            | are 1 - 2147483647, or -1 for unlimited uses.                |
++---------------+---------+----------+------------+--------------------------------------------------------------+
+| validSeconds  | integer | body     | 2147483647 | The number of seconds from creation that the PostIt will be  |
+|               |         |          |            | redeemable.  An expiration time is computed by adding this   |
+|               |         |          |            | value to the current date and time.                          |
++---------------+---------+----------+------------+--------------------------------------------------------------+
+
+
+Listing PostIts
+~~~~~~~~~~~~~~~~~~~
+
+PostIts can be listed by authenticated users.  By default a listing of all PostIts owned by the authenticated
+user will be returned.
+
+Using curl
+
+.. code-block:: shell
+
+    curl "https://tacc.tapis.io/v3/files/postits" -H "X-Tapis-Token: $JWT"
+
+Using python
+
+.. code-block:: python
+
+    tapis.files.listPostIts()
+
+To list all PostIts that are visible to the authenticated user, supply the query parameter
+listType and set it's value to ALL.  Typically users will only be able to see PostIts that
+they own, however tenant admins will be allowed to see all PostIts in their tenant.
+
+Using curl
+
+.. code-block:: shell
+
+    curl "https://tacc.tapis.io/v3/files/postits?listType=ALL" -H "X-Tapis-Token: $JWT"
+
+Using python
+
+.. code-block:: python
+
+    tapis.files.listPostIts(listType="ALL")
+
+Paging is handled by the query parameters limit, skip, and startAfter.  By default 100
+PostIts are returned, however this can be changed by setting the query parameter "limit".
+Skip is used to determine how many PostIts to skip.  For example to get the second page
+of a list of PostIts containing 10 items per page, you would need to set the limit to
+10 (10 items per page), and set skip to 10 (skip the first page).  It's probably a good
+practice to set orderBy also, so that the list is ordered in the same way each time.
+You could for example set orderBy to id.
+
+Using curl
+
+.. code-block:: shell
+
+    curl "https://tacc.tapis.io/v3/files/postits?listType=ALL&limit=10&skip=10&orderBy=id" -H "X-Tapis-Token: $JWT"
+
+Using python
+
+.. code-block:: python
+
+    tapis.files.listPostIts(listType="ALL", limit=10, skip=10, orderBy="id")
+
+Using startAfter is similar to using skip.  When using startAfter, you must provide a
+PostIt id, and the list will start immediately after that PostIt.  You **must** provide
+the orderBy parameter.  You may not use skip and startAfter together.
+
+To control which fields are returned, you can supply the select query parameter, and
+select only certain fields.  Setting the select query parameter to id, redeemUrl and
+expiration would return only those fields (select=id,redeemUrl,expiration).  Setting
+"select" to allAttributes will return all attributes, and setting "select" to
+summaryAttributes will only return a preset collection of attributes.  The default
+is summaryAttributes.  You can also set the value to summaryAttributes with additional
+attributes (select=summaryAttributes,updated).
+
+Using curl
+
+.. code-block:: shell
+
+    curl "https://tacc.tapis.io/v3/files/postits?listType=ALL&select=id,redeemUrl,expiration" -H "X-Tapis-Token: $JWT"
+Using python
+
+.. code-block:: python
+
+    tapis.files.listPostIts(listType="ALL", select="id,redeemUrl,expiration")
+
+Retrieving a Single PostIt
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Retrieving a single PostIt can be done by issuing a GET request containing the id of the PostIt.  This
+is **not** the same as redeeming, and does not add to the redeem count.  This will allow the owner of
+the PostIt or a tenant admin to view the PostIt.  This could be used to see the number of times it's
+been retrieved, total number of uses allowed, expiration date, etc.
+
+Using curl
+
+.. code-block:: shell
+
+    curl "https://tacc.tapis.io/v3/files/postits/e614ce8e-447c-4195-a3f7-55f5dec5d243-010" -H "X-Tapis-Token: $JWT"
+
+Using python
+
+.. code-block:: python
+
+    tapis.files.getPostIt(postitId="e614ce8e-447c-4195-a3f7-55f5dec5d243-010")
+
+For tenant admins, any PostIts in the tenant can be retreived in this way.  For other users only PostIts that
+are owned by that user may be retreived, since access to the redeem url allows redemption of the PostIt.
+
+.. _Updating PostIts:
+
+Updating PostIts
+~~~~~~~~~~~~~~~~~~~
+
+The creator of a PostIt and tenant admins can update a PostIt.  When updating a PostIt, the id of the posted
+is sent as part of the url, and a body containing allowedUses and/or validSeconds can be specified.
+
+.. note::
+The validSeconds parameter will add to the date and time as of the update request to compute the new
+expiration.  It does **not** extend the current expiration by that many seconds.
+
+If you need to update the url, you will need to delete or expire this PostIt and create
+a new one.
+
+Update a PostIt to allow for 10 uses and to expire in 1 hour
+
+Using curl / PATCH
+
+.. code-block:: shell
+
+    curl -X PATCH "https://tacc.tapis.io/v3/files/postits/e614ce8e-447c-4195-a3f7-55f5dec5d243-010" -H "Content-Type: application/json" -H "X-Tapis-Token: $JWT" -d '{ "allowedUses":10, "validSeconds":3600 }'
+
+Using curl / POST
+
+.. code-block:: shell
+
+    curl -X POST "https://tacc.tapis.io/v3/files/postits/e614ce8e-447c-4195-a3f7-55f5dec5d243-010" -H "Content-Type: application/json" -H "X-Tapis-Token: $JWT" -d '{ "allowedUses":10, "validSeconds":3600 }'
+
+Using python
+
+.. code-block:: python
+
+    tapis.files.updatePostIt(postitId="e614ce8e-447c-4195-a3f7-55f5dec5d243-010", allowedUses=10, validSeconds=3600)
+
+~~~~~~~~~~~~~~~~~~~
+
+To redeem a PostIt, use the redeemUrl from the PostIt to make a non-authenticated HTTP GET request.
+
+Using curl
+
+.. code-block:: shell
+
+    curl -JO "https://tacc.tapis.io/v3/files/postits/redeem/e614ce8e-447c-4195-a3f7-55f5dec5d243-010"
+
+.. note::
+  The options -J and -O (specified above as -JO) tell curl to download the file content and use the
+  filename in the content-disposition header.  It's worth noting that using this filename is not
+  entirely without risk as it could overwrite a file of the same name. If you would prefer to use
+  a name that you specify, you could replace -JO with \-\-output filename
+
+Using python
+
+.. code-block:: python
+
+    tapis.files.redeemPostIt(postitId="e614ce8e-447c-4195-a3f7-55f5dec5d243-010")
+
+By default if the PostIt you are redeeming points to a path that is a directory, you will get a
+zip file, and if it's a regular file, you will get an uncompressed file.  If you want to force
+a file to be compressed, you can specify the query parameter zip and set it to true.
+
+Using curl
+
+.. code-block:: shell
+
+    curl -JO "https://tacc.tapis.io/v3/files/postits/redeem/e614ce8e-447c-4195-a3f7-55f5dec5d243-010?zip=true"
+
+Using python
+
+.. code-block:: python
+
+    tapis.files.redeemPostIt(postitId="e614ce8e-447c-4195-a3f7-55f5dec5d243-010", zip=True)
+
+.. note::
+  If you specify zip=false for a PostIt that points to a directory, you will get an error.  Directories
+  can't be returned unless they are compressed.
+
+The redeem URL can also be pasted into the address bar of your favorite browser, and it will download
+the file pointed to by the PostIt.
+
+Expiring PostIts
+~~~~~~~~~~~~~~~~~~~
+There is no special endpoint for expiring a PostIt.  To Expire a PostIt just update see
+:ref:`Updating PostIts` and set validSeconds to 0, or allowedUses to 0.
+
+Deleting PostIts
+~~~~~~~~~~~~~~~~~~~
+PostIts can be deleted by specifying the PostIt id in the url.  This is a hard delete, and
+cannot be undone.  Only an owner or tenant admin can delete a PostIt.
+
+Using curl
+
+.. code-block:: shell
+
+    curl -X DELETE "https://tacc.tapis.io/v3/files/postits/e614ce8e-447c-4195-a3f7-55f5dec5d243-010" -H "X-Tapis-Token: $JWT"
+
+Using python
+
+.. code-block:: python
+
+    tapis.files.deletePostIt(postitId="e614ce8e-447c-4195-a3f7-55f5dec5d243-010")
+
