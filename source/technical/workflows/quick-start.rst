@@ -204,7 +204,7 @@ Create a local file named ``pipeline.json`` with json similar to the following:
         "builder": "kaniko",
         "context": {
             "branch": "main",
-            "recipe_file_path": "<path/to>/Dockerfile",
+            "build_file_path": "<path/to>/Dockerfile",
             "sub_path": null,
             "type": "github",
             "url": "<account>/<repo>",
@@ -267,7 +267,7 @@ Now it's time to run the pipeline.
     t.workflows.runPipeline(group_id="<group_id>")
 
 After the pipeline has finished running, take a look in your Dockerhub image repository
-and you will find you newly pushed image.
+and you will find your newly pushed image.
 
 If you SSH into the *Tapis System* that you selected as your archive, you will also find 
 that you have some new directories and files in your **rootDir**;

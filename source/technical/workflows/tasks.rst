@@ -36,7 +36,7 @@ below.
 +-------------------+-----------------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------+
 | description       | String                | My task description                                                   |                                                                                                                         |
 +-------------------+-----------------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------+
-| input             | Object                |                                                                       |                                                                                                                         |
+| input             | Object                | **see input table below**                                             |                                                                                                                         |
 +-------------------+-----------------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------+
 | output            | Object                |                                                                       |                                                                                                                         |
 +-------------------+-----------------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------+
@@ -44,6 +44,112 @@ below.
 +-------------------+-----------------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------+
 | uuid              | String(UUIDv4)        | 5bd771ab-8df5-43cd-a059-fbaa2323841b                                  | - A globally unique identifier for this task                                                                            |
 +-------------------+-----------------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------+
+
+Task Input
+~~~~~~~~~~
+
+Task input is an object in which the keys are the id of the input(String) and the value is an
+object that defines the type of data, and either the literal value of the data via the *data* property
+or a reference to where that data can be found via the *data_from*. 
+
++---------+------------------+--------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
+| Key-Val | Type             | Example                                          | Notes                                                                                                           |
++=========+==================+==================================================+=================================================================================================================+
+| key     | String           | TAPIS_USERNAME, PATH_TO_FILES, _SOME_INPUT, etc. | - Must be an alpha numeric string that conforms to the following regex pattern: ``^[_]?[a-zA-Z]+[a-zA-Z0-9_]*`` |
++---------+------------------+--------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
+| value   | InputValueObject | **see table below**                              |                                                                                                                 |
++---------+------------------+--------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
+
+InputValue Object
+~~~~~~~~~~~~~~~~~
+
++------------+--------------------+----------------------------------------------------------+--------------------------------------------------------------------------------+
+| Attributes | Type               | Example                                                  | Notes                                                                          |
++============+====================+==========================================================+================================================================================+
+| type       | Enum               | string, number, tapis_file_input, tapis_file_input_array |                                                                                |
++------------+--------------------+----------------------------------------------------------+--------------------------------------------------------------------------------+
+| value      | String, Int, Float | 123, "hello world", 1.23                                 |                                                                                |
++------------+--------------------+----------------------------------------------------------+--------------------------------------------------------------------------------+
+| value_from | ValueFrom Object   | **see table below**                                      | - Used to reference data from a workflow definition (env, params, task_output) |
++------------+--------------------+----------------------------------------------------------+--------------------------------------------------------------------------------+
+
+ValueFrom Object
+~~~~~~~~~~~~~~~~~
+
+The Value From object is a key value pair in which the *key* is an enum denoting the source object
+of the value(pipeline envrionment, workflow submission parmeteters, and task outputs) and 
+the *value* is the key on that source where the value data can be found
+
++---------+--------------------------------------------------+-------------------------------+-------+
+| Key-Val | Type                                             | Example                       | Notes |
++=========+==================================================+===============================+=======+
+| key     | Enum                                             | env, params, task_output      |       |
++---------+--------------------------------------------------+-------------------------------+-------+
+| value   | String or TaskOutput Object(**see table below**) | TAPIS_USERNAME, PATH_TO_FILES |       |
++---------+--------------------------------------------------+-------------------------------+-------+
+
+TaskOutput Object
+~~~~~~~~~~~~~~~~~
+
++------------+--------+--------------------------+-----------------------------------------------+
+| Attributes | Type   | Example                  | Notes                                         |
++============+========+==========================+===============================================+
+| task_id    | String | task_1, my-task          | - The id of a previously run task             |
++------------+--------+--------------------------+-----------------------------------------------+
+| output_id  | String | 123, "hello world", 1.23 | - The id of the output for the specified task |
++------------+--------+--------------------------+-----------------------------------------------+
+
+Example Task Definition with Inputs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+          
+  The example below is in yaml format for readability, but the Tapis Workflows API only accepts JSON
+
+.. code-block:: yaml
+
+  tasks:
+  - id: generate-manifests-and-process-next
+    type: function
+    description: |
+      Python script that creates manifest files and outputs a
+      tapis file inputs array to stdout
+    runtime: python3.9
+    installer: pip # poetry
+    command: ""
+    packages: 
+      - tapipy==1.2.20
+    code: "<base64 encoded user-defined code here>"
+    input:
+      TAPIS_USERNAME:
+        type: string
+        value_from:
+          env: TAPIS_USERNAME
+      TAPIS_PASSWORD:
+        type: string
+        value_from:
+          env: TAPIS_PASSWORD
+      TAPIS_SYSTEM_ID:
+        type: string
+        value: "some-system-id"
+      TARGET_DIR:
+        type: string
+        value: target/dir/for/file-input-array
+      INBOX:
+        type: string
+        value: "/scratch/08294/jplneid/tacc_ep/INBOX"
+      MANIFESTS:
+        type: string
+        value: "/scratch/08294/jplneid/tacc_ep/MANIFESTS"
+      TAPIS_BASE_URL:
+        type: string
+        value_from:
+          params: base_url
+    output:
+      fileInputArrays:
+        type: "tapis_file_input_arrays"
+      manifestFilePath:
+        type: "string"
 
 Task Types
 ~~~~~~~~~~
@@ -84,26 +190,26 @@ along with all other attributes specific to the task type.
     +-------------+---------+-------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------+
 
     **Context Attribute Table**
-    
-    +------------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    | Attribute        | Type           | Example                                | Notes                                                                                                                                                                           |
-    +==================+================+========================================+=================================================================================================================================================================================+
-    | branch           | String         | main, dev, feature/some-new-feature    | - Branch to pull and build from                                                                                                                                                 |
-    +------------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    | recipe_file_path | String         | src/Dockerfile, src/Singularity.myfile | - Path to the Dockerfile relative to the root directory of the project                                                                                                          |
-    +------------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    | sub_path         | String         | /some/sub/path                         | - Equivalent to the build context argument in ``docker push``                                                                                                                   |
-    +------------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    | type             | Enum           | github, dockerhub, local(unsupported)  | - Instructs the API and Workflow Executor how fetch the source                                                                                                                  |
-    +------------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    | url              | String         | tapis/workflows-api                    | - The url repository(or registry) where the source code(or image) is located                                                                                                    |
-    +------------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    | visibility       | Enum           | private, public                        | - Informs that API that credentials are required to access the source                                                                                                           |
-    +------------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    | identity_uuid    | String(UUIDv4) | 78aa5231-7075-428c-b94a-a6b971a444d2   | - Optional if ``visibility == "public"``. The identity that contains the set of credentials required to access the source                                                       |
-    +------------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    | credentials      | Object         |                                        | - Optional if ``visibility == "public"`` and unneccessary if an ``identity_uuid`` is provided. An object that contains key/value of the credentials needed to access the source |
-    +------------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        
+    +-----------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    | Attribute       | Type           | Example                                | Notes                                                                                                                                                                           |
+    +=================+================+========================================+=================================================================================================================================================================================+
+    | branch          | String         | main, dev, feature/some-new-feature    | - Branch to pull and build from                                                                                                                                                 |
+    +-----------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    | build_file_path | String         | src/Dockerfile, src/Singularity.myfile | - Path to the Dockerfile relative to the root directory of the project                                                                                                          |
+    +-----------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    | sub_path        | String         | /some/sub/path                         | - Equivalent to the build context argument in ``docker push``                                                                                                                   |
+    +-----------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    | type            | Enum           | github, dockerhub, local(unsupported)  | - Instructs the API and Workflow Executor how fetch the source                                                                                                                  |
+    +-----------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    | url             | String         | tapis/workflows-api                    | - The url repository(or registry) where the source code(or image) is located                                                                                                    |
+    +-----------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    | visibility      | Enum           | private, public                        | - Informs that API that credentials are required to access the source                                                                                                           |
+    +-----------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    | identity_uuid   | String(UUIDv4) | 78aa5231-7075-428c-b94a-a6b971a444d2   | - Optional if ``visibility == "public"``. The identity that contains the set of credentials required to access the source                                                       |
+    +-----------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    | credentials     | Object         |                                        | - Optional if ``visibility == "public"`` and unneccessary if an ``identity_uuid`` is provided. An object that contains key/value of the credentials needed to access the source |
+    +-----------------+----------------+----------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
     **Context Examples**
 
@@ -115,7 +221,7 @@ along with all other attributes specific to the task type.
 
           "context": {
             "branch": "main",
-            "recipe_file_path": "src/Singularity.test",
+            "build_file_path": "src/Singularity.test",
             "sub_path": null,
             "type": "github",
             "url": "nathandf/jscicd-image-demo-private",
@@ -197,7 +303,7 @@ along with all other attributes specific to the task type.
 
         .. note::
           
-          This file will be deleted at the end of the pipeline run. If this file
+          All files will be deleted at the end of the pipeline run. If files
           needs to be persisted, the pipeline must have an archive selected.
 
         .. code-block:: json 
@@ -236,7 +342,7 @@ along with all other attributes specific to the task type.
     | query_params | Object |                     | - HTTP only                                                |
     +--------------+--------+---------------------+------------------------------------------------------------+
     
-  .. tab:: Tapis Job (pending)
+  .. tab:: Tapis Job
 
     **Tapis Job**
 
@@ -244,19 +350,19 @@ along with all other attributes specific to the task type.
 
     **Tapis Job Task Attributes Table**
 
-    +---------------+---------+--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    | Attribute     | Type    | Example                  | Notes                                                                                                                                                                                                           |
-    +===============+=========+==========================+=================================================================================================================================================================================================================+
-    | tapis_job_def | Object  | **see the Jobs section** |                                                                                                                                                                                                                 |
-    +---------------+---------+--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    | poll          | Boolean | true, false              | - Indicates to Workflow Executor that the job should be polled until it reaches a terminal state. Defaults to `true`. If `false`, the Workflow executor will trigger the actor and immediately mark the task as |
-    +---------------+---------+--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    +---------------+---------+--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    | Attribute     | Type    | Example                  | Notes                                                                                                                                                                                                        |
+    +===============+=========+==========================+==============================================================================================================================================================================================================+
+    | tapis_job_def | Object  | **see the Jobs section** |                                                                                                                                                                                                              |
+    +---------------+---------+--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    | poll          | Boolean | true, false              | - Indicates to Workflow Executor that the job should be polled until it reaches a terminal state. Defaults to `true`. If `false`, the Workflow Executor will submit the job and immediately mark the task as |
+    +---------------+---------+--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-  .. tab:: Tapis Actor (unsupported)
+  .. tab:: Tapis Actor (under development)
 
     **Tapis Actor**
 
-    Triggers an *Actor* via the **Abaco Service**
+    Executes an *Actor* via the **Abaco Service**
 
     **Tapis Actor Task Attributes Table**
 
@@ -268,37 +374,91 @@ along with all other attributes specific to the task type.
     | poll           | Boolean | true, false | - Indicates to Workflow Executor that the actor should be polled until it reaches a terminal state. Defaults to `true`. If `false`, the Workflow executor will trigger the actor and immediately mark the task as |
     +----------------+---------+-------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-  .. tab:: Container Run (unsupported)
+  .. tab:: Container Run (under development)
     
     **Container Run**
 
     Runs a container based on the provided image and tag.
 
     **Container Run Task Attributes Table**
+    
+    +-----------+--------+-------------------------+------------------------------------------------------+
+    | Attribute | Type   | Example                 | Notes                                                |
+    +===========+========+=========================+======================================================+
+    | image     | String | somerepo/some_image     |                                                      |
+    +-----------+--------+-------------------------+------------------------------------------------------+
+    | image_tag | String | latest, 1.0.0, cf3v1em0 |                                                      |
+    +-----------+--------+-------------------------+------------------------------------------------------+
+    | command   | String | sleep 100               | Overwrites both ENTRYPOINT and CMD(s) in Dockerfiles |
+    +-----------+--------+-------------------------+------------------------------------------------------+
 
-    +-----------+--------+-------------------------+-------+
-    | Attribute | Type   | Example                 | Notes |
-    +===========+========+=========================+=======+
-    | image     | String | somerepo/some_image     |       |
-    +-----------+--------+-------------------------+-------+
-    | image_tag | String | latest, 1.0.0, cf3v1em0 |       |
-    +-----------+--------+-------------------------+-------+
-
-  .. tab:: Function (unsupported)
+  .. tab:: Function
 
     **Function**
 
-    Runs user-defined code in the language and runtime of their choice (currently unsupported)
+    Functions enable users to execute arbitrary code in select languages and runtimes as a part of their
+    workflow. Functions have access to the Execution Context(**see section below on Execution Context**)
+    which enables programmatic access to the state of the current Task Execution and the results of previous
+    tasks.
 
     **Function Task Attributes Table**
 
-    +-----------+--------+-----------------------------------+---------------------------------------------------------------+
-    | Attribute | Type   | Example                           | Notes                                                         |
-    +===========+========+===================================+===============================================================+
-    | runtime   | Enum   | python3.9, node20, go1.19, java17 | - The runtime environment in which the users code will be run |
-    +-----------+--------+-----------------------------------+---------------------------------------------------------------+
-    | url       | String | https://www.someplace.dev         | - The location where the file to be run can be found          |
-    +-----------+--------+-----------------------------------+---------------------------------------------------------------+
+    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
+    | Attribute | Type          | Example                                       | Notes                                                                 |
+    +===========+===============+===============================================+=======================================================================+
+    | code      | Base64 String |                                               | - The user-defined code to be run during this task                    |
+    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
+    | runtime   | Enum          | python3.9                                     | - The runtime environment in which the user-defined code will be run  |
+    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
+    | packages  | Array<String> | ["tapipy", "numpy"]                           | - The packages to be installed prior to running the user-defined code |
+    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
+    | installer | Enum          | pip                                           | - The installer to install the packages                               |
+    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
+    | command   | String        | mkdir -p /some/dir && apt-get install package | - Bash command to be run before package installation                  |
+    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
+
+    **Accessing Workflow Execution Context within a Funtion Task**
+
+    The Execution Context is a set of functions to query and mutate the state of the Task Execution.
+    The Execution Context is available for use in user-defined code via the Open Workflow Engine SDK.
+    This can be imported into all functions and used to get task input values,
+    fetch outputs of previously run tasks, set task outputs, and control the termination of the task(stdout, stderr).
+
+    Here is an example of user-defined python code that imports the Execution Context, performs work upon it, then
+    terminates the task.
+
+    .. code-block:: python
+
+      import json
+
+      from tapipy.tapis import Tapis
+      from owe_python_sdk.runtime import execution_context as ctx
+
+
+      system_id = ctx.get_input("TAPIS_SYSTEM_ID")
+      username = ctx.get_input("TAPIS_USERNAME")
+      password = ctx.get_input("TAPIS_PASSWORD")
+      manifest_files_path = ctx.get_input("MANIFEST_FILES_PATH")
+      base_url = ctx.get_input("tapis_base_url")
+
+      try:
+        t = Tapis(
+            base_url=base_url,
+            username=username,
+            password=password
+        )
+
+        t.get_tokens()
+
+        files = t.systems.listFiles(systemId=system_id, path=manifest_files_path)
+      except Exception as e:
+        ctx.stderr(1, "There was an error listing files")
+
+      for file, i in enumerate(files):
+        ctx.set_output(f"fileObject{i}", json.dumps(file))
+
+      ctx.stdout("Hello stdout")
+
 
 ----
 

@@ -7,25 +7,28 @@ A *pipeline* is a collection of tasks and a set of rules governing how those tas
 Pipeline Attributes Table
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-+-------------------+----------------+----------------------------------------------+-------------------------------------------------+
-| Attribute         | Type           | Example                                      | Notes                                           |
-+===================+================+==============================================+=================================================+
-| id                | String         | my.pipeline                                  | - Must be unique within the group               |
-+-------------------+----------------+----------------------------------------------+-------------------------------------------------+
-| uuid              | String(UUIDv4) | e48ada7a-56b4-4d48-974c-7574d51a8789         | - Globally unique identifier for the pipeline   |
-+-------------------+----------------+----------------------------------------------+-------------------------------------------------+
-| owner             | String         | jsmith                                       | - The only user that can delete the pipeline    |
-+-------------------+----------------+----------------------------------------------+-------------------------------------------------+
-| group             | String(UUIDv4) | e48ada7a-56b4-4d48-974c-7574d51a8789         | - The uuid of the group that owns this pipeline |
-+-------------------+----------------+----------------------------------------------+-------------------------------------------------+
-| last_run          | String(UUIDv4) | e48ada7a-56b4-4d48-974c-7574d51a8789         | - The UUID of the previous pipeline run         |
-+-------------------+----------------+----------------------------------------------+-------------------------------------------------+
-| current_run       | String(UUIDv4) | e48ada7a-56b4-4d48-974c-7574d51a8789         | - The UUID of the current running pipeline      |
-+-------------------+----------------+----------------------------------------------+-------------------------------------------------+
-| tasks             | Array[Task]    | **See the Task section for the Task object** |                                                 |
-+-------------------+----------------+----------------------------------------------+-------------------------------------------------+
-| execution_profile | Object         | **See table below**                          |                                                 |
-+-------------------+----------------+----------------------------------------------+-------------------------------------------------+
++-------------------+----------------+----------------------------------------------+---------------------------------------------------------------+
+| Attribute         | Type           | Example                                      | Notes                                                         |
++===================+================+==============================================+===============================================================+
+| id                | String         | my.pipeline                                  | - Must be unique within the group                             |
++-------------------+----------------+----------------------------------------------+---------------------------------------------------------------+
+| uuid              | String(UUIDv4) | e48ada7a-56b4-4d48-974c-7574d51a8789         | - Globally unique identifier for the pipeline                 |
++-------------------+----------------+----------------------------------------------+---------------------------------------------------------------+
+| owner             | String         | jsmith                                       | - The only user that can delete the pipeline                  |
++-------------------+----------------+----------------------------------------------+---------------------------------------------------------------+
+| group             | String(UUIDv4) | e48ada7a-56b4-4d48-974c-7574d51a8789         | - The uuid of the group that owns this pipeline               |
++-------------------+----------------+----------------------------------------------+---------------------------------------------------------------+
+| last_run          | String(UUIDv4) | e48ada7a-56b4-4d48-974c-7574d51a8789         | - The UUID of the previous pipeline run                       |
++-------------------+----------------+----------------------------------------------+---------------------------------------------------------------+
+| current_run       | String(UUIDv4) | e48ada7a-56b4-4d48-974c-7574d51a8789         | - The UUID of the current running pipeline                    |
++-------------------+----------------+----------------------------------------------+---------------------------------------------------------------+
+| tasks             | Array[Task]    | **See the Task section for the Task object** |                                                               |
++-------------------+----------------+----------------------------------------------+---------------------------------------------------------------+
+| execution_profile | Object         | **See table below**                          |                                                               |
++-------------------+----------------+----------------------------------------------+---------------------------------------------------------------+
+| env               | Object         | **See Pipeline Envrionment section below**   | - Environment variables to be used by tasks in a pipeline run |
++-------------------+----------------+----------------------------------------------+---------------------------------------------------------------+
+
 
 Execution Profile Attributes Table
 ##################################
@@ -46,6 +49,33 @@ task definition.
 +-----------------+------+---------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | max_exec_time   | Int  | 60, 3600, 10800     | - The maximum amount of time in seconds that a pipeline(or task) is permitted to run. As soon as the sum of all task runs equals this limit, the pipeline(or task) is terminated. Defaults to 3600 seconds(1 hour) |
 +-----------------+------+---------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+Pipeline Envrionment
+####################
+
+The Pipeline Envrionment (the *env* property of a pipeline definition) is a mechanism for exposing
+static global data to task inputs. The Pipeline Envrionment is an object in which the keys are the 
+name of the variables and the value is either a scalar data (string, number, etc) or an object
+with a  *value_from* property which references data from a source external to the the 
+workflow (ex. Tapis Security Kernel).
+
+.. code-block:: json
+
+  {
+    "env": {
+      "TAPIS_SYSTEM_ID": "tapisv3-exec",
+      "MANIFEST_FILES_DIR": "/path/to/manifest/files",
+      "TAPIS_USERNAME": "someusername",
+      "TAPIS_PASSWORD": {
+        "value_from": {
+          "tapis-security-kernel": "some+sk+id"
+        }
+      }
+    }
+  }
+
+
+
 
 Retrieval
 ~~~~~~~~~
