@@ -11,7 +11,7 @@ Tapis supports geographically distributed deployments where different components
 running in different data centers and managed by different institutions. These
 physically isolated installations of Tapis software are referred to as  *sites*.
 There is a single *primary site* and zero or more *associate sites* within a Tapis
-installtion.
+installation.
 
 
 Primary Site
@@ -23,7 +23,7 @@ unique instance of the Sites and Tenants API (see :ref:`Tenants` below) which ma
 complete registry of all sites and tenants in the installation.
 
 The primary site of the main Tapis installation is hosted at the Texas Advanced
-Computing Center, at URL https://tapis.io.
+Computing Center at the tapis.io domain.
 
 Associate Sites
 ^^^^^^^^^^^^^^^
@@ -36,7 +36,7 @@ institution and leverage the primary site deployment for the rest.
 Deployment
 ^^^^^^^^^^
 The official Tapis deployment tooling targets the Kubernetes container orchestration platform. The project maintains a
-set of deployment templates which can be used in conjunction with a configuration file to deploy any number of Tapis
+set of deployment templates which can be used in conjunction with configuration files to deploy Tapis
 services. If your institution is interested in becomming a Tapis associate site please contact us.
 
 Details about the current list of sites is available from the tenants API. For example, one can retrieve the full list
