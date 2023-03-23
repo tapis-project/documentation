@@ -101,10 +101,10 @@ All Tapis services respond to HTTP requests made to a configurable domain assign
 the "site domain". By default, each 
 tenant is defined to a subdomain of the site domain. For example, the primary site at TACC has domain tapis.io, 
 and each tenant is assigned the subdomain of the form <tenant_id>.tapis.io (e.g., designsafe.tapis.io for the 
-DesignSafe project and cyverse.tapis.io for the CyVerse project). 
+DesignSafe project and cyverse.tapis.io for the CyVerse project, etc.). 
 
 The official Tapis deployment tools will deploy and configure a special HTTP proxy, called Tapis Proxy, 
-to handle TLS negotiation and service request routing for all tenants owned by the site. The official Tapis Proxy, or another reverse 
+to handle TLS negotiation and service request routing for all tenants owned by the site. The official Tapis Proxy, 
 or an HTTP reverse proxy with equivalent functionality, is strictly required for the Tapis services to 
 function. In order for the Tapis Proxy to be configured and deployed properly, the following must be available 
 and provided:
@@ -122,22 +122,73 @@ and provided:
 
 A key point is that the Tapis Proxy does **not** typically listen directly on the public IP address. This
 is because the Tapis Proxy is deployed as a pod to the Kubernetes cluster, and a standard Kubernetes 
-installation does not have a way of assigning a public IP address to a pod.  
+installation does not have a way of assigning a public IP address to a pod. The typical request routing 
+is depicted in the following figure:
+
+.. figure:: ./images/Tapis_proxy_routing.png 
+    :width: 1000px
+    :align: center
+
+
 
 .. note::
 
     One must typically deploy the external reverse proxy outside of Kubernetes. 
+
+Support for deploying the Tapis Proxy with standard certificates for each domain (instead of a single, 
+wildcard certificate) will be added in a future release. Additionally, support for having Tapis Proxy
+generate its own certificates using LetsEncrypt will be added in a future release. 
 
 
 ------------------------
 Tenants & Authenticators
 ------------------------
 Every site must include a minimum of two tenants to function: an administrative tenant for the site, where 
-the Tapis services authenticate and manage authorization (roles, permissions, etc.) and other service
-data, and one or more user tenants. 
+the Tapis services running at that site authenticate and manage authorization (roles, permissions, etc.) 
+and other service data, and one or more user tenants where actual users interact with Tapis. 
 
-The Tapis 
+The Tapis user tenants require an external facing "authenticator" to allow users to generate Tapis JWTs, and
+the Tapis project includes a "default" Authenticator service which can be used for one or more user tenants.
+Still, configuring authenticators, including the default Tapis Authenticator, is non-trivial and requires planning. 
+
+The Tapis Authenticator can work with the following ways:
+
+1) Use an externally deployed LDAP server and configured organizational unit (ou) to check user credentials 
+   directly. This will require: a) creating an LDAP record within the Tenants service and assigning the 
+   ldap identifier to the ``user_ldap_connection_id`` attribute on the tenant object; and b) creating a secret 
+   in the Tapis Security Kernel for the authenticator to use to bind to the LDAP. 
+2) Use a third-party OIDC provider, such as GitHub, Google, or Globus. This option requires additional 
+   configuration. 
+3) Use a test LDAP server that the Tapis deployment tools can deploy; this option is not appropriate for  
+   external-facing users, but it can be used for testing and evaluation purposes. This option requires 
+   minimal configuration.  
+
+
+At a high level, institutions have the following options:
+
+1) Use the Tapis Authenticator service for all user tenants. 
+2) Use a third-party authentication mechanism for all user tenants.
+3) Use the Tapis Authenticator for some user tenants and a third-party authentication mechanism for others. 
+
+
+By default, the Tapis deployment tools will deploy the Tapis Authenticator configured to be used for all 
+of the site's user tenants, and it will deploy the test LDAP server. Moreover, Tapis Authenticator will be 
+configured to make use of the test LDAP server for a special user tenant, referred to as the site's "dev"
+tenant. The tenant id for the site's "dev" tenant can be provided to the deployment tools. 
 
 --------
 Deployer
 --------
+
+The official Tapis installation scripts are based on the Ansible project and are available in the 
+`Tapis Deployer repository <https://github.com/tapis-project/tapis-deployer>`_. Deployment of Tapis 
+using the official scripts involves the following high-level steps:
+
+1. Check out the Tapis Deployer repository 
+2. Provide some configuration for your site
+3. Run the generate script that will generate a set of "deployment files" that will be used to start and 
+   manage the running Tapis services. These deployment files should be checked into a git repository so that 
+   they can be versioned as the files are regenerated using newer versions of deployer. 
+4. If necessary, check out the deployment files to the deployment 
+   environment (for example, the machine that has access to the Kubernetes API).
+5. Run deployment scripts to start/update the Tapis services. 
