@@ -153,15 +153,14 @@ For example, given the system `my-system`, to upload file `someFile.txt` to dire
 Using the official Tapis Python SDK:
 
 .. code-block:: python
-
-    with open("experiment-results.hd5", "r") as f:
-        t.files.insert("my-system", "/folderA/folderB/folderC/someFile.txt", f)
-
+   
+    t.upload(source_file_path="experiment-results.hd5", system_id="my-system", dest_file_path="/folderA/folderB/folderC/someFile.txt")
 
 
 .. code-block:: shell
 
     curl -H "X-Tapis-Token: $JWT" -X POST -F "file=@someFile.txt" https://tacc.tapis.io/v3/files/ops/my-system/folderA/folderB/folderC/someFile.txt
+
 
 For some system types (such as LINUX) any folders that do not exist in the specified path will automatically be created.
 
