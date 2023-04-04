@@ -24,15 +24,21 @@ Tapis Vault
 Introduction to Tapis Vault
 ===========================
 
-Tapis stores all its secrets in its own instance of `Hashicorp Vault <https://www.hashicorp.com/products/vault>`_.  It is critical that access to Vault is tightly controlled and its secret content is safeguarded.  The only Tapis component that interactes directly with Vault is the `Security Kernel <../technical/security.html>`_ and its associated utility programs.
+Tapis stores all its secrets in an instance of `Hashicorp Vault <https://www.hashicorp.com/products/vault>`_.  It is critical that access to Vault is tightly controlled and its secret content is safeguarded.  The only Tapis component that interactes directly with Vault is the `Security Kernel <../technical/security.html>`_ and its associated utility programs.
 
-The natural tension between automation and robust secret management leads to unavoidable tradeoffs.  In highly automated environments like Kubernetes it's typical to automatically restart failed services and to move services from one machine to another.  Vault, with it's multiple unseal keys and root tokens, makes automation difficult without a human in the loop.  This usually translates to persisting a secret on some software accessible disk, thus opening a path for unauthorized access to Vault content.
+When planning a Tapis installation, one should consider the tradeoff between automation and robust secret management.  In highly automated environments like Kubernetes, services are automatically restarted when they fail or need to be moved between nodes.  This level of automation requires writing at least one secret on some software accessible disk.  On the other hand, Vault initialization is geared toward having a human in the loop to execute its unseal protocol and to protect high value tokens.  
 
-On the other hand, by requiring a human in the loop to unseal the Vault or to administratively access it, secrets do not have to be persisted on disk for Tapis to operate.   
+Tapis supports two levels of Vault automation.  When running in a Kubernetes cluster, Vault's unseal keys and a long-lived token are written to disk on the control plane.  Kubernetes accesses these secrets when it initializes a new Vault instance or needs to restart Vault.  These secrets are protected by the operating system's account and access control mechanisms; if those mechanisms are compromised, the Vault's contents are vulnerable. 
 
+Tapis also supports deploying Vault outside a Kubernetes cluster while the rest of Tapis runs in the cluster.  In this configuration, a data center can deploy Vault to meet its local security policies and standards, including limiting administrative access to Vault, running Vault in a physically secure location, employing a hardware security module, etc.
+
+In the following two sections we discuss how the community version of Vault can be run inside Kubernetes and run on a VM outside of Kubernetes.  In both cases, Vault needs to be installed, certains capabilities need to be enabled, Tapis-specific policies and roles need to be created, and administrative processes need to be put in place.  Other configurations, such as running enterprise Vault or sharing Vault with other applications, are not covered explicitly, but the information necessary for such adaptions can be extrapolated from the discussion.   
 
 Deploying Vault in Kubernetes
 =============================
+
+
+
 
 Deploying Vault Outside of Kubernetes
 =====================================
@@ -41,8 +47,8 @@ The procedure below describes how to build a Vault VM, which we'll call "**tapis
 
 Important security characteristics of the VM installation approach are:
 
-- No Vault tokens are ever stored on disk.
-- No unseal keys are ever stored on disk.
+- No Vault tokens are ever stored on the VM's disk.
+- No unseal keys are ever stored on VM's disk.
 
 *The reason not to store these secrets on the Vault machine is because even if the root user is compromised, Vault secrets are inaccessible unless Vault is unsealed and the attacker has a valid token.*
 
@@ -233,3 +239,12 @@ To avoid saving the root token to the command history file:
 Remove any commands that leaked secrets into the history file.  Enter "history" to see the numbered history records.  To remove by line number:  
 
 | *history -d <line number>*
+
+
+Vault Backup
+=====================================
+
+
+Vault Export
+=====================================
+
