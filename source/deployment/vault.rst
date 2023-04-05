@@ -279,3 +279,32 @@ The program is written in Java and packaged as a self-contained executable.  The
 Vault Export
 =====================================
 
+The SkExport utility program provides a quick way to extract Tapis secrets from Vault.  The output is written to stdout as either JSON data or key/value pairs.  One use of this program is to acquire Tapis service secrets and then to inject them into docker containers as environment variables.  SkExport `source code <https://github.com/tapis-project/tapis-security/tree/dev/tapis-securitylib/src/main/java/edu/utexas/tacc/tapis/security/commands/aux/export>`_ is part of the Security Kernel library and is available as a docker `image <https://hub.docker.com/repository/docker/tapis/securityexport/general>`_.
+
+SkExport parameters::
+
+ SkExport [options...]
+  -format (--format) [JSON | ENV] : JSON writes raw Vault data, ENV writes key=value (default: ENV)
+  -help (--help)                  : display help information (default: false)
+  -nosan (--nosanitize)           : don''t replace unsupported characters with underscore when -format=ENV (default is to sanitize)
+  -noskip (--noskipusersecrets)   : don''t skip user secrets (default is to skip)
+  -quote (--quoteenv)             : enclose secret values in single quotes when -format=ENV (default: false)
+  -v (--verbose)                  : output statistics in addition to secrets (default no statistics)
+  -vtok (--vaulttoken) VAL        : Vault token with proper authorization
+  -vurl (--vaulturl) VAL          : Vault URL including port, ex: http(s)://host:32342
+
+Running SkExport
+----------------
+
+The easiest way to execute SkExport is to run its docker image.  The *-vtok* and *-vurl* parameters are required.  Here's an example of how to export the tapis service secrets (user and system secrets are skipped) in environment variable format with the values single quoted::
+
+    export SKEXPORT_PARMS='-quote -vtok xxxx -vurl https://tapis-vault.mydomain.com:8200'
+    docker run --env SKEXPORT_PARMS tapis/securityexport:dev
+
+This example outputs JSON data::
+
+    export SKEXPORT_PARMS='-format=JSON -vtok xxxx -vurl https://tapis-vault.mydomain.com:8200'
+    docker run --env SKEXPORT_PARMS tapis/securityexport:dev
+
+Since a token with at least as much authorization as the Security Kernel's token must be used to extract secrets from Vault, and since secrets are being output in the clear, it's important to take proper security precautions when using SkAdmin.  These precautions include not leaving tokens or secrets in files and deleting sensitive information from the command line history file. 
+
