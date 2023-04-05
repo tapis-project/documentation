@@ -9,9 +9,9 @@
 
 .. _secrets:
 
-################
-Managing Secrets
-################
+##############################
+Managing Secrets with SkAdmin
+##############################
 
 .. raw:: html
 
@@ -27,5 +27,5 @@ Introduction to Tapis Secrets
 
 
 
-SkAdmin Utility
----------------
+The SkAdmin Utility
+===================

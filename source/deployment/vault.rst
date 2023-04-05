@@ -37,7 +37,27 @@ In the following two sections we discuss how the community version of Vault can 
 Deploying Vault in Kubernetes
 =============================
 
+Using `Tapis Deployer <./deployer.html>`_, Tapis's `top-level burnup script <https://github.com/tapis-project/tapis-deployer/blob/main/playbooks/roles/baseburnup/templates/kube/burnup>`_ configures and initializes Vault early in the deployment process.  The `Vault burnup script <https://github.com/tapis-project/tapis-deployer/blob/main/playbooks/roles/vault/templates/kube/burnup>`_ performs these tasks, executing from the Kubernetes control plane:
 
+- Configures Vault's network and site location 
+- Configures Vault storage
+- Creates and initializes Vault (new installations only)
+
+   - Creates *vault* file containing unseal keys and root token
+- Creates *vault-token* file containing root token from *vault* file (if necessary)
+- Pushes unseal keys and root token to Kubernetes secrets
+- Starts the Vault pod and unseals it (if necessary)
+
+The deployer scripts detect the *vault* file to determine whether Vault has been installed.  This file along with the *vault-token* file are placed in user's home directory by default, but this can be changed.
+
+At this point, a Vault docker image is running in a Kubernetes pod and deployment scripts write the unseal keys and the root token to files.  These secrets are also written to Kubernetes secrets to make them available to pods and jobs.  Kubernetes has all the secret information needed to restart Vault whenever it detects a failure or needs to move the pod.  This automation comes at the cost of having sensitive Vault secrets on disk in the Kubernetes control plane. 
+
+The next phase initializes the Vault with Tapis roles, policies and secrets using the SkAdmin utility program.  SkAdmin secrets management capabilities is discussed in depth in its own `topic <secrets.html>`_, but here we'll focus on its role in Vault's one-time initialization.  
+
+SkAdmin connects to Vault with administrative permissions so that is can set up Tapis's `standard policies <https://github.com/tapis-project/tapis-deployer/tree/main/playbooks/roles/skadmin/templates/kube/tapis-vault/policies/sk>`_ and its `administrative policies <https://github.com/tapis-project/tapis-deployer/tree/main/playbooks/roles/skadmin/templates/kube/tapis-vault/policies/sk-admin>`_.  
+SkAdmin also sets up Tapis's `standard roles <https://github.com/tapis-project/tapis-deployer/blob/main/playbooks/roles/skadmin/templates/kube/tapis-vault/roles/sk-role.json>`_ and its `administrative roles <https://github.com/tapis-project/tapis-deployer/blob/main/playbooks/roles/skadmin/templates/kube/tapis-vault/roles/sk-admin-role.json>`_.
+
+Once SkAdmin completes setting up Tapis's roles and policies, Vault is ready to accept Tapis service and user secrets.  See the `secrets discussion <secrets.html>`_ for details.
 
 
 Deploying Vault Outside of Kubernetes
@@ -50,7 +70,9 @@ Important security characteristics of the VM installation approach are:
 - No Vault tokens are ever stored on the VM's disk.
 - No unseal keys are ever stored on VM's disk.
 
-*The reason not to store these secrets on the Vault machine is because even if the root user is compromised, Vault secrets are inaccessible unless Vault is unsealed and the attacker has a valid token.*
+*The reason not to store these secrets on the Vault machine is because even if the root user is compromised, Vault secrets are inaccessible unless Vault is unsealed and the attacker has a valid token.*  
+
+That said, automation inside Kubernetes will typically require a scoped token to start the Security Kernel and that token will most likely be saved in the control plane.
 
 We assume the installation uses the open source version of Hashicorp Vault, so we do not have access to Vault's enterprise features.  Tapis has been tested with Vault v1.8.3 and we assume a version compatible with that is being used.
 
@@ -102,7 +124,7 @@ Save the original /etc/vault.d/vault.hcl.  Update /etc/vault.d/vault.hcl to use 
     listener "tcp" {
         address       = "0.0.0.0:8200"
         tls_cert_file = "/etc/pki/tls/certs/certchain.pem"
-        tls_key_file  = "/etc/pki/tls/private/tapis-vault-tapis-vault-key.20230403"
+        tls_key_file  = "/etc/pki/tls/private/tapis-vault-key.20230403"
         tls_client_ca_file = "/etc/pki/tls/certs/certchain.pem"
     }
 
