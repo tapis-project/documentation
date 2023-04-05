@@ -124,8 +124,8 @@ Copy and past the following code snippet into a file and change the highlighted
 
     tapis_installs:
       hosts:
-       # Replace with a name for your Tapis installation; for example, "Tapis-dev", 
-       # "Tapis-prod", etc. By default, Deployer uses this name for the directory 
+       # Replace with a name for your Tapis installation; for example, "tapis-dev", 
+       # "tapis-prod", etc. By default, Deployer uses this name for the directory 
        # where it writes its output files, though this can be changed.
         <tapis_installation_name>:
           ansible_connection: local
@@ -191,6 +191,10 @@ associate sites and primary sites.
   .. code-block:: yaml
     
     site_type: 1
+
+  .. code-block:: yaml
+    
+    site_type: 2
 
 * ``global_site_id`` -- The Tapis id for the site being deployed. 
   Notes: for 
@@ -298,7 +302,7 @@ installation in the same directory as the inventory file and host vars directory
     * <tapis_installation_name>
 
 we can execute the following command from within the project root directory to generate 
-the ``tapis-kube`` directory:
+the Tapis deployment script directory:
 
 .. code-block:: console
 
@@ -308,7 +312,7 @@ the ``tapis-kube`` directory:
 
   When executing `ansible-playbook`, all Tapis installations defined in the inventory
   file will be generated. Use ``-l <tapis_installation_name>`` to only generate one installation. 
-  
+
 
 Generating the deployment script directory takes quite a bit of some time. If you just need to
 generate (or regenerate) one directory within the deployment script directory, you can 
@@ -325,6 +329,8 @@ For example, with the same file structure as above, we could regenerate just the
   ansible-playbook -i tapis_installations.yml tapis-deployer-1.3.1/playbooks/generate-single-component.yml -e comp=workflows
 
 
+
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Additional Requirements for an Initial Associate Site Deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -335,6 +341,312 @@ Additional Requirements for an Initial Associate Site Deployment
 ----------------------------------
 Using the Deployer Control Scripts
 ----------------------------------
+
+The deployment script directory contains bash scripts called ``burnup`` and ``burndown``, referred to as 
+the Deployer control scripts. These scripts provided convenience functions for managing entire sets of 
+Tapis components at once.  Deploying Tapis using the control scripts involves a three step process:
+
+1. Initialize the Tapis Deployment
+2. Deploy the Primary Tapis Services
+3. Deploy the Secondary Tapis Services
+
+We detail each step in the following subsections. 
+We recommend proceeding in this order, ensuring that each step finishes to completion and verify that 
+it works before moving onto the next step.
+
+
+
+--------------------------------
+Initialize the Tapis Deployment
+--------------------------------
+
+Start by creating the initial Kubernetes objects:
+
+.. code-block:: console
+
+  ./burnup init
+
+You will see a lot of outputs written to the screen. Kubernetes is a declarative system, where API calls
+are used to describe the *desired* state on the cluster and Kubernetes works to make the *actual* state 
+converge to the desired state. In general there is no problem with re-running a control script step more 
+than once, because we are simply re-declaring the desired state to be the same state we declared 
+previously. As a result, you can see messages such as:
+
+.. code-block:: console
+
+  service/apps-api unchanged
+
+This just means the command did not change anything about the desired state so Kuberentes made no update.
+
+Also, it is quite normal to see Error messages indicating that some Kuberentes object was not found;
+for example:
+
+.. code-block:: console
+
+  Error from server (NotFound): secrets "vault-keys" not found
+
+This could mean that one Kuberentes object definition references another object definition that has yet
+to finish creating. 
+
+Finally, you may see related errors such as:
+
+.. code-block:: console
+
+  Error from server (AlreadyExists): secrets "vault-token" already exists
+
+
+Before moving onto the next step, we should validate that the initial objects all completed. 
+Using ``kubectl`` we should check the output of the following commands:
+
+
+Check the services: 
+
+.. code-block:: console
+
+  kubectl get services
+  NAME                               TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    
+  actors-admin                       ClusterIP   10.105.126.200   <none>        5000/TCP   
+  actors-events                      ClusterIP   10.110.114.165   <none>        5000/TCP   
+  actors-grafana                     ClusterIP   10.105.16.173    <none>        3000/TCP   
+  actors-mes                         ClusterIP   10.96.160.55     <none>        5000/TCP   
+  actors-metrics                     ClusterIP   10.99.139.105    <none>        5000/TCP                    
+  actors-mongo                       NodePort    10.103.92.102    <none>        27017:32340/TCP             
+  actors-nginx                       NodePort    10.111.143.102   <none>        80:31633/TCP                
+  actors-prometheus                  ClusterIP   10.109.2.194     <none>        9090/TCP                    
+  actors-rabbit                      NodePort    10.106.132.99    <none>        5672:31108/TCP               
+  actors-rabbit-dash                 ClusterIP   10.105.199.16    <none>        15672/TCP                    
+  actors-reg                         ClusterIP   10.107.149.161   <none>        5000/TCP                     
+  apps-api                           NodePort    10.110.168.192   <none>        8080:32718/TCP               
+  apps-api-debug                     NodePort    10.100.5.250     <none>        8000:30225/TCP               
+  apps-pgadmin                       NodePort    10.102.221.245   <none>        80:31458/TCP                 
+  apps-postgres                      ClusterIP   10.104.211.25    <none>        5432/TCP                     
+  authenticator-api                  NodePort    10.97.35.247     <none>        5000:31167/TCP               
+  authenticator-ldap                 ClusterIP   10.97.243.117    <none>        389/TCP                      
+  authenticator-postgres             ClusterIP   10.107.198.0     <none>        5432/TCP                     
+  chords-app                         NodePort    10.109.154.215   <none>        80:30156/TCP                 
+  chords-influxdb2                   ClusterIP   10.100.107.154   <none>        8086/TCP,8083/TCP            
+  chords-mysql                       ClusterIP   10.111.198.225   <none>        3306/TCP                     
+  files-api                          NodePort    10.101.53.166    <none>        8080:31557/TCP               
+  files-debug                        NodePort    10.107.253.44    <none>        8000:32367/TCP               
+  files-postgres                     ClusterIP   10.107.1.254     <none>        5432/TCP                     
+  files-rabbitmq                     ClusterIP   10.110.250.244   <none>        5672/TCP                     
+  globus-proxy                       ClusterIP   10.96.141.179    <none>        5000/TCP                     
+  jobs-api                           NodePort    10.110.93.52     <none>        8080:30577/TCP               
+  jobs-api-debug                     NodePort    10.100.250.144   <none>        8000:30813/TCP               
+  jobs-api-other                     NodePort    10.102.208.122   <none>        6157:30078/TCP               
+  jobs-api-ssl                       NodePort    10.105.51.28     <none>        8443:32513/TCP               
+  jobs-pgadmin                       NodePort    10.102.30.118    <none>        80:31786/TCP                 
+  jobs-postgres                      ClusterIP   10.104.52.113    <none>        5432/TCP                     
+  jobs-rabbitmq                      ClusterIP   10.105.69.98     <none>        5672/TCP,15672/TCP           
+  jobs-rabbitmq-mgmt                 NodePort    10.101.83.72     <none>        15672:30985/TCP              
+  monitoring-exporter                NodePort    10.104.19.250    <none>        8000:32311/TCP               
+  monitoring-grafana                 NodePort    10.105.48.54     <none>        3000:32088/TCP               
+  monitoring-prometheus              NodePort    10.101.27.134    <none>        9090:32204/TCP               
+  notifications-api                  NodePort    10.111.161.227   <none>        8080:31399/TCP               
+  notifications-pgadmin              NodePort    10.96.236.253    <none>        80:31703/TCP                 
+  notifications-postgres             ClusterIP   10.99.47.18      <none>        5432/TCP                     
+  notifications-rabbitmq             ClusterIP   10.107.233.223   <none>        5672/TCP,15672/TCP           
+  notifications-rabbitmq-mgmt        NodePort    10.104.109.239   <none>        15672:32511/TCP              
+  pgrest-api                         NodePort    10.107.91.195    <none>        5000:30084/TCP               
+  pgrest-postgres                    ClusterIP   10.101.255.95    <none>        5432/TCP                     
+  pgrest-postgres-nodeport           NodePort    10.103.193.222   <none>        5432:30525/TCP               
+  pods-api                           ClusterIP   10.106.237.143   <none>        8000/TCP                     
+  pods-postgres                      NodePort    10.100.171.106   <none>        5432:31128/TCP               
+  pods-rabbitmq                      ClusterIP   10.111.198.30    <none>        5672/TCP                     
+  pods-rabbitmq-dash                 NodePort    10.111.90.160    <none>        15672:30061/TCP              
+  pods-traefik                       ClusterIP   10.111.26.233    <none>        80/TCP                       
+  pods-traefik-dash                  NodePort    10.105.118.198   <none>        8080:30146/TCP               
+  registry                           NodePort    10.97.98.114     <none>        5000:31275/TCP               
+  restheart                          ClusterIP   10.107.197.65    <none>        8080/TCP                    
+  restheart-debug                    NodePort    10.103.14.131    <none>        8080:32023/TCP               
+  restheart-mongo                    NodePort    10.109.224.10    <none>        27017:31792/TCP              
+  restheart-security                 NodePort    10.105.16.196    <none>        8080:30792/TCP               
+  site-router-api                    NodePort    10.102.33.197    <none>        8000:30063/TCP               
+  sk-api                             NodePort    10.107.235.138   <none>        8080:31645/TCP               
+  sk-api-debug                       NodePort    10.106.88.188    <none>        8000:31797/TCP               
+  sk-api-other                       NodePort    10.105.105.97    <none>        6157:31086/TCP               
+  sk-api-ssl                         NodePort    10.99.148.218    <none>        8443:30128/TCP               
+  sk-pgadmin                         NodePort    10.101.207.66    <none>        80:30046/TCP                 
+  sk-postgres                        ClusterIP   10.96.73.92      <none>        5432/TCP                     
+  streams-api                        NodePort    10.98.10.161     <none>        5000:30552/TCP               
+  systems-api                        NodePort    10.108.23.253    <none>        8080:32072/TCP               
+  systems-api-debug                  NodePort    10.97.231.157    <none>        8000:31973/TCP               
+  systems-pgadmin                    NodePort    10.108.234.139   <none>        80:30892/TCP                 
+  systems-postgres                   ClusterIP   10.101.21.137    <none>        5432/TCP                     
+  tapis-nginx                        NodePort    10.107.224.176   <none>        80:30175/TCP,443:31864/TCP   
+  tapisui-service                    NodePort    10.107.80.97     <none>        3000:31766/TCP               
+  tenants-api                        NodePort    10.109.125.21    <none>        5000:31327/TCP               
+  tenants-postgres                   ClusterIP   10.102.182.23    <none>        5432/TCP                     
+  tokens-api                         NodePort    10.110.229.6     <none>        5000:32706/TCP               
+  vault                              ClusterIP   10.101.97.112    <none>        8200/TCP                     
+
+**Note:** The number of services will depend on the site type being deployed. 
+
+Check the PVCs:
+
+.. code-block:: console
+
+  kubectl get pvc
+  NAME                           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+  actors-mongo-backup-vol01      Bound    pvc-fbb44e18-0256-4d0b-b799-a703b0f477b6   10Gi       RWO            rbd-new        8h
+  actors-mongo-vol01             Bound    pvc-d3c224eb-5930-4700-8b8a-5f1ae0f2a921   40Gi       RWO            rbd-new        8h
+  actors-rabbitmq-vol01          Bound    pvc-20dc6e04-e2bb-48b6-8647-ee28081eb0c3   20Gi       RWO            rbd-new        6h19m
+  apps-postgres-vol01            Bound    pvc-f1320b94-6069-41d3-a26a-91a3ebaaed21   20Gi       RWO            rbd-new        8h
+  authenticator-ldap-vol01       Bound    pvc-05ae6dbb-e46d-4383-af6b-f1d2726d6529   10Gi       RWO            rbd-new        4d4h
+  authenticator-postgres-vol01   Bound    pvc-4fa4b8b4-dd31-42f6-afcf-d3fe41eeb723   20Gi       RWO            rbd-new        4d4h
+  files-pgdata                   Bound    pvc-8c9b4e7b-feee-4823-96e2-ebe5631cd4ca   10Gi       RWO            rbd-new        8h
+  files-rabbitmq-data            Bound    pvc-0f060f7b-53a7-41e5-ae4a-4dcbdcf47eb1   10Gi       RWO            rbd-new        8h
+  jobs-postgres-vol01            Bound    pvc-62f74888-028c-4e5f-99c4-a3dd1f16881c   20Gi       RWO            rbd-new        8h
+  jobs-rabbitmq-vol01            Bound    pvc-08f6c91c-8797-4515-b6c7-28fb839fc1c2   10Gi       RWO            rbd-new        8h
+  notifications-postgres-vol01   Bound    pvc-d1a662de-60fc-4ead-a8c2-a84e4d302b2e   20Gi       RWO            rbd-new        8h
+  notifications-rabbitmq-vol01   Bound    pvc-e96e2d73-fe46-4e53-831e-48342715ae72   10Gi       RWO            rbd-new        8h
+  site-router-redis-vol01        Bound    pvc-dab2fdc8-d8e1-461a-902b-7f76026a278a   20Gi       RWO            rbd-new        4d4h
+  sk-postgres-vol01              Bound    pvc-e304ca96-143a-41e6-901f-b61d14590972   20Gi       RWO            rbd-new        4d4h
+  systems-postgres-vol01         Bound    pvc-14e58e3b-876e-4598-b9c2-a31447d3b530   20Gi       RWO            rbd-new        8h
+  tenants-postgres-vol01         Bound    pvc-65b83d4e-24a4-42cb-ae9f-5fce41109d4a   20Gi       RWO            rbd-new        4d4h
+  vault-vol01                    Bound    pvc-f39851c4-e140-4634-a4e4-441a5b143fd6   10Gi       RWO            rbd-new        4d4h
+
+**Note:** The number of PVCs will depend on the site type being deployed. 
+
+Check the jobs:
+
+.. code-block:: console
+  
+  kubectl get jobs
+  NAME              COMPLETIONS   DURATION   AGE
+  renew-sk-secret   1/1           4s         30m
+  sk-admin-init     1/1           19s        30m
+  sk-presetup       1/1           3s         30m
+
+
+Check the pods:
+
+.. code-block:: console
+
+  kubectl get pods
+
+  NAME                              READY   STATUS             RESTARTS   AGE
+  renew-sk-secret-zz8lm             0/1     Completed          0          2m33s
+  site-router-api-784ddbbcc-c456m   1/2     CrashLoopBackOff   4          2m46s
+  sk-admin-init-gpnnq               0/1     Completed          0          2m29s
+  sk-presetup-nk8ht                 0/1     Completed          0          2m32s
+  tapis-nginx-55d47656f8-tvhfk      1/1     Running            0          2m48s
+  vault-67b44ff777-vwphn            1/1     Running            0          2m45s
+
+It is expected that the site-router will be in CrashLoopBackOff state; this will automatically 
+resolve once the primary services are deployed in the next step. 
+
+.. warning::
+
+  Quickly check that the initialization step compelted and move onto the next step. 
+  You have about 10 minutes to deploy the primary services (the topic of the next section)
+  after the initialization. This is because a short-lived token for the Vault database is 
+  generated in this step and used in the next step. 
+
+----------------------------------
+Deploy the Primary Tapis services
+----------------------------------
+
+Next, deploy the primary Tapis services:
+
+.. code-block:: console
+
+  ./burnup primary_services
+
+Similarly to the messages discussed in the Tapis initialization section, it is quite normal to 
+see some messages like
+
+.. code-block:: console
+
+  error: timed out waiting for the condition on jobs/authenticator-migrations
+
+Condition timeouts can happen when it is taking longer for Kubernetes to complete the deloyment of 
+dependent objects, but these should resolve in due time. It is also quite normal to see sets of 
+pods where the first several are in ``Error`` state while the last one ``Completed``, 
+for example:
+
+.. code-block:: console
+
+  notifications-init-db-25dk8                 0/1     Error              0          109s
+  notifications-init-db-gq4lt                 0/1     Completed          0          97s
+  notifications-init-db-zqhvt                 0/1     Error              0          107s
+
+The errors above are normal and could be caused for different reasons, but all of them amount to essentially 
+the same thing: one or more of the Kubernetes objects that the pod depends on where not ready when the pod
+was launched, do the pod crashed, hence the ``Error`` final state. Kubernetes continued to start a new 
+instance of the pod until it finally reached the ``Completed`` state when all of the dependent objects where
+ready.
+
+It could could several minutes (10 or 20 even) for the deployment to converge. Check that eventually 
+there are no pods in CrashLoopBackOff using:
+
+.. code-block:: console
+
+  kubectl get pods
+
+
+Then, check that a few critical services are healthy using the verification scripts:
+
+.. code-block:: console
+
+  cd admin/verification
+
+Check that the Security Kernel is health (your output should be simialr that below):
+
+.. code-block:: console
+
+  ./sk-test
+  hello
+  {"result":"Hello from the Tapis Security Kernel.","status":"success","message":"TAPIS_FOUND hello found: 0 items","version":"1.3.0","commit":"ee1b3342","build":"2023-03-01T15:42:55Z","metadata":null}
+  ready
+  {"result":{"checkNum":1,"databaseAccess":true,"vaultAccess":true,"tenantsAccess":true},"status":"success","message":"TAPIS_READY Readiness check received by Security Kernel.","version":"1.3.0","commit":"ee1b3342","build":"2023-03-01T15:42:55Z","metadata":null}
+  healthcheck
+  {"result":{"checkNum":1,"databaseAccess":true,"vaultAccess":true,"tenantsAccess":true},"status":"success","message":"TAPIS_HEALTHY Health check received by Security Kernel.","version":"1.3.0","commit":"ee1b3342","build":"2023-03-01T15:42:55Z","metadata":null}
+
+
+Check that the Tenants service is healthy:
+
+.. code-block:: console
+
+  ./tenants-test 
+  {
+    "message": "Tenants retrieved successfully.",
+    "metadata": {},
+    "result": [
+      {
+        "admin_user": "admin",
+        "authenticator": "https://admin.test.tapis.io/v3/oauth2",
+  . . .
+
+Check that the Tokens service is healthy:
+
+.. code-block:: console
+
+  ./tokens-test 
+  {"message":"Token generation successful.","metadata":{},"result":{"access_token" . . .
+  . . .
+
+Check that the Authenticator service is healthy:
+
+.. code-block:: console
+
+  ./authenticator-test
+  {"message":"Token created successfully.","metadata":{},"result":{"access_token": . . .
+  . . .
+
+
+
+
+------------------------------------
+Deploy the Secondary Tapis Services
+------------------------------------
+
+Finally, deploy the secondary Tapis services:
+
+.. code-block:: console
+
+  ./burnup secondary_services
+
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Bootstrapping an Initial Primary Site Deployment
