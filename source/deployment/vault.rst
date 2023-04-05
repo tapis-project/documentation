@@ -266,6 +266,15 @@ Remove any commands that leaked secrets into the history file.  Enter "history" 
 Vault Backup
 =====================================
 
+Tapis configures Vault to run with the `raft <https://developer.hashicorp.com/vault/docs/internals/integrated-storage>`_ storage type by default, which allows Vault to operate normally while its database is backed up.  Vault provides these two administrative `commands <https://developer.hashicorp.com/vault/docs/commands/operator/raft>`_ to save and restore backups:
+
+- *vault operator raft snapshot save <outfile>*
+- *vault operator raft snapshot restore <infile>*
+
+Tapis fills the gap in Vault's community edition support automating periodic backups in Vault VM environments.  The `tapis-vaultbackup <https://github.com/tapis-project/tapis-vaultbackup>`_ repository contains a backup utility program source code and documentation.  The program is started in a secure manner and periodically takes snapshots of the Vault database (once a day by default).  The program runs as a daemon until it's shutdown.  Typically, a separate cron job is set up to copy the backup files from the VM to one or more remote data stores as local policy dictates. 
+
+The program is written in Java and packaged as a self-contained executable.  The executable is then packaged into an rpm for use on operating systems that support that package manager.  There are no plans to support other package managers or container runtimes, but everything needed for such support is available in the repository.         
+
 
 Vault Export
 =====================================
