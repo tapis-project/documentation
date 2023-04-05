@@ -42,6 +42,8 @@ Welcome to Tapis's Documentation!
    deployment/index
    deployment/preliminaries
    deployment/deployer
+   deployment/vault
+   deployment/secrets
    deployment/administration
    deployment/upgrade
    deployment/architecture
