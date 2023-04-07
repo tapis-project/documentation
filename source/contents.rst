@@ -33,3 +33,17 @@ Welcome to Tapis's Documentation!
    technical/workflows
    technical/sharing
    technical/pythondev
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Deployment & Administration:
+
+   deployment/index
+   deployment/preliminaries
+   deployment/deployer
+   deployment/vault
+   deployment/secrets
+   deployment/administration
+   deployment/upgrade
+   deployment/architecture
