@@ -54,7 +54,7 @@ If you need to use the *file* storage type, be sure to override the default in y
 .. warning::
 
     Attempting to deploy the Tapis Vault with a different storage type could result in secret loss
-    and permanet corruption of the Tapis installation.
+    and permanent corruption of the Tapis installation.
 
 PVC Names
 ~~~~~~~~~

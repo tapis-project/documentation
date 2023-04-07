@@ -42,6 +42,8 @@ Artifacts and Code Repositories
 
 Below we list the primary Tapis service code repositories and their associate container images.
 
+*This section is a work in progress...*
+
 +---------------+-------------------------------------------------+-------------------------------------------------------+---------------------------------------------------------+
 | Service       | Primary Repository                              |   Additional Repositories                             |   Container Image(s)                                    |
 +===============+=================================================+=======================================================+=========================================================+

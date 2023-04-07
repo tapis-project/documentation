@@ -271,6 +271,24 @@ The following fields can optionally be provided in the Host Vars file.
 
     tapisdir: /home/cic/deployments/tapis-test
 
+* ``vault_raft_storage`` -- Whether to use Raft storage for Vault. 
+
+  Default Value: ``true``
+
+  Examples:
+
+  .. code-block:: yaml
+
+    vault_raft_storage: false    
+
+.. warning:: 
+
+  Using the *file* storage type for Vault is not considered viable for production environments. At 
+  the same time, changing the storage type from *file* to *Raft* requires a manual migration.
+  Attempting to change the Tapis Vault with a different storage type without performing the manual 
+  migration could result in secret loss and permanent corruption of the Tapis installation.
+
+
 
 ------------------------------------------------
 Generating the Tapis Deployment Script Directory
@@ -329,20 +347,52 @@ For example, with the same file structure as above, we could regenerate just the
   ansible-playbook -i tapis_installations.yml tapis-deployer-1.3.1/playbooks/generate-single-component.yml -e comp=workflows
 
 
+-------------------------------------
+Deployment Script Directory Structure
+-------------------------------------
+The deployment script directory is structured as follows:
 
+.. code-block:: console
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Additional Requirements for an Initial Associate Site Deployment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  actors/   # the Actors component
+    burnup 
+    burndown
+    # k8s .yml files for actors...
 
-* Associate site record added to primary site table
-* Associate site tenants created (in DRAFT mode) on primary tenants table  
+  admin/   # the admin component, not a Tapis service
+    backup/
+    # . . .
+    verification/
+
+  apps/   # the Apps component
+    burnup
+    burndown
+    # k8s .yml files apps...
+
+  # ... additional component directories ...
+
+  burnup     # top-level burnup script
+  burndown   # top-level burndown script
+
+  # ... additional component directories ...
+
+At the top level, there is a directory for every Tapis *component* that will be deployed. Note that most
+components are Tapis services, such as Actors and Apps, but some components, such as ``admin``, ``skadmin``
+and ``vault`` are not Tapis services but are instead components needed to make the deployment work.
+
+Except for ``admin``, each component contains a ``burnup`` and ``burndown`` script, together with some yaml 
+files for defining the Kuberentes objects. The ``burnup`` BASH script is a convenience utility for creating
+the Kuberentes objects while the ``burndown`` script can be used to remove the objects. Similarly, 
+there is a top-level ``burnup`` and ``burndown`` script to create/remove all the Tapis objects. The top-level 
+scripts call the individual component ``burnup``and ``burndown`` scripts, respectively.  
+
 
 ----------------------------------
 Using the Deployer Control Scripts
 ----------------------------------
 
-The deployment script directory contains bash scripts called ``burnup`` and ``burndown``, referred to as 
+As mentioned above, the deployment script directory contains bash scripts called ``burnup`` 
+and ``burndown``, referred to as 
 the Deployer control scripts. These scripts provided convenience functions for managing entire sets of 
 Tapis components at once.  Deploying Tapis using the control scripts involves a three step process:
 

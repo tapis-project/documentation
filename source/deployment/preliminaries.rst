@@ -192,3 +192,15 @@ using the official scripts involves the following high-level steps:
 4. If necessary, check out the deployment files to the deployment 
    environment (for example, the machine that has access to the Kubernetes API).
 5. Run deployment scripts to start/update the Tapis services. 
+
+----------------------------------------------------------------
+Additional Requirements for an Initial Associate Site Deployment
+----------------------------------------------------------------
+Some additional setup is required at the primary site before an associate site can be created.
+These steps include:
+
+1) Creating the associate site record on the primary site table.
+2) Creating the Associate site tenant records (in DRAFT mode) on primary tenants table.
+
+Contact the administrators of the primary site to have these steps completed before beginning your 
+associate site deployment. 

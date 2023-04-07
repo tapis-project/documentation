@@ -14,31 +14,34 @@ Tapis Administration
 In this section, we cover common administration tasks that arise when operating Tapis 
 software. 
 
-
---------------------------
-Troubleshooting Tapis Pods
---------------------------
-
-------------------------
-Running Tapis Test Suite
-------------------------
-
---------------------------------
-Configuring Tenant Signing keys
---------------------------------
+*This section is under construction...*
 
 
---------------------------
-Configuring Authenticators
---------------------------
+    --------------------------
+    Troubleshooting Tapis Pods
+    --------------------------
+
+    ------------------------
+    Running Tapis Test Suite
+    ------------------------
+
+    --------------------------------
+    Configuring Tenant Signing keys
+    --------------------------------
 
 
------------------
-Creating Tenants 
------------------
+    --------------------------
+    Configuring Authenticators
+    --------------------------
 
-.. note::
-    Creating tenants is an action performed at a primary site. If you run an associate site 
-    and need a new tenant created, contact your primary site administrators. 
+
+    -----------------
+    Creating Tenants 
+    -----------------
+
+.. # commented for now ---
+    .. note::
+        Creating tenants is an action performed at a primary site. If you run an associate site 
+        and need a new tenant created, contact your primary site administrators. 
 
 
