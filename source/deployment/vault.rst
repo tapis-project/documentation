@@ -306,12 +306,12 @@ Running SkExport
 The easiest way to execute SkExport is to run its docker image.  The *-vtok* and *-vurl* parameters are required.  Here's an example of how to export the tapis service secrets (user and system secrets are skipped) in environment variable format with the values single quoted::
 
     export SKEXPORT_PARMS='-quote -vtok xxxx -vurl https://tapis-vault.mydomain.com:8200'
-    docker run --env SKEXPORT_PARMS tapis/securityexport:dev
+    docker run --env SKEXPORT_PARMS tapis/securityexport
 
 This example outputs JSON data::
 
     export SKEXPORT_PARMS='-format=JSON -vtok xxxx -vurl https://tapis-vault.mydomain.com:8200'
-    docker run --env SKEXPORT_PARMS tapis/securityexport:dev
+    docker run --env SKEXPORT_PARMS tapis/securityexport
 
 Since a token with at least as much authorization as the Security Kernel's token must be used to extract secrets from Vault, and since secrets are being output in the clear, it's important to take proper security precautions when using SkAdmin.  These precautions include not leaving tokens or secrets in files and deleting sensitive information from the command line history file. 
 
