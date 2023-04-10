@@ -195,7 +195,7 @@ PHASE II - Remote Commands
 
 On the remote machine terminal, export the root VAULT_TOKEN as shown in Step 10.  Clone the `tapis-vault-vm <https://github.com/tapis-project/tapis-vault-vm>`_ git repo into the current directory.
 
-| git clone https://github.com/tapis-project/tapis-vault-vm.git
+| *git clone https://github.com/tapis-project/tapis-vault-vm.git*
 | *cd tapis-vault-vm*
 
 | *curl -X POST -H "X-Vault-Token: $VAULT_TOKEN" --data @roles/sk-role.json https://tapis-vault.mydomain.com:8200/v1/auth/approle/role/sk*
