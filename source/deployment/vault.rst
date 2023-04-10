@@ -31,20 +31,20 @@ Tapis Vault
 Introduction to Tapis Vault
 ===========================
 
-Tapis stores all its secrets in an instance of `Hashicorp Vault <https://www.hashicorp.com/products/vault>`_.  It is critical that access to Vault is tightly controlled and its secret content is safeguarded.  The only Tapis component that interactes directly with Vault is the `Security Kernel <../technical/security.html>`_ and its associated utility programs.
+Tapis stores all its secrets in an instance of `Hashicorp Vault <https://www.hashicorp.com/products/vault>`_.  It is critical that access to Vault is tightly controlled and its secret content safeguarded.  The only Tapis component that interactes directly with Vault is the `Security Kernel <../technical/security.html>`_ and its associated utility programs.
 
 When planning a Tapis installation, one should consider the tradeoff between automation and robust secret management.  In highly automated environments like Kubernetes, services are automatically restarted when they fail or need to be moved between nodes.  This level of automation requires writing at least one secret on some software accessible disk.  On the other hand, Vault initialization is geared toward having a human in the loop to execute its unseal protocol and to protect high value tokens.  
 
-Tapis supports two levels of Vault automation.  When running in a Kubernetes cluster, Vault's unseal keys and a long-lived token are written to disk on the control plane.  Kubernetes accesses these secrets when it initializes a new Vault instance or needs to restart Vault.  These secrets are protected by the operating system's account and access control mechanisms; if those mechanisms are compromised, the Vault's contents are vulnerable. 
+Tapis supports two levels of Vault automation.  When running in a Kubernetes cluster, Vault's unseal keys and a long-lived token are written to disk on the control plane.  Kubernetes accesses these secrets when it initializes a new Vault instance or it needs to restart Vault.  These secrets are protected by the operating system's account and access control mechanisms; if those mechanisms are compromised, the Vault's contents are vulnerable. 
 
 Tapis also supports deploying Vault outside a Kubernetes cluster while the rest of Tapis runs in the cluster.  In this configuration, a data center can deploy Vault to meet its local security policies and standards, including limiting administrative access to Vault, running Vault in a physically secure location, employing a hardware security module, etc.
 
-In the following two sections we discuss how the community version of Vault can be run inside Kubernetes and run on a VM outside of Kubernetes.  In both cases, Vault needs to be installed, certains capabilities need to be enabled, Tapis-specific policies and roles need to be created, and administrative processes need to be put in place.  Other configurations, such as running enterprise Vault or sharing Vault with other applications, are not covered explicitly, but the information necessary for such adaptions can be extrapolated from the discussion.   
+In the following two sections we discuss how the community version of Vault can be run inside Kubernetes and run on a VM outside of Kubernetes.  In both cases, Vault needs to be installed, certains capabilities need to be enabled, Tapis-specific policies and roles need to be created, and administrative processes need to be put in place.  Other configurations, such as running enterprise Vault or sharing Vault with other applications, are not covered, but information from this discussion can be adapted to other configurations.   
 
 Deploying Vault in Kubernetes
 =============================
 
-Using `Tapis Deployer <./deployer.html>`_, Tapis's `top-level burnup script <https://github.com/tapis-project/tapis-deployer/blob/main/playbooks/roles/baseburnup/templates/kube/burnup>`_ configures and initializes Vault early in the deployment process.  The `Vault burnup script <https://github.com/tapis-project/tapis-deployer/blob/main/playbooks/roles/vault/templates/kube/burnup>`_ performs these tasks, executing from the Kubernetes control plane:
+Using `Tapis Deployer <./deployer.html>`_, Tapis's `top-level burnup script <https://github.com/tapis-project/tapis-deployer/blob/main/playbooks/roles/baseburnup/templates/kube/burnup>`_ configures and initializes Vault early in the deployment process.  The `Vault burnup script <https://github.com/tapis-project/tapis-deployer/blob/main/playbooks/roles/vault/templates/kube/burnup>`_ executes from the Kubernetes control plane and performs these tasks:
 
 - Configures Vault's network and site location 
 - Configures Vault storage
@@ -57,9 +57,9 @@ Using `Tapis Deployer <./deployer.html>`_, Tapis's `top-level burnup script <htt
 
 The deployer scripts detect the *vault* file to determine whether Vault has been installed.  This file along with the *vault-token* file are placed in user's home directory by default, but this can be changed.
 
-At this point, a Vault docker image is running in a Kubernetes pod and deployment scripts write the unseal keys and the root token to files.  These secrets are also written to Kubernetes secrets to make them available to pods and jobs.  Kubernetes has all the secret information needed to restart Vault whenever it detects a failure or needs to move the pod.  This automation comes at the cost of having sensitive Vault secrets on disk in the Kubernetes control plane. 
+At this point, a Vault docker image is running in a Kubernetes pod and deployment scripts have written the unseal keys and the root token to files.  These secrets are also written to Kubernetes secrets to make them available to pods and jobs.  Kubernetes has all the secret information needed to restart Vault whenever it detects a failure or needs to move the pod.  This automation comes at the cost of having sensitive Vault secrets on disk in the Kubernetes control plane. 
 
-The next phase initializes the Vault with Tapis roles, policies and secrets using the SkAdmin utility program.  SkAdmin secrets management capabilities is discussed in depth in its own `topic <secrets.html>`_, but here we'll focus on its role in Vault's one-time initialization.  
+The next phase initializes the Vault with Tapis roles, policies and secrets using the SkAdmin utility program.  SkAdmin secrets management capabilities is discussed in depth in its own `topic <secrets.html>`_, but here we'll focus on its role during Vault initialization.  
 
 SkAdmin connects to Vault with administrative permissions so that is can set up Tapis's `standard policies <https://github.com/tapis-project/tapis-deployer/tree/main/playbooks/roles/skadmin/templates/kube/tapis-vault/policies/sk>`_ and its `administrative policies <https://github.com/tapis-project/tapis-deployer/tree/main/playbooks/roles/skadmin/templates/kube/tapis-vault/policies/sk-admin>`_.  
 SkAdmin also sets up Tapis's `standard roles <https://github.com/tapis-project/tapis-deployer/blob/main/playbooks/roles/skadmin/templates/kube/tapis-vault/roles/sk-role.json>`_ and its `administrative roles <https://github.com/tapis-project/tapis-deployer/blob/main/playbooks/roles/skadmin/templates/kube/tapis-vault/roles/sk-admin-role.json>`_.
@@ -70,7 +70,7 @@ Once SkAdmin completes setting up Tapis's roles and policies, Vault is ready to 
 Deploying Vault Outside of Kubernetes
 =====================================
 
-The procedure below describes how to build a Vault VM, which we'll call "**tapis-vault**".  This procedure can also be used as a template for building Vault instances in other environments.  In Kubernetes environments, for example, Tapis's automated process follows the same general outline as discussed here.  
+The procedure below describes how to build a Vault VM on Linux, which we'll call "**tapis-vault**".  This procedure can also be used as a template for building Vault instances in other environments and follows the same general outline as dicussed above for Kubernetes environments.  
 
 Important security characteristics of the VM installation approach are:
 
@@ -94,7 +94,7 @@ Acquire a VM with a TLS certificate installed.  We'll use the fictitious domain 
 
 **Step 2 - Install Hashicorp Vault**
 
-SSH into target VM as root.  Follow installation instructions for your package manager: 
+SSH into target VM as root.  Follow installation instructions for your package manager to natively install Vault: 
 
 https://learn.hashicorp.com/tutorials/vault/getting-started-install?in=vault/getting-started
 
@@ -152,7 +152,7 @@ Test the installation (customize for your hostname):
 
 *vault operator init*
 
-Five *unseal keys* and the *root token* will be written to the screen.  DO NOT SAVE THESE DATA ANYWHERE ON THE FILE SYSTEM.  Instead, copy the information off the screen and save them securely off the VM.
+Five *unseal keys* and the *root token* will be written to the screen.  DO NOT SAVE THESE DATA PERMANENTLY ON THE FILE SYSTEM.  Instead, copy the information off the screen and save them securely off the VM.
 
 **Step 7 - Unseal Vault**
 The Vault requires 3 out of the 5 of the unseal keys to unseal.  Issue the operator unseal call 3 times, each time using a different key.
@@ -193,9 +193,10 @@ PHASE II - Remote Commands
 
 **Step 12 - Create SK Roles**
 
-On the remote machine terminal, export the root token if that's already been done (see Step 10).  Clone the tapis-vault git repo into the current directory.
+On the remote machine terminal, export the root VAULT_TOKEN as shown in Step 10.  Clone the `tapis-vault-vm <https://github.com/tapis-project/tapis-vault-vm>`_ git repo into the current directory.
 
-| *cd tapis-vault*
+| git clone https://github.com/tapis-project/tapis-vault-vm.git
+| *cd tapis-vault-vm*
 
 | *curl -X POST -H "X-Vault-Token: $VAULT_TOKEN" --data @roles/sk-role.json https://tapis-vault.mydomain.com:8200/v1/auth/approle/role/sk*
 
@@ -278,7 +279,7 @@ Tapis configures Vault to run with the `raft <https://developer.hashicorp.com/va
 - *vault operator raft snapshot save <outfile>*
 - *vault operator raft snapshot restore <infile>*
 
-Tapis fills the gap in Vault's community edition support automating periodic backups in Vault VM environments.  The `tapis-vaultbackup <https://github.com/tapis-project/tapis-vaultbackup>`_ repository contains a backup utility program source code and documentation.  The program is started in a secure manner and periodically takes snapshots of the Vault database (once a day by default).  The program runs as a daemon until it's shutdown.  Typically, a separate cron job is set up to copy the backup files from the VM to one or more remote data stores as local policy dictates. 
+Tapis fills the gap in Vault's community edition support by automating periodic backups in Vault VM environments.  The `tapis-vaultbackup <https://github.com/tapis-project/tapis-vaultbackup>`_ repository contains a backup utility program's source code and documentation.  The program can be started in a secure manner to periodically takes snapshots of the Vault database (once a day by default).  The program runs as a daemon until it's shutdown.  Typically, a separate cron job is set up to copy the backup files from the VM to one or more remote data stores as local policy dictates. 
 
 The program is written in Java and packaged as a self-contained executable.  The executable is then packaged into an rpm for use on operating systems that support that package manager.  There are no plans to support other package managers or container runtimes, but everything needed for such support is available in the repository.         
 
@@ -286,7 +287,7 @@ The program is written in Java and packaged as a self-contained executable.  The
 Vault Export
 =====================================
 
-The SkExport utility program provides a quick way to extract Tapis secrets from Vault.  The output is written to stdout as either JSON data or key/value pairs.  One use of this program is to acquire Tapis service secrets and then to inject them into docker containers as environment variables.  SkExport `source code <https://github.com/tapis-project/tapis-security/tree/dev/tapis-securitylib/src/main/java/edu/utexas/tacc/tapis/security/commands/aux/export>`_ is part of the Security Kernel library and is available as a docker `image <https://hub.docker.com/repository/docker/tapis/securityexport/general>`_.
+The SkExport utility program provides a quick way to extract many Tapis secrets from Vault.  The output is written to stdout as either JSON data or key/value pairs.  One use of this program is to acquire Tapis service secrets and then to inject them into docker containers as environment variables.  SkExport `source code <https://github.com/tapis-project/tapis-security/tree/dev/tapis-securitylib/src/main/java/edu/utexas/tacc/tapis/security/commands/aux/export>`_ is part of the Security Kernel library and is available as a docker `image <https://hub.docker.com/repository/docker/tapis/securityexport/general>`_.
 
 SkExport parameters::
 
@@ -313,5 +314,5 @@ This example outputs JSON data::
     export SKEXPORT_PARMS='-format=JSON -vtok xxxx -vurl https://tapis-vault.mydomain.com:8200'
     docker run --env SKEXPORT_PARMS tapis/securityexport
 
-Since a token with at least as much authorization as the Security Kernel's token must be used to extract secrets from Vault, and since secrets are being output in the clear, it's important to take proper security precautions when using SkAdmin.  These precautions include not leaving tokens or secrets in files and deleting sensitive information from the command line history file. 
+Since a token with at least as much authorization as the Security Kernel's token must be used to extract secrets from Vault, and since secrets are being output in the clear, it's important to take proper security precautions when using SkExport.  These precautions include not leaving tokens or secrets in files and deleting sensitive information from the command line history file. 
 
