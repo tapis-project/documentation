@@ -71,7 +71,7 @@ Versioned Attributes
   Maximum total number of jobs that can be queued or running for this application on a given execution system at
   a given time. Note that the execution system may also limit the number of jobs on the system which may further
   restrict the total number of jobs. Set to -1 for unlimited. Default is unlimited.
-*mJobsPerUser*
+*maxJobsPerUser*
   Maximum total number of jobs associated with a specific job owner that can be queued or running for this application
   on a given execution system at a given time. Note that the execution system may also limit the number of jobs on the
   system which may further restrict the total number of jobs. Set to -1 for unlimited. Default is unlimited.

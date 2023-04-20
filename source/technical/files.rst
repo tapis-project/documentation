@@ -43,7 +43,7 @@ Using the official Tapis Python SDK:
 
 .. code-block:: python
 
-    t.files.listing("/")
+    t.files.listFiles(systemId="my-tapis-system", path="/")
 
 Or using curl:
 
