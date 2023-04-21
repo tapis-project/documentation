@@ -5,7 +5,6 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-22.11";
     flake-utils.url = "github:numtide/flake-utils";
     shell-utils.url = "github:waltermoreira/shell-utils";
-    gum.url = "github:waltermoreira/gum";
   };
 
   outputs =
@@ -13,7 +12,6 @@
     , nixpkgs
     , flake-utils
     , shell-utils
-    , gum
     }:
 
       with flake-utils.lib; eachDefaultSystem
@@ -27,7 +25,6 @@
           pythonPkgs = with pkgs.lib;
             fix (extends generatedPythonPkgs (self: myPython.pkgs));
           shell = shell-utils.myShell.${system};
-          gumBin = gum.packages.${system}.default;
           myPython = pkgs.python310;
           docsPython = (myPython.withPackages (
             ps: with pythonPkgs; [
