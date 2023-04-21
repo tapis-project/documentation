@@ -51,7 +51,7 @@ You can use `Nix <https://nixos.org>`_ for developing and building the documenta
    to automatically spawn a shell and run ``make livehtml``.
 
 Sphinx and reStructuredText
-===========================
+---------------------------
 
 reStructuredText is the default plaintext markup language used by Sphinx, a Python documentation generator. 
 rST is a bit more complex than Markdown, for example, but it includes more advanced features
