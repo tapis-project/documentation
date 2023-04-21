@@ -285,7 +285,7 @@ can jump to the ``Fourth`` step. Feel free to run just the code you need.
 Using ``t.files.insert`` with Tapipy for file upload.
 -----------------------------------------------------
 
-Introduced in Tapipy 1.3.2, the library now have native support from ``multipart/form-data`` input data and headers. This
+Introduced in Tapipy 1.3.2, the library now has native support for ``multipart/form-data`` input data and headers. This
 allows us to natively support the ``t.files.insert`` operation. The following is an example of uploading a ``filepath.ext`` file to a specific
 ``path`` in a users Tapis ``system_id`` system.
 
@@ -296,7 +296,7 @@ allows us to natively support the ``t.files.insert`` operation. The following is
 
 .. Important::
     
-    The previous static workaround, ``t.upload(filePath, systemId, local_file_path)`` is now deprecated and will be removed in a future release.
+    The previous static workaround, ``t.upload(filePath, systemId, local_file_path)``, is now deprecated and will be removed in a future release.
 
 ----
 
