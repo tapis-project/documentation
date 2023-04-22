@@ -32,6 +32,8 @@ rebuild/refresh automatically. Go to http://localhost:7898/ to see its output.
 Alternative Quickstart (using Nix)
 ==================================
 You can use `Nix <https://nixos.org>`_ for developing and building the documentation.
+Using ``Nix`` you don't need to manually install any of the required dependencies (such as Python,
+Sphinx, ``make``, etc.). 
 
 1. Install ``Nix`` using the `Determinate Systems Installer <https://zero-to-nix.com/concepts/nix-installer>`_.
 2. If you want to just build the documentation, you can do it without the need of cloning 
