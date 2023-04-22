@@ -48,7 +48,7 @@ You can use `Nix <https://nixos.org>`_ for developing and building the documenta
 
       nix develop .#live
 
-   to automatically spawn a shell and run ``make livehtml``.
+   to automatically launch the development server, accessible at http://localhost:7898.
 
 Sphinx and reStructuredText
 ---------------------------
