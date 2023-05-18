@@ -297,6 +297,117 @@ The response should contain a list of items similar to the single listing shown 
   See the sections below on `Searching`_, `Selecting`_, `Sorting`_ and `Limiting`_ to find out how to control the
   amount of information returned.
 
+Child Systems
+~~~~~~~~~~~~~~~~~~~~~~
+
+Creating Child Systems
+^^^^^^^^^^^^^^^^^^^^^^
+
+Creating a child system provides a way to share a configured system.  Child systems allow a user to set only
+a few fields, and use all other values from an existing system.  This reduces the difficulty in creating a child
+system, but also allows the child system to be updated when the parent is updated.  
+
+To create a child system, create a local file (for example child_system_example.json) with the following xml::
+
+ {
+    "id": "my-child-<userid>",
+    "effectiveUserId": "${apiUserId}",
+    "rootDir": "/home/<userid>"
+ }
+
+Where <userid> is replaced with your username.  Also ensure that the root directory path is correct.  Now use the
+create child system REST endpoint to create the child system.  Let's assuming that the new child system will be a
+child of a parent system called parent-system.
+
+Using PySDK::
+
+ import json
+ from tapipy.tapis import Tapis
+ t = Tapis(base_url='https://tacc.tapis.io', username='<userid>', password='************')
+ with open('child_system_example.json', 'r') as openfile:
+     my_child_system = json.load(openfile)
+ t.systems.createChildSystem(parentId="parent-system", **my_child_system)
+
+Using CURL::
+
+ $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/parent-system/createChildSystem -d @child_system_example.json
+
+
+These fields are maintained
+independently for child systems:
+
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute           | Type           | Example              | Notes                                                                                |
++=====================+================+======================+======================================================================================+
+| id                  | String         | ds1.storage.default  | - Identifier for the system. URI safe, see RFC 3986.                                 |
+|                     |                |                      | - *tenant* + *id* must be unique.                                                    |
+|                     |                |                      | - Allowed characters: Alphanumeric [0-9a-zA-Z] and special characters [-._~].        |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| owner               | String         | jdoe                 | - username of *owner*.                                                               |
+|                     |                |                      | - Variable references: *${apiUserId}*. Resolved at create time.                      |
+|                     |                |                      | - By default this is the resolved value for *${apiUserId}*.                          |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| enabled             | boolean        | FALSE                | - Indicates if system currently enabled for use.                                     |
+|                     |                |                      | - May be updated using the enable/disable endpoints.                                 |
+|                     |                |                      | - By default this is *true*.                                                         |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| effectiveUserId     | String         | tg869834             | - User to use when accessing the system.                                             |
+|                     |                |                      | - May be a static string or a variable reference.                                    |
+|                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*                                    |
+|                     |                |                      | - On output variable reference will be resolved.                                     |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or IRODS or *isDtn* = true.                      |
+|                     |                |                      | - For LINUX or IRODS must begin with ``/``.                                          |
+|                     |                |                      | - Optional for S3 and will typically not begin with ``/``.                           |
+|                     |                |                      | - Variable references are resolved at create time.                                   |
+|                     |                |                      | - Serves as effective root directory when listing or moving files.                   |
+|                     |                |                      | - May not be updated. Contact support to request a change.                           |
+|                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| deleted             | boolean        | FALSE                | - Indicates if system has been deleted.                                              |
+|                     |                |                      | - May be updated using the delete/undelete endpoints.                                |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| created             | Timestamp      | 2020-06-19T15:10:43Z | - When the system was created. Maintained by service.                                |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| updated             | Timestamp      | 2020-07-04T23:21:22Z | - When the system was last updated. Maintained by service.                           |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+
+During the creation of a child system, the only fields any of these fields may be specified except for created, updated, and deleted.
+
+
+All other fields are taken from the parent system.
+
+
+Updating a Child System
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Updates are done just like any other system, however only the following fields may be updated for a child system.
+
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute           | Type           | Example              | Notes                                                                                |
++=====================+================+======================+======================================================================================+
+| effectiveUserId     | String         | tg869834             | - User to use when accessing the system.                                             |
+|                     |                |                      | - May be a static string or a variable reference.                                    |
+|                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*                                    |
+|                     |                |                      | - On output variable reference will be resolved.                                     |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+
+Some other fields can be updated through special endpoints. For example deleted and enabled are updated through the endpoints for
+deleting, undeleting, enabling and disabling.
+
+Child System Operations
+^^^^^^^^^^^^^^^^^^^^^^^
+Most operations other than update are the same for child systems as they are for parent systems.  For more information
+see the appropriate section of the document for the operation.
+
+* Delete   - see `Deletion`_
+* Undelete - see `Deletion`_
+* Enable   - see "enabled" in `System Attributes Table`_
+* Disable  - see "enabled" in `System Attributes Table`_
+
+Detaching a Child System from it's Parent System
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 -----------------------------------
 Minimal Definition and Restrictions
 -----------------------------------

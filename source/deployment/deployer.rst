@@ -36,19 +36,19 @@ Installing Deployer
 --------------------
 The Tapis Deployer project is hosted on GitHub. Use the 
 `tags <https://github.com/tapis-project/tapis-deployer/tags>`_ download page to download a 
-specific version of the Deployer software. For example, to get version 1.3.1 of the Deployer
+specific version of the Deployer software. For example, to get version 1.3.5 of the Deployer
 software, we could do the following in a terminal:
 
 .. code-block:: console
 
   # download the tar archive
-  wget https://github.com/tapis-project/tapis-deployer/archive/refs/tags/v1.3.1.tar.gz
+  wget https://github.com/tapis-project/tapis-deployer/archive/refs/tags/1.3.5.tar.gz
 
   # unpack the directory
-  tar -xf v1.3.1.tar.gz
+  tar -xf 1.3.5.tar.gz
 
-  # produces a new directory, tapis-deployer-1.3.1, in the current working directory 
-  ls -l tapis-deployer-1.3.1
+  # produces a new directory, tapis-deployer-1.3.5, in the current working directory 
+  ls -l tapis-deployer-1.3.5
   -rw-rw-r-- 1 jstubbs jstubbs 2340 Mar 22 10:13 CHANGELOG.md
   drwxrwxr-x 3 jstubbs jstubbs 4096 Mar 22 10:13 inventory_example
   drwxrwxr-x 3 jstubbs jstubbs 4096 Mar 22 10:13 playbooks

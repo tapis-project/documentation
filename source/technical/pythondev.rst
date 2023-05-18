@@ -12,6 +12,8 @@
 Tapipy and TapisService
 #######################
 
+Tapipy and TapisService are powerful Python libraries for interacting with Tapis.
+
 ----
 
 Tapipy User Guide
@@ -104,10 +106,9 @@ For this example, creating a system, I can see I need to run the following:
     t.systems.createSystem(id="id", host="host", systemType="LINUX")
 
 .. Important::
-
-    ``t.files.insert`` is not yet working. Due to the dynamic nature of the library, Tapipy can't use the intended method
-    for file upload.  Workaround, ``t.upload(filePath, systemId, path)`` allows you to upload a local file in the same way as
-    ``t.files.insert``. Read more :ref:`here<tapipyuploadanchor>`.
+    
+    Tapipy 1.3.2 introduces native support for ``t.files.insert()``. Previous a workaround,
+    ``t.upload(filePath, systemId, path)`` was required. Read more :ref:`here<tapipyuploadanchor>`.
 
 You can specify any parameter identified by the spec. Tapipy will detail missing required parameters if they're missing.
 
@@ -280,32 +281,22 @@ can jump to the ``Fourth`` step. Feel free to run just the code you need.
 
 
 .. _tapipyuploadanchor:
-Use ``t.upload`` for ``t.files.insert``
----------------------------------------
-Tapipy does not yet natively support ``t.files.insert`` due to the dynamic nature of the library. A workaround is found in
-``t.upload(filePath, systemId, path)``, this function is a helper to run ``t.files.insert``. This allows you to provide
-a file path which Python will read, open, and upload. This does mean that you cannot direct provide a blob of data, you must
-first save to a file.
 
-If you want to run a direct data blob insert (as opposed to providing file path) to the Files service you can fallback
-to Python's ``requests`` library as shown below.
+Using ``t.files.insert`` with Tapipy for file upload.
+-----------------------------------------------------
+
+Introduced in Tapipy 1.3.2, the library now has native support for ``multipart/form-data`` input data and headers. This
+allows us to natively support the ``t.files.insert`` operation. The following is an example of uploading a ``filepath.ext`` file to a specific
+``path`` in a users Tapis ``system_id`` system.
 
 .. code-block:: python
 
-    import requests as r
-    base_url = t.base_url
-    token = t.access_token.access_token
-    systemId = "systemid"
-    path = "mypath.ext"
+    with open("filepath.ext", "rb") as data_blob:
+        res = t.files.insert(systemId=system_id, path=path, file = data_blob)
 
-    # Open a binary blob, you can ignore the file open if you already have a ready blob.
-    with open("localfile.ext", "rb") as data_blob:
-        res = r.post(
-            url = f'{base_url}/v3/files/ops/{systemId}/{path}',
-            files = {"file": data_blob},
-            headers = {"X-Tapis-Token": token})
-    print(res.content)
-
+.. Important::
+    
+    The previous static workaround, ``t.upload(filePath, systemId, local_file_path)``, is now deprecated and will be removed in a future release.
 
 ----
 
@@ -382,6 +373,7 @@ develop environment, the ``config-local.json`` can be replaced with file mounted
 - Create a Dockerfile to build your service. The image name for your service should be ``tapis/<service_name>-api``; for example, ``tapis/tokens-api`` or ``tapis/tenants-api``. Here is a general template for the Dockerfile for your service:
 
 .. code-block:: python
+
     # inherit from the flaskbase image:
     FROM: tapis/flaskbase
 
@@ -417,7 +409,7 @@ initialized. Run the following commands from a terminal:
     $ exit
 
 Migrations Dockerfile
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 Create Dockerfile-migrations to containerize your migrations code. For simple cases, you may be able to just use
 the following after change <service> to the name of your service.
 
@@ -441,7 +433,7 @@ Code for a number of common tasks has been packaged into ``tapisservice`` module
 of how to use some of the functionality in your service.
 
 Accessing TapisService Modules
-----------------------------
+------------------------------
 You can install ``tapisservice`` with ``pip install tapisservice``. Services can import modules directly from this package;
 for example:
 
@@ -604,7 +596,7 @@ HTTP response returned to the user would be:
     {
         "message": "Invalid sprocket; too many widgets.",
         "status": "error",
-        "version": conf.version,    # <-- from your config
+        "version": conf.version,
         "result": Null
     }
 
@@ -629,7 +621,7 @@ Of course, different KeyErrors in different situations could translate into a us
 
 
 Working with TapisService, Need to Knows
-======================================
+========================================
 If you're developing with TapisService then please ensure you understand the following topics.
 
 Framework Talk
@@ -767,6 +759,7 @@ Hammering home the point, ``tapisservice`` exposes two sets of similar variables
 - ``g.request_username`` - ``g.username`` if not service and ``g.x_tapis_user`` otherwise
 - ``g.username`` - incoming request token's ``username`` claim
 - ``g.x_tapis_user`` - the value of the ``X-Tapis-Tenant`` header
+
 and
 
 - ``g.request_tenant_id`` - ``g.tenant_id`` if not service and ``g.x_tapis_tenant`` otherwise

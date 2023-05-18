@@ -1383,6 +1383,12 @@ The response will look something like the following:
     }
     }
 
+The Job output list API retrieves job's output files list for a previously submitted job by its UUID.
+By default, the job must be in a terminal state (FINISHED or FAILED or CANCELLED) for the API to list the job's output files .
+There is a query parameter allowIfRunning set to false by default.
+If allowIfRunning=true, the API returns the job output files list even if the job is not in the terminal state.
+Note that if a file is being written, still the file is listed.
+
 Get Job Output Download
 -------------------------
 
@@ -1400,6 +1406,12 @@ With CURL:
       $ curl -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/output/download/ --output joboutput.zip
 
 All the files in the the requested outputPath get downloaded in a zip file.
+
+The Jobs output download API retrieves the job's output files for a previously submitted job by its UUID.
+By default, the job must be in a terminal state (FINISHED or FAILED or CANCELLED) for the API to download the job's output files.
+There is a query parameter allowIfRunning set to false by default.
+If allowIfRunning=true, the API allows downloading the job output files even if the job is not in the terminal state.
+Note that if a file is being written at the time of the request, the file is still downloaded with the current content.
 
 
 Dedicated Search Endpoint
@@ -1467,6 +1479,7 @@ The response will look something like the following:
           "totalCount": 246
       }
       }
+
 
 Search using POST on Dedicated Endpoint
 ---------------------------------------
