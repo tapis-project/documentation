@@ -59,14 +59,18 @@ At a high level a system represents the following information:
   For S3 this is optional and typically will not begin with ``/``.
   May not be updated. Contact support to request a change.
 *dtnSystemId* - DTN system Id
-  An alternate system to use as a Data Transfer Node (DTN).
+  An alternate system to use as a Data Transfer Node (DTN) during job execution. The execution system and the DTN
+  system must have shared storage.
 *dtnMountPoint* - DTN mount point
-  Mount point (aka target) used when running the mount command on this system.
+  Mount point (aka target) used when running the mount command on this system. During job execution this is the
+  path on this system for files transferred to *rootDir* on *dtnSystemId*.
 *dtnMountSourcePath* - DTN mount source path
   The path exported by *dtnSystemId* that matches the *dtnMountPoint* on this system. This will be relative to
-  *rootDir* on *dtnSystemId*.
+  *rootDir* on *dtnSystemId*. Used during job execution.
 *isDtn*
-  Indicates if system will be used as a data transfer node (DTN). By default this is *false*.
+  Indicates if system will be used as a data transfer node (DTN). If this is *true* then *rootDir* is required,
+  *canExec* must be false and following may not be specified: *dtnSystemId*, *dtnMountSourcePath*, *dtnMountPoint*
+  and all job execution related attributes. By default this is *false*.
 *canExec*
   Indicates if system can be used to execute jobs.
 *canRunBatch*
