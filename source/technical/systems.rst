@@ -329,8 +329,8 @@ Using PySDK::
  from tapipy.tapis import Tapis
  t = Tapis(base_url='https://tacc.tapis.io', username='<userid>', password='************')
  with open('child_system_example.json', 'r') as openfile:
-     my_child_system = json.load(openfile)
- t.systems.createChildSystem(parentId="parent-system", **my_child_system)
+     child_system = json.load(openfile)
+ t.systems.createChildSystem(parentId="parent-system", **child_system)
 
 Using CURL::
 
@@ -409,8 +409,65 @@ see the appropriate section of the document for the operation.
 * Enable   - see "enabled" in `System Attributes Table`_
 * Disable  - see "enabled" in `System Attributes Table`_
 
-Detaching a Child System from it's Parent System
+Unlinking a Child System from it's Parent System
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A child system may be unlinked from it's parent.  This is a permanent operation, and cannot be undone.  This will make the child a standalone
+system with all of it's current settings.  When the unlink happens any fields that had previously been linked to the parent will be copied to 
+the child, and it will be as if the child was created as in independant system with those values.
+
+If the owner of the child system wantes to unlink the child from it's parent, the owner may use the unlinkFromParent endpoint.
+
+Using PySDK::
+
+ import json
+ from tapipy.tapis import Tapis
+ t = Tapis(base_url='https://tacc.tapis.io', username='<userid>', password='************')
+ t.systems.unlinkFromParent(childSystemId="<child-system-id>")
+
+Using CURL::
+
+ $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/<child-system-id>/unlinkFromParent
+
+Replace <child-system-id> with the id of the child system.
+
+The owner of a parent system can also decide to unlink child systems from the parent.  In that case the parent system owner would use
+the unlinkChildren endpoint.  They could unlink specific child systems.  First create a json file (for example children_to_unlink.json)::
+
+ {
+    "childSystemIds":
+    [
+      "<child-system-1-id>",
+      "<child-system-2-id>"
+      ...
+    ]
+ }
+
+Using PySDK::
+
+  import json
+  from tapipy.tapis import Tapis
+  t = Tapis(base_url='https://tacc.tapis.io', username='<userid>', password='************')
+  with open('children_to_unlink.json', 'r') as openfile:
+      children_to_unlink = json.load(openfile)
+  t.systems.unlinkChildren(parentSystemId="<parent-system-id>", **children_to_unlink)
+
+Using CURL::
+
+ $curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" http://localhost:8080/v3/systems/<parent-system-id>/unlinkChildren -d @./children_to_unlink.json
+
+Or all child systems using all=True (no json file required)
+
+Using PySDK::
+
+ import json
+ from tapipy.tapis import Tapis
+ t = Tapis(base_url='https://tacc.tapis.io', username='<userid>', password='************')
+ t.systems.unlinkChildren(parentSystemId="<parent-system-id>", all=True)
+
+Using CURL::
+
+ $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" "https://tacc.tapis.io/v3/systems/<parent-system-id>/unlinkChildren?all=true"
 
 -----------------------------------
 Minimal Definition and Restrictions

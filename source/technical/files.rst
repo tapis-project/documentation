@@ -121,6 +121,30 @@ resulting path will become the key.
   When *rootDir* is defined for an S3 system it typically should not begin with ``/``.
   For S3 keys are typically created and manipulated using URLs and do not have a leading ``/``.
 
+Handling of symbolic links on Linux systems
+^^^^^^^^^^^^^^^^^^^^^^^
+If listing contains a symbolic link, it will show type of symbolic link:
+
+.. code-block:: json
+
+        {
+            "group": "1002",
+            "lastModified": "2023-05-09T19:53:53Z",
+            "mimeType": null,
+            "name": "x2",
+            "nativePermissions": "rwxrwxrwx",
+            "owner": "1002",
+            "path": "x2",
+            "size": 4,
+            "type": "symbolic_link",
+            "url": "tapis://mysystem/mySymLinkedFileOrDirectory"
+        },
+
+If a listing for a path that is a symbolic link is requested, the symbolic link is followed, and the information is 
+returned for path that the symbolic link points to.  If the path doesn't exist, and error will be returned.  If the 
+link points to a file, the file's information will be returned (the type will be "file").  If the symbolic link 
+points to a directory, the contents of that directory will be returned.
+
 Move and Copy
 ~~~~~~~~~~~~~
 
@@ -142,6 +166,78 @@ with a JSON body of
     "newPath": "/subdir/file1.txt"
   }
 
+Handling of symbolic links on Linux systems
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+During a move or copy, if a symbolic link is encountered, it will be handled as shown in the tables below.  The first and second columns indicate whether the link is the source or target and if it points to a file or directory.
+
+Copy
+
++---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
+| Symbolic Link | Points To | Notes                                                                                                                     |
++===============+===========+===========================================================================================================================+
+| source        | file      | If the destination path is to a file (this means that the path ends in a component that does exist, and it's a file or a  |
+|               |           | component that does not exist):                                                                                           |
+|               |           |  -  a new symbolic link is created that points to the same place as the source.                                           |
+|               |           |  - if the destination path includes directories that do not exist, they will be created.                                  |
+|               |           | If the destination path is to a directory (this means that the path ends in a component that does exist and it is a       |
+|               |           | directory):                                                                                                               |
+|               |           |  - If the path given is to an existing directory,  a new link with the same name will be created in that directory, and   |
+|               |           |    it will point to the same place as the source.                                                                         |
+|               |           | Note that if the link is to a relative path, moving it could change where it actually points because the exact relative   |
+|               |           | path will remain the same.                                                                                                |
++---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
+| source        | directory | If the destination path is to a file (this means that the path ends in a component that does exist, and it's a file or a  |
+|               |           | component that does not exist):                                                                                           |
+|               |           |  - a new symbolic link is created that points to the same place as the source.                                            | 
+|               |           |  - if the destination path includes directories that do not exist, they will be created.                                  |
+|               |           | If the destination path is to a directory (this means that the path ends in a component that does exist and it is a       |
+|               |           | directory):                                                                                                               |
+|               |           |  - If the path given is to an existing directory,  a new link with the same name will be created in that directory, and   |
+|               |           |    it will point to the same place as the source.                                                                         |
+|               |           | Note that if the link is to a relative path, moving it could change where it actually points because the exact relative   |
+|               |           | path will remain the same.                                                                                                |
++---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
+| destination   | file      | The destination is replaced by the source.  The source could be a file, directory, or link to a file or directory.        |
++---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
+| destination   | directory | The new file, directory, or link is created inside of the existing directory.                                             |
++---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
+
+
+Move
+
++---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
+| Symbolic Link | Points To | Notes                                                                                                                     |
++===============+===========+===========================================================================================================================+
+| source        | file      | If the destination path is to a file (this means that the path ends in a component that does exist, and it's a file or a  |
+|               |           | component that does not exist):                                                                                           |
+|               |           |  - the symbolic link is renamed.                                                                                          |
+|               |           |  - if the destination path includes directories that do not exist, they will be created, and the new link will be placed  |
+|               |           |    there.                                                                                                                 |        
+|               |           | If the destination path is to a directory (this means that the path ends in a component that does exist and it is a       |
+|               |           | directory):                                                                                                               |
+|               |           |  - If the path given is to an existing directory,  the link is moved to that directory.                                   |
+|               |           | Note that if the link is to a relative path, moving it could change where it actually points because the exact relative   |
+|               |           | path will remain the same.                                                                                                |
++---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
+| source        | directory |                                                                                                                           |
++---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
+|               |           | If the destination path is to a file (this means that the path ends in a component that does exist, and it's a file or a  |
+|               |           | component that does not exist):                                                                                           |
+|               |           |  - the symbolic link is renamed.                                                                                          |
+|               |           |  - if the destination path includes directories that do not exist, they will be created.                                  |
+|               |           | If the destination path is to a directory (this means that the path ends in a component that does exist and it is a       |
+|               |           | directory):                                                                                                               |
+|               |           |  - if the path given is to an existing directory,  the souce link will be moved into that directory, and it will point to |
+|               |           |    the same place as the source.                                                                                          |
+|               |           | Note that if the link is to a relative path, moving it could change where it actually points because the exact relative   |
+|               |           | path will remain the same.                                                                                                |
++---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
+| destination   | file      | The source link is renamed, to the destination path.  The destination is replaced.  The source could be a file, directory,|
+|               |           | or link to a file or directory.                                                                                           |
++---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
+| destination   | directory |  The file, directory, or link is moved inside of the existing directory.                                                  |
++---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
 
 Uploading
 ~~~~~~~~~
@@ -186,6 +282,11 @@ the system *rootDir* if the path is the empty string.
   the prefix *rootDir* will be deleted. So if the *rootDir* is also the empty string, then all objects in the
   bucket will be removed.
 
+Handling of symbolic links and special files on Linux Systems
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If Tapis encounters a symbolic link during a delete operation, the link will be deleted.  The file or directory that the link points to will be 
+unaffected.  If the delete encounters a special file (such as a device file or fifo, etc), it will not be deleted, and an error will be returned.  
+If this is in the middle of a recursive delete operation, some files may have been already deleted.
 
 Creating a directory
 ~~~~~~~~~~~~~~~~~~~~
@@ -455,6 +556,17 @@ The JSON response should look something like :
     "version": "1.1-094fd38d",
     "metadata": {}
   }
+
+Handling of symbolic links on Linux Systems
+~~~~~~~~~~~~~~~~~~~
+Transfer will always "follow links".  If the source of the transfer is a symbolic link to a file or directory, it transfer the file or 
+directory that is pointed to.  If it doesn't exist, it will be an error (i.e. the link points to something that doesn't exist).  In 
+the case of a directory transfer where one of the entries in the directory encountered is a symbolic link it will be resolved in 
+exactly the same way - the file is added to the archive to be downloaded, or the directory is walked, and it's content added to the 
+archive.  Symbolic links can create situations where infinite recursion can occur - for example, suppose you have a directory with a 
+link that points to "../".  That means that each time it's expanded the current directory will be added, and the link will be 
+expanded again.  Transfers (and really all file operations that involve recursing subdirectories) are limited by a recursion depth.  
+The current maximum depth is 20.
 
 ------------------------------
 File Permissions
@@ -880,6 +992,7 @@ Using python
 
     tapis.files.updatePostIt(postitId="e614ce8e-447c-4195-a3f7-55f5dec5d243-010", allowedUses=10, validSeconds=3600)
 
+Redeeming PostIts
 ~~~~~~~~~~~~~~~~~~~
 
 To redeem a PostIt, use the redeemUrl from the PostIt to make a non-authenticated HTTP GET request.
@@ -924,6 +1037,11 @@ Using python
 
 The redeem URL can also be pasted into the address bar of your favorite browser, and it will download
 the file pointed to by the PostIt.
+
+Handling of symbolic links on Linux Systems
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Redeeming PostIts handles symbolic links exactly the same as Transfers_
 
 Expiring PostIts
 ~~~~~~~~~~~~~~~~~~~
