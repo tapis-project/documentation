@@ -122,7 +122,7 @@ resulting path will become the key.
   For S3 keys are typically created and manipulated using URLs and do not have a leading ``/``.
 
 Handling of symbolic links on Linux systems
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If listing contains a symbolic link, it will show type of symbolic link:
 
 .. code-block:: json
@@ -178,23 +178,31 @@ Copy
 +===============+===========+===========================================================================================================================+
 | source        | file      | If the destination path is to a file (this means that the path ends in a component that does exist, and it's a file or a  |
 |               |           | component that does not exist):                                                                                           |
+|               |           |                                                                                                                           |
 |               |           |  -  a new symbolic link is created that points to the same place as the source.                                           |
 |               |           |  - if the destination path includes directories that do not exist, they will be created.                                  |
+|               |           |                                                                                                                           |
 |               |           | If the destination path is to a directory (this means that the path ends in a component that does exist and it is a       |
 |               |           | directory):                                                                                                               |
+|               |           |                                                                                                                           |
 |               |           |  - If the path given is to an existing directory,  a new link with the same name will be created in that directory, and   |
 |               |           |    it will point to the same place as the source.                                                                         |
+|               |           |                                                                                                                           |
 |               |           | Note that if the link is to a relative path, moving it could change where it actually points because the exact relative   |
 |               |           | path will remain the same.                                                                                                |
 +---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
 | source        | directory | If the destination path is to a file (this means that the path ends in a component that does exist, and it's a file or a  |
 |               |           | component that does not exist):                                                                                           |
+|               |           |                                                                                                                           |
 |               |           |  - a new symbolic link is created that points to the same place as the source.                                            | 
 |               |           |  - if the destination path includes directories that do not exist, they will be created.                                  |
+|               |           |                                                                                                                           |
 |               |           | If the destination path is to a directory (this means that the path ends in a component that does exist and it is a       |
 |               |           | directory):                                                                                                               |
+|               |           |                                                                                                                           |
 |               |           |  - If the path given is to an existing directory,  a new link with the same name will be created in that directory, and   |
 |               |           |    it will point to the same place as the source.                                                                         |
+|               |           |                                                                                                                           |
 |               |           | Note that if the link is to a relative path, moving it could change where it actually points because the exact relative   |
 |               |           | path will remain the same.                                                                                                |
 +---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
@@ -211,12 +219,16 @@ Move
 +===============+===========+===========================================================================================================================+
 | source        | file      | If the destination path is to a file (this means that the path ends in a component that does exist, and it's a file or a  |
 |               |           | component that does not exist):                                                                                           |
+|               |           |                                                                                                                           |
 |               |           |  - the symbolic link is renamed.                                                                                          |
 |               |           |  - if the destination path includes directories that do not exist, they will be created, and the new link will be placed  |
 |               |           |    there.                                                                                                                 |        
+|               |           |                                                                                                                           |
 |               |           | If the destination path is to a directory (this means that the path ends in a component that does exist and it is a       |
 |               |           | directory):                                                                                                               |
+|               |           |                                                                                                                           |
 |               |           |  - If the path given is to an existing directory,  the link is moved to that directory.                                   |
+|               |           |                                                                                                                           |
 |               |           | Note that if the link is to a relative path, moving it could change where it actually points because the exact relative   |
 |               |           | path will remain the same.                                                                                                |
 +---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
@@ -224,12 +236,16 @@ Move
 +---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
 |               |           | If the destination path is to a file (this means that the path ends in a component that does exist, and it's a file or a  |
 |               |           | component that does not exist):                                                                                           |
+|               |           |                                                                                                                           |
 |               |           |  - the symbolic link is renamed.                                                                                          |
 |               |           |  - if the destination path includes directories that do not exist, they will be created.                                  |
+|               |           |                                                                                                                           |
 |               |           | If the destination path is to a directory (this means that the path ends in a component that does exist and it is a       |
 |               |           | directory):                                                                                                               |
+|               |           |                                                                                                                           |
 |               |           |  - if the path given is to an existing directory,  the souce link will be moved into that directory, and it will point to |
 |               |           |    the same place as the source.                                                                                          |
+|               |           |                                                                                                                           |
 |               |           | Note that if the link is to a relative path, moving it could change where it actually points because the exact relative   |
 |               |           | path will remain the same.                                                                                                |
 +---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
@@ -238,6 +254,23 @@ Move
 +---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
 | destination   | directory |  The file, directory, or link is moved inside of the existing directory.                                                  |
 +---------------+-----------+---------------------------------------------------------------------------------------------------------------------------+
+
+Making directories
+~~~~~~~~~~~~~~~~~~
+To create a directory on a tapis system at the given path, issue a mkdir request. This is not supported for all system types. 
+The mkdir operation is currently supported for LINUX, IRODS and GLOBUS type systems.
+
+Using the Tapis Python SDK:
+
+.. code-block:: python
+   
+    t.files.mkdir(systemId="my-system", path="/folderA/folderB/newDirectory")
+
+Using CURL:
+
+.. code-block:: shell
+
+    curl -X POST https://tacc.tapis.io/v3/files/ops/<systemId> -H "X-Tapis-Token: $JWT" -H Content-Type:application/json -d '{"path":"<directory_path"}'
 
 Uploading
 ~~~~~~~~~
@@ -558,7 +591,7 @@ The JSON response should look something like :
   }
 
 Handling of symbolic links on Linux Systems
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Transfer will always "follow links".  If the source of the transfer is a symbolic link to a file or directory, it transfer the file or 
 directory that is pointed to.  If it doesn't exist, it will be an error (i.e. the link points to something that doesn't exist).  In 
 the case of a directory transfer where one of the entries in the directory encountered is a symbolic link it will be resolved in 
@@ -928,6 +961,7 @@ Using curl
 .. code-block:: shell
 
     curl "https://tacc.tapis.io/v3/files/postits?listType=ALL&select=id,redeemUrl,expiration" -H "X-Tapis-Token: $JWT"
+
 Using python
 
 .. code-block:: python
@@ -966,8 +1000,8 @@ The creator of a PostIt and tenant admins can update a PostIt.  When updating a 
 is sent as part of the url, and a body containing allowedUses and/or validSeconds can be specified.
 
 .. note::
-The validSeconds parameter will add to the date and time as of the update request to compute the new
-expiration.  It does **not** extend the current expiration by that many seconds.
+  The validSeconds parameter will add to the date and time as of the update request to compute the new
+  expiration.  It does **not** extend the current expiration by that many seconds.
 
 If you need to update the url, you will need to delete or expire this PostIt and create
 a new one.
