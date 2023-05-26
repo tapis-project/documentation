@@ -288,6 +288,20 @@ The following fields can optionally be provided in the Host Vars file.
   Attempting to change the Tapis Vault with a different storage type without performing the manual 
   migration could result in secret loss and permanent corruption of the Tapis installation.
 
+* ``skadmin_sk_privileged_sa`` -- The name of a service account to use when deploying certain 
+  Tapis components. If specified, this service account should have sufficient privileges to create 
+  and manage various Kubernetes API objects, including: jobs, pods, PVCs, and secrets. If this variable
+  is not set, then no value will be specified for the ``serviceAccountName`` attribute and Kubernetes
+  will fall back to using the  ``default`` service account (in which case the default account must have
+  sufficient privileges to create and manage the Tapis Kubernetes objects).
+
+  Default Value: None (the value of ``default`` is supplied by Kuberentes).
+
+  Examples:
+
+  .. code-block:: yaml
+
+    skadmin_sk_privileged_sa: tapis-manager    
 
 
 ------------------------------------------------

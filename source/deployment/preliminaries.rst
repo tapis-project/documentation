@@ -93,6 +93,28 @@ As mentioned above, each Tapis environment/installation must be deployed into it
 namespace. Uniqueness assumptions made by the deployment architecture and scripts imply that attempting to
 deploy multiple Tapis instances into the same Kubernetes namespace will result in failures. 
 
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Roles, Permissions and Service Accounts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The Tapis deployment scripts utilize the ``kubectl`` command-line utility to register jobs, pods 
+PVCs, secrets, services, and other objects. Registering these objects requires certain permissions
+at the Kubernetes level. Additionally, some, but not all, Tapis jobs and pods use the Kubernetes 
+API as part of their operation. In the spirit of least privilege, we recommend the following:
+
+1. Create a clusterRole (e.g., "tapis-manager") with sufficient privileges to create and manage
+   the Kubernetes objects associated with the Tapis installation (jobs, pods, PVCs, secrets, services, 
+   etc).
+2. Create a Kubernetes service account for each namespace/Tapis installation.
+3. Create a roleBinding for the namespace and service account to grant the service account
+   the privileges in that particular namespace.
+
+.. note::
+
+  It is important in Step 3 that you use a roleBinding, not a clusterRoleBinding, as the 
+  service account only needs the privileges in the specific namespace.
+
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Public IP Addresses, Domains and TLS Certificates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
