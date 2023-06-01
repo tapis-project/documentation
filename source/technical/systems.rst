@@ -35,7 +35,7 @@ At a high level a system represents the following information:
 *description*
   An optional more verbose description for the system.
 *systemType* - Type of system
-  LINUX, S3 or IRODS
+  LINUX, S3, IRODS or GLOBUS
 *owner*
   A specific user set at system creation. By default this is the resolved value for *${apiUserId}*, the user making
   the request to create the system.
@@ -75,6 +75,9 @@ At a high level a system represents the following information:
   Indicates if system can be used to execute jobs.
 *canRunBatch*
   Indicates if system supports running jobs using a batch scheduler. By default this is *false*.
+*enableCmdPrefix*
+  Indicates if system allows a job submission request to specify a *cmdPrefix*. Since *cmdPrefix* is a free form
+  command it is a security concern. By default this is *false*.
 Job related attributes
   Various attributes related to job execution such as *jobRuntimes*, *jobWorkingDir*,
   *batchScheduler*, *batchLogicalQueues*
@@ -256,6 +259,7 @@ The response should look similar to the following::
         "isDtn": false,
         "canExec": false,
         "canRunBatch": false,
+        "enableCmdPrefix": false,
         "jobRuntimes": [],
         "jobWorkingDir": null,
         "jobEnvVariables": [],
@@ -307,11 +311,11 @@ Child Systems
 Creating Child Systems
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Creating a child system provides a way to share a configured system.  Child systems allow a user to set only
-a few fields, and use all other values from an existing system.  This reduces the difficulty in creating a child
-system, but also allows the child system to be updated when the parent is updated.  
+The ability to create child systems provides a way to easily clone and manage systems based on existing systems.
+Child systems allow a user to set only a few fields, and use all other values from an existing system. This reduces the
+difficulty in creating a child system, but also allows the child system to be updated when the parent is updated.
 
-To create a child system, create a local file (for example child_system_example.json) with the following xml::
+To create a child system, create a local file (for example child_system_example.json) with the following::
 
  {
     "id": "my-child-<userid>",
@@ -319,9 +323,9 @@ To create a child system, create a local file (for example child_system_example.
     "rootDir": "/home/<userid>"
  }
 
-Where <userid> is replaced with your username.  Also ensure that the root directory path is correct.  Now use the
-create child system REST endpoint to create the child system.  Let's assuming that the new child system will be a
-child of a parent system called parent-system.
+Where *<userid>* is replaced with your username. Also ensure that the root directory path is correct. Now use the
+create child system REST endpoint to create the child system. Let's assume that the new child system will be a
+child of a parent system called *parent-system*.
 
 Using PySDK::
 
@@ -376,16 +380,14 @@ independently for child systems:
 | updated             | Timestamp      | 2020-07-04T23:21:22Z | - When the system was last updated. Maintained by service.                           |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 
-During the creation of a child system, the only fields any of these fields may be specified except for created, updated, and deleted.
-
-
+During the creation of a child system, any of these fields may be specified except for created, updated and deleted.
 All other fields are taken from the parent system.
 
 
 Updating a Child System
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Updates are done just like any other system, however only the following fields may be updated for a child system.
+Updates are done just like any other system, however, only the following fields may be updated for a child system.
 
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | Attribute           | Type           | Example              | Notes                                                                                |
@@ -401,7 +403,7 @@ deleting, undeleting, enabling and disabling.
 
 Child System Operations
 ^^^^^^^^^^^^^^^^^^^^^^^
-Most operations other than update are the same for child systems as they are for parent systems.  For more information
+Most operations other than update are the same for child systems as they are for parent systems. For more information
 see the appropriate section of the document for the operation.
 
 * Delete   - see `Deletion`_
@@ -412,11 +414,11 @@ see the appropriate section of the document for the operation.
 Unlinking a Child System from it's Parent System
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A child system may be unlinked from it's parent.  This is a permanent operation, and cannot be undone.  This will make the child a standalone
-system with all of it's current settings.  When the unlink happens any fields that had previously been linked to the parent will be copied to 
-the child, and it will be as if the child was created as in independant system with those values.
+A child system may be unlinked from it's parent. This is a permanent operation, and cannot be undone. This will make the child a standalone
+system with all of it's current settings. When the unlink happens any fields that had previously been linked to the parent will be copied to
+the child, and it will be as if the child was created as in independent system with those values.
 
-If the owner of the child system wantes to unlink the child from it's parent, the owner may use the unlinkFromParent endpoint.
+If the owner of the child system wants to unlink the child from it's parent, the owner may use the *unlinkFromParent* endpoint.
 
 Using PySDK::
 
@@ -429,10 +431,10 @@ Using CURL::
 
  $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/<child-system-id>/unlinkFromParent
 
-Replace <child-system-id> with the id of the child system.
+Replace *<child-system-id>* with the id of the child system.
 
-The owner of a parent system can also decide to unlink child systems from the parent.  In that case the parent system owner would use
-the unlinkChildren endpoint.  They could unlink specific child systems.  First create a json file (for example children_to_unlink.json)::
+The owner of a parent system can also decide to unlink child systems from the parent. In that case the parent system owner would use
+the *unlinkChildren* endpoint. The child systems to unlink may be specified in the request body. First create a json file (for example children_to_unlink.json)::
 
  {
     "childSystemIds":
@@ -456,7 +458,7 @@ Using CURL::
 
  $curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" http://localhost:8080/v3/systems/<parent-system-id>/unlinkChildren -d @./children_to_unlink.json
 
-Or all child systems using all=True (no json file required)
+Or all child systems using *all=True* (no json file required)
 
 Using PySDK::
 
@@ -583,7 +585,7 @@ System Attributes Table
 | description         | String         | Default storage      | - Description                                                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | systemType          | enum           | LINUX                | - Type of system.                                                                    |
-|                     |                |                      | - Types: LINUX, S3, IRODS                                                            |
+|                     |                |                      | - Types: LINUX, S3, IRODS, GLOBUS                                                    |
 |                     |                |                      |                                                                                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | owner               | String         | jdoe                 | - username of *owner*.                                                               |
@@ -648,6 +650,9 @@ System Attributes Table
 | canExec             | boolean        |                      | - Indicates if system will be used to execute jobs.                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | canRunBatch         | boolean        |                      | - Indicates if system supports running jobs using a batch scheduler.                 |
+|                     |                |                      | - By default this is *false*.                                                        |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| enableCmdPrefix     | boolean        |                      | - Indicates if system allows a job submission request to specify a cmdPrefix.        |
 |                     |                |                      | - By default this is *false*.                                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobRuntimes         | [Runtime]      |                      | - List of runtime environments supported by the system.                              |
