@@ -58,8 +58,20 @@ Tapis Monitoring Tests
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 A configurable suite of tests is available on GitHub; see the 
-`tapis-tests <https://github.com/tapis-project/tapis-tests>`_ repository. We recommend
-running the tests periodically (for example, every 4 hours). 
+`tapis-tests <https://github.com/tapis-project/tapis-tests>`_ repository. 
+This repository contains test suites that can be used to validate a Tapis installation. There are two types of 
+tests included in each of the subdirectories in the repository. The ``smoke_tests`` folder containers basic
+checks of the functionality of each service. The tests are written in BASH and utilize the curl HTTP client.
+There is significant overlap between these tests and the Tapis Status application, mentioned above, and in 
+many cases using only one or the other is likely to be sufficient. Some projects may prefer the BASH/curl 
+approach of the smoke tests to the Status App. 
+
+The other type of test included is contained in the ``integration_tests`` folder. These tests make 
+more elaborate checks of the Tapis functionality than that checked by the smoke tests, incluind submitting jobs
+and monitoring that the jobs complete. These tests will require some configuration unique to each site (for example, 
+an execution system to use to run the jobs). Also, unlike the smoke tests, the integration tests use Python and the 
+Tapis Python SDK (tapipy). Please see the README in the repository for more details. 
+
 
 
 --------------------------

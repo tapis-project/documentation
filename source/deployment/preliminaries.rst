@@ -114,6 +114,17 @@ API as part of their operation. In the spirit of least privilege, we recommend t
   It is important in Step 3 that you use a roleBinding, not a clusterRoleBinding, as the 
   service account only needs the privileges in the specific namespace.
 
+.. note::
+
+  We explicitly recommend that a new service account be created, as described in step 2, and that 
+  the roleBindings in step 3 be made to this new service account, not the default account. See 
+  the definition of the ``skadmin_sk_privileged_sa`` variable, 
+  described `here <deployer.html#optional-fields-all-sites>`_, for more details.
+
+For even better security, we suggest explicitly differentiating the privileges needed for the deployment of 
+Tapis (that use the Deployer burnup and burndown scripts) versus the privileges 
+needed by the Kubernetes jobs and deployments (i.e., the service account described in Step 2 above).
+
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Public IP Addresses, Domains and TLS Certificates
