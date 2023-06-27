@@ -316,3 +316,154 @@ This example outputs JSON data::
 
 Since a token with at least as much authorization as the Security Kernel's token must be used to extract secrets from Vault, and since secrets are being output in the clear, it's important to take proper security precautions when using SkExport.  These precautions include not leaving tokens or secrets in files and deleting sensitive information from the command line history file. 
 
+
+
+Revoke / Regenerating Vault Root Tokens
+=======================================
+
+Revoking and regenerating Vault Root Tokens is standard practice for Vault. 
+
+Thanks to these sources for providing details for the procedures.
+
+- `Identifying Active Hashicorp Vault Root Tokens <https://www.greenreedtech.com/identifying-active-hashicorp-vault-root-tokens/>`_
+- `Generate Root Token <https://developer.hashicorp.com/vault/tutorials/operations/generate-root>`_
+
+Examples of UUIDs, tokens, passwords are randomized below.
+
+
+**Step 1 - Make a Backup**
+
+Ensure you have a good backup of your Vault before proceeding.
+
+**Step 2 - Generate New Root Token**
+
+Generate a one-time-password::
+
+    # vault operator generate-root -init
+    A One-Time-Password has been generated for you and is shown in the OTP field.
+    You will need this value to decode the resulting root token, so keep it safe.
+    Nonce         8af5de52-0da3-4896-ab9f-6f0f291f31dc
+    Started       true
+    Progress      0/3
+    Complete      false
+    OTP           199273364d410af3c520c9460d
+    OTP Length    26
+
+Use the OTP & unseal keys to generate an Encoded Token. You must enter 3 different unseal keys::
+
+    vault operator generate-root
+    
+    # vault operator generate-root
+    Operation nonce: 8af5de52-0da3-4896-ab9f-6f0f291f31dc
+    Unseal Key (will be hidden): 
+    Nonce       8af5de52-0da3-4896-ab9f-6f0f291f31dc
+    Started     true
+    Progress    1/3
+    Complete    false
+    
+    # vault operator generate-root
+    Operation nonce: 8af5de52-0da3-4896-ab9f-6f0f291f31dc
+    Unseal Key (will be hidden): 
+    Nonce       8af5de52-0da3-4896-ab9f-6f0f291f31dc
+    Started     true
+    Progress    2/3
+    Complete    false
+    
+    # vault operator generate-root
+    Operation nonce: 8af5de52-0da3-4896-ab9f-6f0f291f31dc
+    Unseal Key (will be hidden): 
+    Nonce            8af5de52-0da3-4896-ab9f-6f0f291f31dc
+    Started          true
+    Progress         3/3
+    Complete         true
+    Encoded Token    cd7dc17b468d1c4d0754446b7fe6008aXy1
+
+
+Decode the encoded token using the OTP::
+
+    # vault operator generate-root -decode=cd7dc17b468d1c4d0754446b7fe6008aXy1 -otp=199273364d410af3c520c9460d
+    s.4f31f8b4380afdf78a0c4f2b
+
+Note the New Root Token (*s.4f31f8b4380afdf78a0c4f2b*).
+
+
+**Step 3 - Find and Revoke the Old Root Token**
+
+In the vault container, list Accessors. There may be several.::
+
+    # vault list auth/token/accessors
+    Keys
+    ----
+    31e7d2f9d581f43758635169
+    0a8511c58fdfffa7edea60e9
+    aa1faa246e2e4346bc6364d3
+    8fea0ebb035d3ffdcc8a5e36
+
+You can use this to look the information for each accessor.::
+
+    # vault list -format json auth/token/accessors | jq -r .[] | xargs -I '{}' vault token lookup -format json -accessor '{}' | jq -r 'select(.data.policies | any(. == "root"))'
+
+For each accessor look for their creation time to identify the one you want to revoke::
+
+    # vault token lookup -format json -accessor 0a8511c58fdfffa7edea60e9 | grep creation
+        "creation_time": 1607701202,
+        "creation_ttl": 0,
+
+    # vault token lookup -format json -accessor aa1faa246e2e4346bc6364d3 | grep creation
+        "creation_time": 1684427946,
+
+    $ date -d @1607701202
+    Fri Dec 11 09:40:02 CST 2021
+
+    $ date -d @1684427946
+    Thu May 18 11:39:06 CDT 2023
+
+
+We see that token *0a8511c58fdfffa7edea60e9* is the 2-year-old one so that's the one to revoke.
+
+Revoke the old token::
+
+    # vault token revoke -accessor 0a8511c58fdfffa7edea60e9
+    Success! Revoked token (if it existed)
+
+Confirm the old one no longer works::
+
+    # vault list -format json auth/token/accessors
+    Error listing auth/token/accessors: Error making API request.
+
+    URL: GET http://127.0.0.1:8200/v1/auth/token/accessors?list=true
+    Code: 403. Errors:
+    * permission denied
+
+Verify the new one works::
+
+    # export VAULT_TOKEN=s.4f31f8b4380afdf78a0c4f2b
+    # vault list -format json auth/token/accessors
+    [
+      "aa1faa246e2e4346bc6364d3",
+      "31e7d2f9d581f43758635169",
+      "8fea0ebb035d3ffdcc8a5e36"
+    ]
+
+Note the old one is missing.
+
+
+
+**Step 4 - Setup Tapis to Use the new Root Token**
+
+- Use burndown script to stop vault.
+- Move the old {tapisdatadir}/vault/vault-token out of the way (e.g. `mv vault-token vault-token-20230627-backup`)
+- Update vault-token file with new root token.
+- Delete vault secrets so they will be recreated.
+  - kubectl delete secret vault-keys
+  - kubectl delete secret vault-token
+- Use burnup script to start vault.
+- Restart Security Api. (Go to {tapisdir}/security/api and use the burndown & burnup scripts.)
+- Confirm that the sk and vault secrets are just recently recreated::
+
+    # kubectl get secret | grep vault
+    tapis-sk-vault-secrets              Opaque                                2      15s
+    vault-keys                          Opaque                                3      2m19s
+    vault-token                         Opaque                                1      2m20s
+
+

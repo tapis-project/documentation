@@ -42,10 +42,10 @@ software, we could do the following in a terminal:
 .. code-block:: console
 
   # download the tar archive
-  wget https://github.com/tapis-project/tapis-deployer/archive/refs/tags/1.3.5.tar.gz
+  wget https://github.com/tapis-project/tapis-deployer/archive/refs/tags/tapis-deployer-1.3.1.tar.gz
 
   # unpack the directory
-  tar -xf 1.3.5.tar.gz
+  tar -xf tapis-deployer-1.3.1.tar.gz
 
   # produces a new directory, tapis-deployer-1.3.5, in the current working directory 
   ls -l tapis-deployer-1.3.5
@@ -270,6 +270,16 @@ The following fields can optionally be provided in the Host Vars file.
   .. code-block:: yaml
 
     tapisdir: /home/cic/deployments/tapis-test
+
+* ``tapisdatadir`` -- The path on the local machine where Deployer & Tapis scripts will write important stateful data.
+
+  Default Value: ``$HOME/.tapis-data/{{ inventory_name }}``
+
+  Examples:
+
+  .. code-block:: yaml
+
+    tapisdirdata: /home/cic/deployments/tapis-test-data
 
 * ``vault_raft_storage`` -- Whether to use Raft storage for Vault. 
 
