@@ -67,7 +67,7 @@ many cases using only one or the other is likely to be sufficient. Some projects
 approach of the smoke tests to the Status App. 
 
 The other type of test included is contained in the ``integration_tests`` folder. These tests make 
-more elaborate checks of the Tapis functionality than that checked by the smoke tests, incluind submitting jobs
+more elaborate checks of the Tapis functionality than that checked by the smoke tests, including submitting jobs
 and monitoring that the jobs complete. These tests will require some configuration unique to each site (for example, 
 an execution system to use to run the jobs). Also, unlike the smoke tests, the integration tests use Python and the 
 Tapis Python SDK (tapipy). Please see the README in the repository for more details. 
@@ -120,6 +120,13 @@ Below we provide templates of the backup command we use for each technology.
 * Vault (only used by SK API): See the `Vault Backup <vault.html#vault-backup>`_ section.
 
 
+.. note:: 
+
+    Be aware that Deployer manipulates and stores Vault keys and a Vault root token in files.  
+    Please refer to the Vault guidelines on the safekeeping and handling of these.  If 
+    starting the Vault with the Deployer "burnup" script, in the absence of the file 
+    containing the Vault keys, you will be prompted for Vault keys.  However, a file 
+    containing a Vault root token will be required.
 
     --------------------------------
     Configuring Tenant Signing keys
