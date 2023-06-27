@@ -113,11 +113,11 @@ At TACC, for 3) we have opted to use an AWS S3 bucket.
 
 Below we provide templates of the backup command we use for each technology.
 
-* InfluxDB: ``influxd backup -portable /path/to/file``
-* MySQL: ``mysqldump --all-databases > /path/to/file``
-* MongoDB: See the GitHub repository `tapis/mongodb-backup <https://github.com/tapis-project/mongodb-backup>`_
-* Postgres: ``pg_dump --dbname={service_db} > /path/to/file``
-* Vault: See the `Vault Backup <vault.html#vault-backup>`_ section.
+* InfluxDB (only used by Streams API): ``influxd backup -portable /path/to/file``
+* MySQL (only used by Streams and Workflows API): ``mysqldump --all-databases > /path/to/file``
+* MongoDB (only used by Meta and Actors API): See the GitHub repository `tapis/mongodb-backup <https://github.com/tapis-project/mongodb-backup>`_
+* Postgres (used by Authenticator, Apps, Files, Jobs, Notifications, PgREST, Pods, SK, Systems, and Tenants API): ``pg_dump --dbname={service_db} > /path/to/file``
+* Vault (only used by SK API): See the `Vault Backup <vault.html#vault-backup>`_ section.
 
 
 
