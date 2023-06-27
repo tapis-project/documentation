@@ -39,7 +39,7 @@ Tapis stores all secrets that it uses or manages in `Hashicorp Vault <vault.html
 - Credentials for user systems
 - Arbitrary passwords and other secrets
 
-The only Tapis runtime component that can access the Vault is the `Security Kernal (SK) <../technical/security.html>`_.  There is, however, a need to read, write or delete secrets outside of SK, such as when installing or updating Tapis, rotating keys, or when manual action can quickly solve a problem.  The `SkAdmin <https://github.com/tapis-project/tapis-security/tree/dev/tapis-securitylib/src/main/java/edu/utexas/tacc/tapis/security/commands>`_ utility program provides such capabilities.  
+The only Tapis runtime component that can access the Vault is the `Security Kernal (SK) <../technical/security.html>`_.  There is, however, sometimes a need to read, write or delete secrets outside of SK, such as when installing or updating Tapis, rotating keys, or when manual action can quickly solve a problem.  The `SkAdmin <https://github.com/tapis-project/tapis-security/tree/dev/tapis-securitylib/src/main/java/edu/utexas/tacc/tapis/security/commands>`_ utility program provides such capabilities.  
 
 
 The SkAdmin Utility
@@ -56,7 +56,7 @@ SkAdmin does the following:
 - Generates passwords and key pairs on demand.
 - Provides summary and detail information about work performed on a run.
 
-Secret creation is independent of all Tapis services when going directly to Vault.  When used in this mode, the only dependencies are on Kubernetes and Vault.  This allows SkAdmin to bootstrap all secrets needed by Tapis before any services run.  Whether secrets are created by going through SK or by going directly to Vault, the same secret path naming conventions are used.
+Secret creation is independent of all Tapis services when going directly to Vault.  When used in this mode, the only dependencies are Vault and, possibly, Kubernetes.  This allows SkAdmin to bootstrap all secrets needed by Tapis before any services run.  Whether secrets are created by going through SK or by going directly to Vault, the same secret path naming conventions are used.
 
 Packaging
 ---------
@@ -71,7 +71,7 @@ The most common way to run SkAdmin is using a docker container.  Here's how to d
 
  docker run --rm --env SKADMIN_PARMS=-help tapis/securityadmin
 
-The value assigned to the container's SKADMIN_PARMS environment variable is passed to SkAdmin on the command line.  See this `DockerFile <https://github.com/tapis-project/tapis-security/blob/dev/deployment/tapis-securityadmin/Dockerfile>`_ for details.  Here is the SkAdmin help information::
+The value assigned to the container's SKADMIN_PARMS environment variable is passed to SkAdmin on the command line.  See this `DockerFile <https://github.com/tapis-project/tapis-security/blob/dev/deployment/tapis-securityadmin/Dockerfile>`_ if you're interested in how this is done.  Here is the SkAdmin help information::
 
  SkAdmin for creating and deploying secrets to Kubernetes.
 
@@ -111,7 +111,7 @@ Launching SkAdmin
 
 To manage secrets, SkAdmin requires both of these parameters:
 
-- -i (-input) - JSON file or direct containing one more JSON files that conform to the SkAdminInput.json schema.
+- -i (-input) - JSON file or directory containing one more JSON files that conform to the `SkAdminInput.json <https://github.com/tapis-project/tapis-security/blob/dev/tapis-securitylib/src/main/resources/edu/utexas/tacc/tapis/security/jsonschema/SkAdminInput.json>`_ schema.
 - -b (-baseurl) - the SK or Vault server url. 
 
 And at least one of these *action* parameters:
@@ -123,13 +123,13 @@ And at least one of these *action* parameters:
 
 The *-c* and *-u* parameters are mutually exclusive, as are the *-dm* and *-dr* parameters.  The *-c* option will never overwrite a secret that already exists in Vault, so it is non-destructive.  If the secret doesn't exist, it will be created per the input file specification.  On the other hand, while the *-u* option also creates secrets if they don't already exist in Vault, it will overwrite existing secrets according to the input file specification.  The *-u* option can be destructive. 
 
-The *-dm* option deploys secrets from Vault to Kubernetes secrets in an additive manner.  A Kubernetes secret can contain any number of key/value pairs.  The *-dm* option preserves existing key/value pairs and adds any new ones that exist in Vault; it therefore is non-destructive.  On the other hand, the *-dr* option will replace all key/value pairs in a Kubernetes secret with the key/value pairs in Vault that are associated with the secret.  The *-dr* option can be destructive. 
+The *-dm* option deploys secrets from Vault to Kubernetes secrets in an additive manner.  A Kubernetes secret can contain any number of key/value pairs.  The *-dm* option preserves existing key/value pairs and adds any new ones that exist in Vault; it therefore is non-destructive.  The *-dr* option, on the other hand, will replace all key/value pairs in a Kubernetes secret with the key/value pairs in Vault that are associated with the secret.  The *-dr* option can be destructive. 
 
 
 Vault Parameters
 ^^^^^^^^^^^^^^^^^
 
-Both of the following parameters are required when access Vault directly.  Note that these parameters are mutually exclusive with the SK Parameters.
+Both of the following parameters are required when accessing Vault directly.  Note that these parameters are mutually exclusive with the SK Parameters.
 
 - -vr (-vaultRole) - the Vault role-id used to be acquire an authorized Vault token.
 - -vs (-vaultSecret) - the Vault secret-id used to be acquire an authorized Vault token.
@@ -168,7 +168,7 @@ These parameters are optional and have default values.
 SkAdmin Inputs
 ^^^^^^^^^^^^^^
 
-SkAdmin takes JSON input that conforms to the `SkAdminInput <https://github.com/tapis-project/tapis-security/blob/dev/tapis-securitylib/src/main/resources/edu/utexas/tacc/tapis/security/jsonschema/SkAdminInput.json>`_ schema.  The required *-i* parameter can name a single JSON file or a directory that contains any number of JSON files.  When a directory is specified, all json files that are immediate children of the directory are loaded and merged into a single set of secrets to be processed.
+SkAdmin takes JSON input that conforms to the `SkAdminInput.json <https://github.com/tapis-project/tapis-security/blob/dev/tapis-securitylib/src/main/resources/edu/utexas/tacc/tapis/security/jsonschema/SkAdminInput.json>`_ schema.  The required *-i* parameter can name a single JSON file or a directory that contains any number of JSON files.  When a directory is specified, all JSON files that are immediate children of the directory are loaded and merged into a single set of secrets to be processed.
 
 SkAdmin supports the following Security Kernel secret types:
 
@@ -180,9 +180,9 @@ SkAdmin supports the following Security Kernel secret types:
 
 A short discussion on secret types can be found in the Security Kernel `secrets section <../technical/security.html#secrets>`_.  The input files used to generate Tapis's initial set of secrets are in the `initialLoad <https://github.com/tapis-project/tapis-deployer/tree/main/playbooks/roles/skadmin/templates/kube/initialLoad>`_ directory of `tapis-deployer <https://github.com/tapis-project/tapis-deployer>`_. 
 
-The values of passwords and keys fields can be specified using the distinguished value "<generate-secret>".  SkAdmin will generate random passwords or asymmetric key pairs as required.  The value of key fields can also be specified as "file:pathToPEMFile" where the pathToPEMFile is a path, usually an absolute path, to a PEM file containing a public or private key.  When key values are provided inline in the input json files, the values are required to be in PEM format.
+The values of passwords and keys fields can be specified using the distinguished value "<generate-secret>".  SkAdmin will generate random passwords or asymmetric key pairs as required.  The value of key fields can also be specified as "file:pathToPEMFile" where *pathToPEMFile* is a path, usually an absolute path, to a PEM file containing a public or private key.  Alternatively, key values can be provided inline in the input json files, in which case they are required to be in PEM format.
 
-When SkAdmin is directed to generate a new key pair, both the public and private parts are saved in SK, but only the private part is deployed to Kubernetes using JwtSigning input.  To deploy the public key to Kubernetes, use separate JwtPublic input stanzas for each public key.  Results report a combined tally for JwtSigning and JwtPublic under the JWT Signing Keys heading. 
+When SkAdmin is directed to generate a new key pair, both the public and private parts are saved in SK, but only the private part is deployed to Kubernetes using JwtSigning input.  To deploy the public key to Kubernetes, use separate JwtPublic input stanzas for each public key. 
 
 JwtPublic stanza can also be used independently of whether a key pair resides in SK.  If the optional publicKey value is provided in the JwtPublic input stanza, then that value will be used without consulting SK.  In addition, if that value starts with the "file:" string, the publicKey will be assigned the contents of the specified file.
 
@@ -191,21 +191,80 @@ Execution
 
 SkAdmin execution consists of the following steps:
 
+1. **Validate parameters** - Validate that a complete, non-conflicting set of parameters have be specified.  The API used to perform all I/O on the secrets database will be either the SK or Vault interface. 
+2. **Load secret specifications** - The file or directory referenced by the *-input* parameter is loaded.  In the directory case, the JSON files in the directory are loaded in alphabetic order.  Each of the five secret types listed in the previous section are aggregated if there is more than one file.
+3. **Validate secret specifications** - All five types of secrets are validated.  If a value of *<generate-secret>* is encountered, then a password or key pair is generated depending on context.  Any invalid input causes the program to abort.
+4. **Create or update secrets** - If the *-create* parameter is set, then write the secrets to the Vault database only if they don't already exist there.  If the *-update* parameter is set, always write the secrets to the Vault database.
+5. **Deploy secrets** - If the *-deployMerge* parameter is specified, then any new secret keys that do not already exist in Kubernetes secrets will be deployed.  If the *-deployReplace* parameter is specified, then all input secrets will be deployed to Kubernetes overwriting any existing secrets with the same name.
+6. **Report results** - SkAdmin writes a report with both summary and detail information to stdout in the format specified by the *-output* parameter.      
+
 
 Result Reporting
 ^^^^^^^^^^^^^^^^^
 
-An accounting of what actions were performed is printed to stdout when the program completes.  Summary information include counts of secret processing.  Detailed information includes an outcome message for each secret action that includes success, failure and skipped outcomes.  The default result format is text, but json and yaml can also be specified.
+An accounting of what actions were performed is printed to stdout when the program completes.  Summary information include counts of secrets processed.  Detailed information includes an outcome message for each secret action that includes success, failure and skipped outcomes.  The default result format is text, but json and yaml can also be specified.
 
-Deploying Tapis with SkAdmin
+Creating Secrets with SkAdmin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+SkAdmin is an integral part of Tapis deployment processing:  It initializes Vault with Tapis roles and permissions, it creates secrets and, in Kubernetes environments, it deploys secrets to Kubernetes for subsequent injection into containers.  
+
+In an automated Kubernetes environment, SkAdmin would run in a pod, which complicates how values get passed to SkAdmin.  Consult the top-level deployer `burnup <https://github.com/tapis-project/tapis-deployer/blob/main/playbooks/roles/baseburnup/templates/kube/burnup>`_ script to see when SkAdmin gets called during Tapis deployment and `skadmin/burnup <https://github.com/tapis-project/tapis-deployer/blob/main/playbooks/roles/skadmin/templates/kube/burnup>`_ to see how parameters are passed into the SkAdmin pod.  
+
+For this discussion, however, we'll show how to create secrets by running an SkAdmin docker container directly.  In the first scenario, we'll go to your deployment's *skadmin/initialLoad* directory, which contains the deployment's initial secret specifications.  Here's how we invoke SkAdmin to only create the secrets that do not already exist in Vault::
+ 
+ cd $TAPIS_DIR/tapis-kube/skadmin/initialLoad
+ docker run -e SKADMIN_PARMS="-c -i /initialLoad -vr <VAULT_ROLEID> -vs <VAULT_SECRETID> -b http://vault:8200" --mount type=bind,source=`pwd`,target=/initialLoad --rm tapis/securityadmin
+
+Going from left to right, we see that all the SkAdmin command line parameters are assigned to the SKADMIN_PARMS environment variable.  In this case, SkAdmin is being asked to create secrets only if they don't already exist.  It will read the JSON files in the */initialLoad* directory inside the container.  
+
+SkAdmin will communicate directly with Vault using values represented by <VAULT_ROLEID> and <VAULT_SECRETID> and the given Vault network location.  Details on how to obtain these values is beyond the scope of this discussion, but tapis-deployer's `renew-sk-secret-script <https://github.com/tapis-project/tapis-deployer/blob/main/playbooks/roles/skadmin/templates/kube/renew-sk-secret/renew-sk-secret-script>`_ provides an example implementation.
+
+We bind mount the host's current directory into the */initialLoad* directory in the container.  Any host directory that contains SkAdmin JSON input files could serve as the source directory; any target directory in the container that's referenced by the *-i* parameter could serve as the destination.  We use the *--rm* flag to instruct docker to remove the container (and any secrets it contains) after execution.    
+
+Creating and Deploying Secrets with SkAdmin
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If we add Kubernetes parameters to the command line shown in the previous section, we'll be able to both create secrets and deploy them to Kubernetes.  The changes begin at the *-dm* parameter::
+
+ cd $TAPIS_DIR/tapis-kube/skadmin/initialLoad
+ docker run -e SKADMIN_PARMS="-c -i /initialLoad -vr <VAULT_ROLEID> -vs <VAULT_SECRETID> -b http://vault:8200" --mount type=bind,source=`pwd`,target=/initialLoad --rm -dm -kt <KUBE_TOKEN> -kn <KUBE_NAMESPACE> -ku https://kubernetes.default.svc.cluster.local tapis/securityadmin 
+
+The *-dm* parameter instructs SkAdmin to merge the input secrets into Kubernetes secrets.  The merge will not change any secret value already in Kubernetes.  The <KUBE_TOKEN> and <KUBE_NAMESPACE> values allow access to the Kubernetes cluster running at the URL specified by the *-ku* parameter. 
+
 
 Updating Secrets with SkAdmin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+It's common to add a secret after Tapis has already been deployed, such as when a new service is added to a site.  The deployed SkAdmin directory contains an `updateSecrets <https://github.com/tapis-project/tapis-deployer/tree/main/playbooks/roles/skadmin/templates/kube/updateSecrets>`_ subdirectory that makes it easy make incremental changes to secrets in Vault and Kubernetes.  The *updateSecrets/README* file contents explain how to do this::
 
-More Examples
-^^^^^^^^^^^^^^ 
+ Adding New Secrets
+ ==================
+
+ This directory contains configuration and script files that allow new secrets to be imported into SK and Kubernetes.  The general approach follows that of the initial secrets loading process in the parent directory.  The main difference is that a staging directory contains one or more SkAdmin input files specified for a particular run.  
+
+ Usage is as follows:
+
+    1. Put one or more SkAdmin input json files into the ./updateFiles directory.
+    2. ./burnup
+    3. Remove your json files from the staging directory 
+    
+ Common use cases for this facility include creating secrets for new services, generating new secrets for an existing service after deleting that service's secrets in SK, and restoring secrets in Kubernetes that exist in SK.
+
+ This facility assumes that SK was previously configured and initialized with secrets by running the burnup script in the parent directory.        
+
+Replacing Secrets
+~~~~~~~~~~~~~~~~~~
+
+For safety, the process described in the above README calls SkAdmin with the create (*-c*) parameter just like in the two previous examples.  This means that the procedure is non-destructive to secrets in Vault and Kubernetes.  It also means the procedure cannot be used to replace existing secret values.
+
+To replace an existing secret with a new one, follow these steps:
+
+1. Use SK `listSecret <https://tapis-project.github.io/live-docs/?service=SK#tag/vault/operation/listSecretMeta>`_ and `readSecret <https://tapis-project.github.io/live-docs/?service=SK#tag/vault/operation/readSecret>`_ APIs to understand what secrets currently exist in SK.  Use *kubect get secret* calls to see what secrets are currently in Kubernetes and how SK maps them.  When new to this process, consider temporarily saving the secrets you plan to replace off to the side.
+2. Run an SkAdmin container from the command line using the update (*-u*) and/or deployReplace (*-dr*) parameters and one input file at a time to limit potential loss.  SK saves up to 10 previous versions of a secret, so secrets are recoverable up to that limit.
+3. Validate that everything went as expected and then delete any temporarily saved old secrets.
+
+ 
 
 
 

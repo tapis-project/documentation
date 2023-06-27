@@ -93,6 +93,39 @@ As mentioned above, each Tapis environment/installation must be deployed into it
 namespace. Uniqueness assumptions made by the deployment architecture and scripts imply that attempting to
 deploy multiple Tapis instances into the same Kubernetes namespace will result in failures. 
 
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Roles, Permissions and Service Accounts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The Tapis deployment scripts utilize the ``kubectl`` command-line utility to register jobs, pods 
+PVCs, secrets, services, and other objects. Registering these objects requires certain permissions
+at the Kubernetes level. Additionally, some, but not all, Tapis jobs and pods use the Kubernetes 
+API as part of their operation. In the spirit of least privilege, we recommend the following:
+
+1. Create a clusterRole (e.g., "tapis-manager") with sufficient privileges to create and manage
+   the Kubernetes objects associated with the Tapis installation (jobs, pods, PVCs, secrets, services, 
+   etc).
+2. Create a Kubernetes service account for each namespace/Tapis installation.
+3. Create a roleBinding for the namespace and service account to grant the service account
+   the privileges in that particular namespace.
+
+.. note::
+
+  It is important in Step 3 that you use a roleBinding, not a clusterRoleBinding, as the 
+  service account only needs the privileges in the specific namespace.
+
+.. note::
+
+  We explicitly recommend that a new service account be created, as described in step 2, and that 
+  the roleBindings in step 3 be made to this new service account, not the default account. See 
+  the definition of the ``skadmin_sk_privileged_sa`` variable, 
+  described `here <deployer.html#optional-fields-all-sites>`_, for more details.
+
+For even better security, we suggest explicitly differentiating the privileges needed for the deployment of 
+Tapis (that use the Deployer burnup and burndown scripts) versus the privileges 
+needed by the Kubernetes jobs and deployments (i.e., the service account described in Step 2 above).
+
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Public IP Addresses, Domains and TLS Certificates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -36,19 +36,19 @@ Installing Deployer
 --------------------
 The Tapis Deployer project is hosted on GitHub. Use the 
 `tags <https://github.com/tapis-project/tapis-deployer/tags>`_ download page to download a 
-specific version of the Deployer software. For example, to get version 1.3.1 of the Deployer
+specific version of the Deployer software. For example, to get version 1.3.5 of the Deployer
 software, we could do the following in a terminal:
 
 .. code-block:: console
 
   # download the tar archive
-  wget https://github.com/tapis-project/tapis-deployer/archive/refs/tags/v1.3.1.tar.gz
+  wget https://github.com/tapis-project/tapis-deployer/archive/refs/tags/1.3.5.tar.gz
 
   # unpack the directory
-  tar -xf v1.3.1.tar.gz
+  tar -xf 1.3.5.tar.gz
 
-  # produces a new directory, tapis-deployer-1.3.1, in the current working directory 
-  ls -l tapis-deployer-1.3.1
+  # produces a new directory, tapis-deployer-1.3.5, in the current working directory 
+  ls -l tapis-deployer-1.3.5
   -rw-rw-r-- 1 jstubbs jstubbs 2340 Mar 22 10:13 CHANGELOG.md
   drwxrwxr-x 3 jstubbs jstubbs 4096 Mar 22 10:13 inventory_example
   drwxrwxr-x 3 jstubbs jstubbs 4096 Mar 22 10:13 playbooks
@@ -288,6 +288,20 @@ The following fields can optionally be provided in the Host Vars file.
   Attempting to change the Tapis Vault with a different storage type without performing the manual 
   migration could result in secret loss and permanent corruption of the Tapis installation.
 
+* ``skadmin_sk_privileged_sa`` -- The name of a service account to use when deploying certain 
+  Tapis components. If specified, this service account should have sufficient privileges to create 
+  and manage various Kubernetes API objects, including: jobs, pods, PVCs, and secrets. If this variable
+  is not set, then no value will be specified for the ``serviceAccountName`` attribute and Kubernetes
+  will fall back to using the  ``default`` service account (in which case the default account must have
+  sufficient privileges to create and manage the Tapis Kubernetes objects).
+
+  Default Value: None (the value of ``default`` is supplied by Kuberentes).
+
+  Examples:
+
+  .. code-block:: yaml
+
+    skadmin_sk_privileged_sa: tapis-manager    
 
 
 ------------------------------------------------

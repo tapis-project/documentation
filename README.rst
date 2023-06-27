@@ -29,8 +29,31 @@ Note that if you replace step 1 above with ``pip install sphinx-autobuild``, you
 ``make livehtml`` which will start a server that watches for source changes and will 
 rebuild/refresh automatically. Go to http://localhost:7898/ to see its output.
 
+Alternative Quickstart (using Nix)
+==================================
+You can use `Nix <https://nixos.org>`_ for developing and building the documentation.
+Using ``Nix`` you don't need to manually install any of the required dependencies (such as Python,
+Sphinx, ``make``, etc.). 
+
+1. Install ``Nix`` using the `Determinate Systems Installer <https://zero-to-nix.com/concepts/nix-installer>`_.
+2. If you want to just build the documentation, you can do it without the need of cloning 
+   this repository, by running::
+
+      nix build github:tapis-project/documentation
+
+   It will generate the Sphinx site in the directory ``./result/html``. Alternatively,
+   you can clone the repository and run ``nix build``.
+3. For developing the documentation, clone the repository and run ``nix develop``.
+   It will spawn a shell where you can run ``make html`` or ``make livehtml``, so you
+   can edit the documentation and generate the output.
+4. As a convenience, you can run::
+
+      nix develop .#live
+
+   to automatically launch the development server, accessible at http://localhost:7898.
+
 Sphinx and reStructuredText
-===========================
+---------------------------
 
 reStructuredText is the default plaintext markup language used by Sphinx, a Python documentation generator. 
 rST is a bit more complex than Markdown, for example, but it includes more advanced features
