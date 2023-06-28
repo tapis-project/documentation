@@ -33,8 +33,7 @@ The Pods service provides functionality for two types of pod solutions:
 Using the Pods Service
 ----------------------
 
-The Pods Service is broken and bad and barely used and not really perfect in any way yet. Please create issues on our 
-`github repo <https://github.com/tapis-project/pods_service>`_ and report problems to Christian R. Garcia.
+Please create issues on our `github repo <https://github.com/tapis-project/pods_service>`_ and report problems to Christian R. Garcia.
 The service is available to researchers and students. To learn more about the the system, including getting access, follow the
 instructions in :doc:`/getting-started/index`.
 
@@ -178,7 +177,7 @@ the pod we want to register through the function parameters. For example:
 As you can see, we're using pod_template equal to `neo4j`, that is one of our templated pods.
 You should see a response like this:
 
-.. code-block:: python
+.. code-block:: bash
 
     creation_ts: None
     data_attached: []

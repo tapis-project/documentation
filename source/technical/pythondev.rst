@@ -22,7 +22,7 @@ Tapipy User Guide
 What is Tapipy
 --------------
 Tapipy is a Python library for interacting with an instance of the Tapis API framework. The package is hosted
-on `PyPi <https://pypi.org/project/tapipy/>`_. You can install it with: 
+on `PyPi - tapipy <https://pypi.org/project/tapipy/>`_. You can install it with: 
 
 .. code-block:: bash
 
@@ -195,6 +195,22 @@ to accidentally overwrite any packaged specs when call update_spec_cache() later
               spec_dir='/home/username/tapipy_specs')
     t.get_tokens()
 
+
+Tapipy Instantiation with only a Tapis access token
+---------------------------------------------------
+Tapipy can be instantiated with only a Tapis access token. This is useful when you have a created token and don't want to
+provide username and password. The minimal instantiation requires the base_url and the token as follows:
+
+.. code-block:: python
+
+    from tapipy.tapis import Tapis
+
+    t = Tapis(base_url='https://admin.develop.tapis.io',
+              access_token='tokenhere')
+
+As the token is already created users do not have to run ``t.get_tokens()``. You can use the client as normal at this point.
+
+
 Refresh Tapipy's Cached Specs
 -----------------------------
 Tapipy uses a cache to organize spec dictionaries as pickled files and has the ability to accept custom spec files.
@@ -307,7 +323,7 @@ What is TapisService
 --------------------
 TapisService is a Python plugin for Tapipy which extends Tapipy with additional service oriented Python modules.
 This plugin is useful when creating a Tapis service or using a Tapis service account. The package is hosted on
-`PyPi <https://pypi.org/project/tapisservice/>`_. You can install it with:
+`PyPi - tapisservice <https://pypi.org/project/tapisservice/>`_. You can install it with:
 
 .. code-block:: bash
 
@@ -596,8 +612,8 @@ HTTP response returned to the user would be:
     {
         "message": "Invalid sprocket; too many widgets.",
         "status": "error",
-        "version": conf.version,
-        "result": Null
+        "version": "conf.version",
+        "result": null
     }
 
 And the HTTP status code would be ``400``.
