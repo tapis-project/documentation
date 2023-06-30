@@ -615,6 +615,7 @@ System Attributes Table
 |                     |                |                      | - Credentials may be updated using the systems credentials endpoint.                 |
 |                     |                |                      | - By default for LINUX the credentials are verified during create or update.         |
 |                     |                |                      | - Use query parameter skipCredentialCheck=true to bypass initial verification.       |
+|                     |                |                      | - See table *Credential Attributes* below for more information.                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | bucketName          | String         | tapis-ds1-jdoe       | - Name of bucket for an S3 system.                                                   |
 |                     |                |                      | - Required if *systemType* is S3.                                                    |
@@ -668,8 +669,8 @@ System Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobEnvVariables     | [KeyValuePair] |                      | - Environment variables added to the shell environment in which the job is running.  |
 |                     |                |                      | - Added to environment variables specified in job and application definitions.       |
-|                     |                |                      | - Will overwrite job and application variables with same names.                      |
-|                     |                |                      | - Each entry has a *key* (required) and a *value* (optional)                         |
+|                     |                |                      | - Each entry has *key* (required) and *value* (optional) as well as other attributes.|
+|                     |                |                      | - See table *KeyValuePair Attributes* below for more information.                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobMaxJobs          | int            |                      | - Max total number of jobs .                                                         |
 |                     |                |                      | - Set to -1 for unlimited.                                                           |
@@ -683,6 +684,7 @@ System Attributes Table
 | batchLogicalQueues  | [LogicalQueue] |                      | - List of logical queues available on the system.                                    |
 |                     |                |                      | - Each logical queue maps to a single HPC queue.                                     |
 |                     |                |                      | - Multiple logical queues may be defined for each HPC queue.                         |
+|                     |                |                      | - See table *LogicalQueue Attributes* below for more information.                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 |batchDefaultLogical  | LogicalQueue   |                      | - Default logical batch queue for the system.                                        |
 |Queue                |                |                      |                                                                                      |
@@ -731,6 +733,31 @@ Credential Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | accessSecret        | String         |                      | - Access secret used to authenticate to an S3 system.                                |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+
+-----------------------------
+KeyValuePair Attributes Table
+-----------------------------
+
++---------------------+--------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute           | Type   | Example              | Notes                                                                                |
++=====================+========+======================+======================================================================================+
+| key                 | String |   "INPUT_FILE"       | - Environment variable name. Required.                                               |
++---------------------+--------+----------------------+--------------------------------------------------------------------------------------+
+| value               | String |   "/tmp/file.input"  | - Environment variable value                                                         |
++---------------------+--------+----------------------+--------------------------------------------------------------------------------------+
+| description         | String |                      | - Description                                                                        |
++---------------------+--------+----------------------+--------------------------------------------------------------------------------------+
+| inputMode           | enum   |   REQUIRED           | - Indicates how argument is to be treated when processing individual job requests.   |
+|                     |        |                      | - Modes: REQUIRED, FIXED, INCLUDE_ON_DEMAND, INCLUDE_BY_DEFAULT                      |
+|                     |        |                      | - Default is INCLUDE_BY_DEFAULT.                                                     |
+|                     |        |                      | - REQUIRED: Must be provided in a job request or application definition.             |
+|                     |        |                      | - FIXED: Not overridable in application or job request.                              |
+|                     |        |                      | - INCLUDE_ON_DEMAND: Included if referenced in a job request.                        |
+|                     |        |                      | - INCLUDE_BY_DEFAULT: Included unless *include=false* in a job request.              |
++---------------------+--------+----------------------+--------------------------------------------------------------------------------------+
+| notes               | String |  "{}"                | - Simple metadata in the form of a Json object.                                      |
+|                     |        |                      | - Not used by Tapis.                                                                 |
++---------------------+--------+----------------------+--------------------------------------------------------------------------------------+
 
 -----------------------------
 LogicalQueue Attributes Table
@@ -811,8 +838,9 @@ Attribute names are given in the table above and may be specified using Camel Ca
 
 Supported operators: ``eq`` ``neq`` ``gt`` ``gte`` ``lt`` ``lte`` ``in`` ``nin`` ``like`` ``nlike`` ``between`` ``nbetween``
 
-For more information on search operators, handling of timestamps, lists, quoting, escaping and other general information on
-search please see <TBD>.
+..
+  For more information on search operators, handling of timestamps, lists, quoting, escaping and other general information on
+  search please see <TBD>.
 
 Example CURL command to search for systems that have ``Test`` in the id, are of type LINUX,
 are using a port less than ``1024`` and have a default authentication method of either ``PKI_KEYS`` or ``PASSWORD``::
@@ -852,8 +880,9 @@ Attribute names are given in the table above and may be specified using Camel Ca
 
 Supported operators: ``eq`` ``neq`` ``gt`` ``gte`` ``lt`` ``lte`` ``in`` ``nin`` ``like`` ``nlike`` ``between`` ``nbetween``
 
-For more information on search operators, handling of timestamps, lists, quoting, escaping and other general information on
-search please see <TBD>.
+..
+  For more information on search operators, handling of timestamps, lists, quoting, escaping and other general information on
+  search please see <TBD>.
 
 Example CURL command to search for systems that have ``Test`` in the name, are of type ``LINUX``,
 are using a port less than ``1024`` and have a default authentication method of either ``PKI_KEYS`` or ``PASSWORD``::

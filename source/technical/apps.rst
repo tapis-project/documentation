@@ -526,8 +526,9 @@ ParameterSet Attributes Table
 | schedulerOptions    | [Arg]          |                      | - Scheduler options passed to the HPC batch scheduler.                               |
 |                     |                |                      | - See table below.                                                                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| envVariables        | [String]       |                      | - Environment variables placed into the runtime environment.                         |
-|                     |                |                      | - Specified in the form <key>=<value> where <value> is optional.                     |
+| envVariables        | [KeyValuePair] |                      | - Environment variables placed into the runtime environment.                         |
+|                     |                |                      | - Each entry has *key* (required) and *value* (optional) as well as other attributes.|
+|                     |                |                      | - See table *KeyValuePair Attributes* below for more information.                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | archiveFilter       | ArchiveFilter  |                      | - Sets of files to include or exclude when archiving.                                |
 |                     |                |                      | - Default is to include all files in *execSystemOutputDir*.                          |
@@ -579,6 +580,31 @@ For more information on how the *inputMode* attribute is used during job process
 | notes               | String     | {"fieldType": "int"} | - Metadata in the form of a Json object, such as type, allowed values, etc.          |
 |                     |            |                      | - Not used by Tapis.                                                                 |
 +---------------------+------------+----------------------+--------------------------------------------------------------------------------------+
+
+-----------------------------
+KeyValuePair Attributes Table
+-----------------------------
+
++---------------------+--------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute           | Type   | Example              | Notes                                                                                |
++=====================+========+======================+======================================================================================+
+| key                 | String |   "INPUT_FILE"       | - Environment variable name. Required.                                               |
++---------------------+--------+----------------------+--------------------------------------------------------------------------------------+
+| value               | String |   "/tmp/file.input"  | - Environment variable value                                                         |
++---------------------+--------+----------------------+--------------------------------------------------------------------------------------+
+| description         | String |                      | - Description                                                                        |
++---------------------+--------+----------------------+--------------------------------------------------------------------------------------+
+| inputMode           | enum   |   REQUIRED           | - Indicates how argument is to be treated when processing individual job requests.   |
+|                     |        |                      | - Modes: REQUIRED, FIXED, INCLUDE_ON_DEMAND, INCLUDE_BY_DEFAULT                      |
+|                     |        |                      | - Default is INCLUDE_BY_DEFAULT.                                                     |
+|                     |        |                      | - REQUIRED: Must be provided in a job request or application definition.             |
+|                     |        |                      | - FIXED: Not overridable in application or job request.                              |
+|                     |        |                      | - INCLUDE_ON_DEMAND: Included if referenced in a job request.                        |
+|                     |        |                      | - INCLUDE_BY_DEFAULT: Included unless *include=false* in a job request.              |
++---------------------+--------+----------------------+--------------------------------------------------------------------------------------+
+| notes               | String |  "{}"                | - Simple metadata in the form of a Json object.                                      |
+|                     |        |                      | - Not used by Tapis.                                                                 |
++---------------------+--------+----------------------+--------------------------------------------------------------------------------------+
 
 --------------------------
 FileInput Attributes Table
@@ -647,8 +673,9 @@ Attribute names are given in the table above and may be specified using Camel Ca
 
 Supported operators: ``eq`` ``neq`` ``gt`` ``gte`` ``lt`` ``lte`` ``in`` ``nin`` ``like`` ``nlike`` ``between`` ``nbetween``
 
-For more information on search operators, handling of timestamps, lists, quoting, escaping and other general information on
-search please see <TBD>.
+..
+  For more information on search operators, handling of timestamps, lists, quoting, escaping and other general information on
+  search please see <TBD>.
 
 Example CURL command to search for applications that have ``Test`` in the id, are of type FORK and allow for *maxJobs*
 greater than ``5``::
@@ -689,8 +716,9 @@ Attribute names are given in the table above and may be specified using Camel Ca
 
 Supported operators: ``eq`` ``neq`` ``gt`` ``gte`` ``lt`` ``lte`` ``in`` ``nin`` ``like`` ``nlike`` ``between`` ``nbetween``
 
-For more information on search operators, handling of timestamps, lists, quoting, escaping and other general information on
-search please see <TBD>.
+..
+  For more information on search operators, handling of timestamps, lists, quoting, escaping and other general information on
+  search please see <TBD>.
 
 Example CURL command to search for applications that have ``Test`` in the id, are of type FORK and allow for *maxJobs*
 greater than ``5``::
