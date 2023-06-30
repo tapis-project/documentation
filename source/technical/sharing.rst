@@ -24,7 +24,7 @@ Resource Sharing
 Introduction to Tapis Access Controls
 =====================================
 
-Tapis users define resources such as systems, applications, files, streams, functions and workflows.  These resources can be used to generate other resources, such as job, workflow and function outputs.  The ability to share resources greatly extends their utility and, in general, the usefulness of Tapis.  On the other hand, users need to safeguard their data by controlling access to resources.  To facilitate both sharing and access control, Tapis provides two built-in authorization mechanisms.  
+Tapis users define resources such as systems, applications, files, streams, functions and workflows.  These resources can be used to generate other resources, such as job, workflow and function outputs.  The ability to share resources greatly extends their utility and, in general, the usefulness of Tapis.  On the other hand, users need to safeguard their data by controlling access to resources.  To facilitate both sharing and access control, Tapis provides two built-in authorization mechanisms.
 
 The first facility is implemented using *roles and permissions*.  These controls operate at a low level of abstraction and apply to the individual Tapis resources to which they are associated.  The second facility, *Tapis shared resources* (or simply *shared resources*), operate at a higher level of abstraction by authorizing complex actions in Tapis.  Such actions include running jobs, which authorizes access to an application, execution and archive system.  In this case, the granting of a single share affects multiple Tapis resources.  We explore both roles/permissions and shared resources in the following sections.
 
@@ -89,7 +89,10 @@ Below are links to the roles and permissions APIs for each service.  Also see th
 Tapis Shared Resources
 ======================
 
-The roles and permissions discussed in the last section allow fine-grained authorization to Tapis resources, such as to systems or applications.  Although the semantics of a role or permission can authorize access to multiple resources of the same type, they cannot easily authorize access to all the resources encountered in a complex workflow such as job execution.  To get a deeper understanding of the challenge, consider the authorizations needed to run a job:
+The roles and permissions discussed in the last section allow fine-grained authorization to Tapis resources, such as to
+systems or applications. Although the semantics of a role or permission can authorize access to multiple resources of
+the same type, they cannot easily authorize access to all the resources encountered in a complex workflow, such as job
+execution. To get a deeper understanding of the challenge, consider the authorizations needed to run a job:
 
 #. Read access to the application definition.
 #. Read access to the execution system definition.
@@ -99,40 +102,66 @@ The roles and permissions discussed in the last section allow fine-grained autho
 #. Read access to the job's archive system definition.
 #. Write access to the job's archive system's archive path.
 
-If a user simply wants to share an application with another user so that the latter can execute it, many individual role or permission grants would have to be put in place across multiple services.  
+If a user simply wants to share an application with another user so that the latter can execute it, many individual role
+or permission grants would have to be put in place across multiple services.
 
-To solve this problem, *Tapis sharing* grants access to all resources needed to perform an *action*.  Tapis sharing defines a runtime *context* in which Tapis authorization is implicitly granted to users performing an action.  This context can span multiple services.  For example, if a file is shared with a user, then access to Tapis system on which the file resides is implicitly granted when the user attempts access through the Files service.  
+To solve this problem, *Tapis sharing* grants some implicit access to all resources needed to perform an *action*. Tapis
+sharing defines a runtime *context* in which limited Tapis authorization is implicitly granted to users performing an
+action. This context can span multiple services. For example, if a file path is shared with a user, then access to the
+Tapis system on which the file resides is implicitly granted when the user attempts access through the Files service.
 
-An important aspect of sharing is that implicit access applies within a certain context and does not apply outside of that context.  In the case of a shared file, for instance, read access to the required system definition is only valid when accessing that file through the Files API.  If the user tries to access the system definition directly through the Systems API, the request will be rejected as unauthorized (assuming no other authorizations apply).
+An important aspect of sharing is that implicit access applies within a certain context and does not apply outside of
+that context. In the case of a shared file path, for instance, read access to the required system definition is only valid
+when accessing that file path through the Files API. If the user tries to access the system definition directly through the
+Systems API, the request will be rejected as unauthorized (assuming no other authorizations apply).
 
-Another characteristic of sharing is that implicit authorizations apply only to Tapis resources.  In the file sharing scenario, the system definition that is part of the shared context is an artifact defined within and under the control of Tapis.  Tapis is the controlling agent.  Access to the file itself, however, is ultimately under the control of the file system on which the file resides, such as a Posix file system.  Tapis sharing has no effect on authorizations enforced by external systems.  For example, a user could share a file in their home directory, but unless the grantee already has Posix access to that file, requests to access it will be denied by the operating system.
+Another characteristic of sharing is that implicit authorizations apply only to Tapis resources. In the file path sharing
+scenario, the system definition that is part of the shared context is an artifact defined within and under the control
+of Tapis. Tapis is the controlling agent. Access to the path itself, however, is ultimately under the control of the
+file system on which the path resides, such as a Posix file system. Tapis sharing has no effect on authorizations
+enforced by external systems. For example, a user could share a path in their home directory, but unless the grantee
+already has Posix access to that path, requests to access it will be denied by the operating system.
 
-In addition to sharing resources with individual users, Tapis sharing also supports granting public access to resources.  The *public-grantee* access designation allows all users in a tenant access to the shared resource.  Where supported, the *public-grantee-no-authn* access designation grants access to all users, even those that have not authenticated with Tapis.  See individual service documentation for details on public access support. 
+In addition to sharing resources with individual users, Tapis sharing also supports granting public access to resources.
+The *public-grantee* access designation allows all users in a tenant access to the shared resource. Where supported, the
+*public-grantee-no-authn* access designation grants access to all users, even those that have not authenticated with
+Tapis. See individual service documentation for details on public access support.
 
 Shared Application Contexts (SACs)
 ----------------------------------
 
-The concept of a *Shared Application Context (SAC)* recognizes that applications run in the context of a Tapis job.  This context is leveraged by multiple, cooperating services to allow implicit access to all the resources needed to run a job.  Specifically, users are able to access systems and files to which they have not been given explicit Tapis permission when they run in a SAC.
+The concept of a *Shared Application Context (SAC)* recognizes that applications run in the context of a Tapis job. This
+context is leveraged by multiple, cooperating services to allow limited implicit access to all the resources needed to
+run a job. In this case, the term *limited implicit access* means that for certain resources, the user running the job
+will have the application owner's authorizations in addition to their own. Specifically, users are able to access
+systems and file paths which they cannot normally access but the application owner can access.
 
-When a job runs in a SAC services skip Tapis authorization checking on **resources explicitly specified in the application definition**.  Important characteristics of a SAC are:
+When a job runs in a SAC, services grant this *limited implicit access* for **resources explicitly specified in the
+application definition**. Important characteristics of a SAC are:
 
 1. The SAC-aware services are Systems, Applications, Jobs and Files.
     a) These services know when they are running in a SAC and how to alter their behavior.
-2. SAC-aware services skip Tapis authorization only during Job execution of a shared application.
+2. SAC-aware services grant implicit access only during Job execution of a shared application.
     a) Users are not conferred any special privileges on application-specified resources outside of job execution.
-    b) Relaxed authorization checking applies only to systems and files referenced in the application definition.
+    b) Relaxed authorization checking applies only to systems and file paths referenced in the application definition.
 3. SSH authentication to a host is not affected by SAC processing.
     a) The Tapis system definition still determines the credentials used to login to a host.
     b) The host operating system still authorizes access to host resources.
 4. File system and object store authorization is not affected by SAC processing.
     a) The authenticated user must still be authorized by the persistent storage systems.
 
-In summary, a user can share an application with another user and the Tapis file and system resources referenced in the application definition are also implicitly shared.  This implicit sharing is implemented by simply not performing Tapis authorization checks on these resources (and only these resources).  The underlying operating systems' and persistent storage systems' authentication and authorization mechanisms are unchanged, so users have no more low-level access than they would otherwise.  Tapis simply relaxes its access constraints *during job execution*, but all host authorizations are still enforced. 
+In summary, a user can share an application with another user and the Tapis file and system resources referenced in the
+application definition are also implicitly shared. This implicit sharing is implemented by supplementing the requesting
+user's authorizations with the application owner's authorizations for these resources (and only these resources). The
+underlying operating systems' and persistent storage systems' authentication and authorization mechanisms are unchanged,
+so users have no more low-level access than they would otherwise. Tapis simply relaxes its access constraints
+*during job execution*, but all host authorizations are still enforced.
 
 SAC-Eligible Attributes
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-The following attributes of application definitions are SAC-eligible, meaning that implicit access to the resources they designate can be granted to jobs running in a SAC.
+The following attributes of application definitions are SAC-eligible, meaning that implicit access to the resources they
+designate can be granted to jobs running in a SAC.
 
 #. execSystemId
 #. execSystemExecDir
@@ -143,12 +172,15 @@ The following attributes of application definitions are SAC-eligible, meaning th
 #. fileInputs sourceUrl
 #. fileInputs targetPath
 
-If an execution system, for instance, is specified in a shared application definition, *and that system is not overridden in the job submission request*, then jobs running in a SAC will be granted implicit access to the system's definition.  The same goes for the other SAC-eligible attributes:  If their values are specified in the application and those values are not overridden when a job is submitted, Tapis implicitly grants access to the designated Tapis resource. 
+If an execution system, for instance, is specified in a shared application definition, *and that system is not
+overridden in the job submission request*, then jobs running in a SAC will be granted implicit access to the system's
+definition. The same is true for the other SAC-eligible attributes: If their values are specified in the application and
+those values are not overridden when a job is submitted, Tapis implicitly grants access to the designated Tapis resource.
 
 Implementations of Tapis Sharing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Below are links to the sharing APIs for each service.  Also see the sharing discussions in each serivce's documentation.
+Below are links to the sharing APIs for each service. Also see the sharing discussions in each serivce's documentation.
 
 - Systems-Sharing_
 - Applications-Sharing_
@@ -163,15 +195,3 @@ Below are links to the sharing APIs for each service.  Also see the sharing disc
 ..  _Files-Sharing: https://tapis-project.github.io/live-docs/?service=Files#tag/Sharing
 
 ..  _Jobs-Sharing: https://tapis-project.github.io/live-docs/?service=Jobs#tag/share
-
-
-   
-
-
-
-
-
-
-
-
-
