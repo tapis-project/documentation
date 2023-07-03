@@ -39,18 +39,17 @@ At a high level a system represents the following information:
 *owner*
   A specific user set at system creation. By default this is the resolved value for *${apiUserId}*, the user making
   the request to create the system.
-*host* - Host name or IP address
-  FQDN or IP address
+*host* - Host name, IP address or Globus ID
+  FQDN, IP address, Globus endpoint ID or Globus collection ID.
 *enabled* - Enabled flag
   Indicates if system is currently considered active and available for use. By default this is *true*.
 *effectiveUserId* - Effective User
-  The username to use when accessing the system. Referred to as *effectiveUserId.*
-  A specific user (such as a service account) or the dynamic user ``${apiUserId}``.
-  By default this is ``${apiUserId}``.
+  The username to use when accessing the system. A specific user (such as a service account) or the dynamic
+  user ``${apiUserId}``.  By default this is ``${apiUserId}``.
 *defaultAuthnMethod* - Default authentication method
   How access authentication is handled by default. Authentication method can also be
   specified as part of a request.
-  Supported methods: PASSWORD, PKI_KEYS, ACCESS_KEY.
+  Supported methods: PASSWORD, PKI_KEYS, ACCESS_KEY, TOKEN.
 *bucketName* - Bucket name
   For an S3 system this is the name of the bucket.
 *rootDir* - Effective root directory
@@ -533,7 +532,7 @@ when accessing the system.
 Note that the Systems service does not store credentials. Credentials are persisted by the Security Kernel service
 and only specific Tapis services are authorized to retrieve credentials.
 
-By default any credentials provided for LINUX type systems are verified. The query parameter
+By default any credentials provided for LINUX and S3 type systems are verified. The query parameter
 *skipCredentialCheck=true* may be used to bypass the initial verification of credentials.
 
 --------------------------
@@ -592,7 +591,7 @@ System Attributes Table
 |                     |                |                      | - Variable references: *${apiUserId}*. Resolved at create time.                      |
 |                     |                |                      | - By default this is the resolved value for *${apiUserId}*.                          |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| host                | String         | data.tacc.utexas.edu | - Host name or ip address of the system                                              |
+| host                | String         | data.tacc.utexas.edu | - Host name, ip address, Globus endpoint ID or Globus collection ID.                 |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | enabled             | boolean        | FALSE                | - Indicates if system currently enabled for use.                                     |
 |                     |                |                      | - May be updated using the enable/disable endpoints.                                 |
@@ -605,7 +604,7 @@ System Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | defaultAuthnMethod  | enum           | PKI_KEYS             | - How access authentication is handled by default.                                   |
 |                     |                |                      | - Can be overridden as part of a request to get a system or credential.              |
-|                     |                |                      | - Methods: PASSWORD, PKI_KEYS, ACCESS_KEY                                            |
+|                     |                |                      | - Methods: PASSWORD, PKI_KEYS, ACCESS_KEY, TOKEN                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | authnCredential     | Credential     |                      | - On input credentials to be stored in Security Kernel.                              |
 |                     |                |                      | - *effectiveUserId* must be static, either a string constant or ${owner}.            |
@@ -732,6 +731,10 @@ Credential Attributes Table
 | accessKey           | String         |                      | - Access key used to authenticate to an S3 system.                                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | accessSecret        | String         |                      | - Access secret used to authenticate to an S3 system.                                |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| accessToken         | String         |                      | - Access token for Globus authentication.                                            |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| refreshToken        | String         |                      | - Refresh token for Globus authentication.                                           |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 
 -----------------------------
