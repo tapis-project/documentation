@@ -13,8 +13,7 @@ Overview
 Through the Files service users can perform file listing, uploading, and various operations such as move, copy, mkdir
 and delete. The service also supports transferring files from one Tapis system to another.
 
-Currently the files service includes support for systems of type LINUX, S3 and IRODS. Other system types such as
-GLOBUS will be included in future releases.
+Currently, the files service includes support for systems of type LINUX, S3, IRODS and GLOBUS.
 
 Note that supported functionality varies by system type.
 
@@ -417,8 +416,6 @@ If the path being downloaded is a single file and the contents are placed in a f
 the *gunzip* utility may also be used to extract the contents.
 
 
-
-
 --------------------
 Transfers
 --------------------
@@ -445,6 +442,9 @@ COMPLETED
 Unauthenticated HTTP endpoints are also possible to use as a source for transfers.
 This method can be utilized to include outputs from other APIs into Tapis jobs.
 
+.. note::
+  For transfers involving Globus, both the source and destination system must be of type GLOBUS.
+
 The number of files included in the *bill of materials* will depend on the system types and the *sourceUri* values
 provided in the transfer request. If the source system supports directories and *sourceUri* is a directory then
 the directory will be processed recursively and all files will be added to the *bill of materials*. If the source
@@ -453,7 +453,7 @@ system is of type S3 then all objects matching the *sourceUri* path as a prefix 
 System types and supported functionality
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As discussed above the files included in a transfer will depend on the source system types and the *sourceUri* values
+As discussed above, the files included in a transfer will depend on the source system types and the *sourceUri* values
 provided in the transfer request. Here is a summary of the behavior:
 
 *LINUX/IRODS to LINUX/IRODS*
@@ -473,8 +473,8 @@ provided in the transfer request. Here is a summary of the behavior:
   All objects matching the *sourceUri* path as a prefix will be re-created as objects on the *destinationUri* system.
 
 *HTTP/S to ANY*
-  Transfer of a directory is not supported. The content of the object from the *sourceUri* URL is used to create a
-  single file or object on the *destinationUri* system.
+  Transfer of a directory is not supported. Destination system may not be of type GLOBUS. The content of the object
+  from the *sourceUri* URL is used to create a single file or object on the *destinationUri* system.
 
 *ANY to HTTP/S*
   Transfers not supported. Tapis does not support the use of protocol http/s for the *destinationUri*.
@@ -600,6 +600,34 @@ archive.  Symbolic links can create situations where infinite recursion can occu
 link that points to "../".  That means that each time it's expanded the current directory will be added, and the link will be 
 expanded again.  Transfers (and really all file operations that involve recursing subdirectories) are limited by a recursion depth.  
 The current maximum depth is 20.
+
+------------------
+Support for Globus
+------------------
+
+Please note that your Tapis site installation must have been configured by the site administrator to support
+Globus. Please see `Globus_Config`_.
+
+.. _Globus_Config: https://tapis.readthedocs.io/en/latest/deployment/deployer.html#configuring-support-for-globus
+
+The integration of Globus and Tapis allows users to configure and use Globus endpoints and
+collections just as they would other types of Tapis storage systems. As mentioned previously, not all operations
+are supported for all system types. For systems of type GLOBUS the following operations are supported:
+
+* listing
+* mkdir
+* move
+* delete
+* transfer between GLOBUS systems
+
+
+For more information on setting up and registering credentials for a system of type GLOBUS,
+please see `Systems_Globus`_.
+
+.. _Systems_Globus: https://tapis.readthedocs.io/en/latest/technical/systems.html#registering-credentials-for-a-globus-system#
+
+
+
 
 ------------------------------
 File Permissions

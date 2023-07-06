@@ -744,9 +744,9 @@ register credentials for the system. The Tapis client application uses the Globu
 flow to obtain the initial access and refresh tokens for the end-user. Globus’s support for the PKCE
 protocol is used to perform a three-legged OAuth2 authorization code grant.
 
-For more information, please see Systems _`Support For Globus`.
+For more information, please see Systems
+`Support For Globus <https://tapis.readthedocs.io/en/latest/technical/systems.html#support-for-globus>`_.
 
-.. _`Support for Globus`: https://tapis.readthedocs.io/en/latest/technical/systems.html#support-for-globus
 
 ----------------------------------
 Advanced Configuration Options

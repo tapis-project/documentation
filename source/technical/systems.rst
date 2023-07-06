@@ -223,12 +223,10 @@ Registering credentials for a GLOBUS type system is a special case that involves
 the section above. For a GLOBUS type system, the user will need to use the TOKEN authentication method and generate
 an ``accessToken`` and ``refreshToken`` using two special-purpose System service endpoints.
 
-For more general information on Globus support, please see the section below `Support for Globus`_.
-Also, please note that your Tapis site installation must have been configured by the site administrator to support
-Globus. Please see `Globus Config`_.
+Please note that your Tapis site installation must have been configured by the site administrator to support
+Globus. Please see `Globus_Config`_.
 
-.. _Globus Config: http://localhost:7898/deployment/deployer.html#configuring-support-for-globus
-
+.. _Globus_Config: https://tapis.readthedocs.io/en/latest/deployment/deployer.html#configuring-support-for-globus
 
 Obtain Globus Authorization Code
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -644,14 +642,6 @@ A system may be deleted and undeleted. Deletion means the system is marked as de
 is no longer available for use. By default deleted systems will not be included in searches and operations on
 deleted systems will not be allowed. When listing systems the query parameter *showDeleted* may be used in order
 to include deleted systems in the results.
-
-------------------
-Support for Globus
-------------------
-
-Please note that your Tapis site installation must have been configured by the site administrator to support
-Globus. Please see `Globus Config`_.
-TBD????
 
 ------------------------
 System Attributes Table
