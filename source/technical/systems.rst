@@ -234,7 +234,7 @@ Obtain Globus Authorization Code
 The first step in generating Globus credentials is for the user to call the systems *authUrl* credential endpoint
 to obtain a Globus authorization code.
 
-Using CURL, the request would like similar to this::
+Using CURL, the request would look something like this::
 
  $curl -H "X-Tapis-Token: $JWT" https://dev.tapis.io/v3/systems/credential/globus/authUrl
 
@@ -269,7 +269,7 @@ Exchange Authorization Code for Tokens
 The final step is for the user to call the systems credential endpoint to exchange the authorization code and session ID
 for tokens which are stored by the Systems service in a credentials record.
 
-Using CURL, the request would like similar to this::
+Using CURL, the request would look something like this::
 
  $curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT"
         https://dev.tapis.io/v3/systems/credential/<system>/user/<user>/globus/tokens/<authCode>/<sessionId>

@@ -611,8 +611,8 @@ Globus. Please see `Globus_Config`_.
 .. _Globus_Config: https://tapis.readthedocs.io/en/latest/deployment/deployer.html#configuring-support-for-globus
 
 The integration of Globus and Tapis allows users to configure and use Globus endpoints and
-collections just as they would other types of Tapis storage systems. As mentioned previously, not all operations
-are supported for all system types. For systems of type GLOBUS the following operations are supported:
+collections just as they would other types of storage systems defined in Tapis. As mentioned previously, not all operations
+are supported for all system types. For systems of type GLOBUS, the following operations are supported:
 
 * listing
 * mkdir
