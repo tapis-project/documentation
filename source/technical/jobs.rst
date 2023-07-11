@@ -211,7 +211,7 @@ An execution system can run jobs using a batch scheduler (e.g., Slurm or Condor)
 Directories
 -----------
 
-The execution and archive system directories are calculated before the submission response is sent.  This calculation can include the use of macro definitions that get replaced by values at submission request time.  The `Macro Substitution`_ section discusses what macro defintions are available and how substitution works.  In this section, we document the default directory assignments which may include macro definitions.
+The execution and archive system directories are calculated before the submission response is sent.  This calculation can include the use of macro definitions that get replaced by values at submission request time.  The `Macro Substitution`_ section discusses what macro definitions are available and how substitution works.  In this section, we document the default directory assignments which may include macro definitions.
 
 .. _dir-definitions:
 

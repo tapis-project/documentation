@@ -730,6 +730,34 @@ Bootstrapping an Initial Primary Site Deployment
 Bootstrapping an Initial Associate Site Deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+------------------------------
+Configuring Support for GLOBUS
+------------------------------
+
+In order for a primary or associate site to support Tapis systems of type GLOBUS, a Globus project must be
+created and registered. This yields a Globus client ID that must be configured as part of the Tapis environment.
+For more information on creating a Globus project, please see the
+`Globus Auth Developer Guide <https://docs.globus.org/api/auth/developer-guide>`_.
+Each Tapis installation can be configured with it’s own Globus client ID.
+
+The resulting client ID must be set in the host_vars file using the field ``systems_globus_client_id``.
+This field is referenced as part of the deployment for the Systems and Files services. This is done by adding lines
+similar to the following to the host_vars file:
+
+  .. code-block:: yaml
+
+    # Globus client ID for systems and files
+    systems_globus_client_id: 868c331e-ab77-4321-bd12-9c85cb0f12aa
+
+To use Globus, an end-user will create a system in Tapis and follow an authentication flow to
+register credentials for the system. The Tapis client application uses the Globus OAuth2 Native App
+flow to obtain the initial access and refresh tokens for the end-user. Globus’s support for the PKCE
+protocol is used to perform a three-legged OAuth2 authorization code grant.
+
+For more information, please see Systems
+`Support For Globus <https://tapis.readthedocs.io/en/latest/technical/systems.html#support-for-globus>`_.
+
+
 ----------------------------------
 Advanced Configuration Options
 ----------------------------------

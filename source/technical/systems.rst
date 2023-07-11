@@ -135,8 +135,12 @@ Registering Credentials for a System
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now that you have registered a system you will need to register credentials so you can use Tapis to access the host.
-Various authentication methods can be used to access a system, such as PASSWORD and PKI_KEYS. Here we will cover
-registering ssh keys.
+Various authentication methods can be used to access a system, such as PASSWORD, PKI_KEYS and TOKEN. Note that the
+TOKEN authentication method is for systems of type GLOBUS. Registering credentials for a GLOBUS type system is a special
+case that involves steps different from those described in this section. Please see the section below on
+`Registering Credentials for a Globus System`_ for more information.
+
+Here we will cover registering PKI_KEYS (i.e. ssh keys) as an example.
 
 Create a local file named ``cred_tmp.json`` with json similar to the following::
 
@@ -211,6 +215,79 @@ If problems persist you can also attempt to manually validate the keypair using 
 
 where /tmp/my_private_key contains the original multi-line private key. If everything is set up correctly and the
 keypair is valid you should be logged into the host without being prompted for a password.
+
+Registering Credentials for a Globus System
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Registering credentials for a GLOBUS type system is a special case that involves steps different from those described in
+the section above. For a GLOBUS type system, the user will need to use the TOKEN authentication method and generate
+an ``accessToken`` and ``refreshToken`` using two special-purpose System service endpoints.
+
+Please note that your Tapis site installation must have been configured by the site administrator to support
+Globus. Please see `Globus_Config`_.
+
+.. _Globus_Config: https://tapis.readthedocs.io/en/latest/deployment/deployer.html#configuring-support-for-globus
+
+Obtain Globus Authorization Code
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The first step in generating Globus credentials is for the user to call the systems *authUrl* credential endpoint
+to obtain a Globus authorization code.
+
+Using CURL, the request would look something like this::
+
+ $curl -H "X-Tapis-Token: $JWT" https://dev.tapis.io/v3/systems/credential/globus/authUrl
+
+The response should look similar to the following. Note that for brevity and readability, only the result portion of the
+response is shown, the response has been split into multiple lines and various IDs are not filled in::
+
+ {
+   "url": "https://auth.globus.org/v2/oauth2/authorize?client_id=<client_id>
+       &redirect_uri=https%3A%2F%2Fauth.globus.org%2Fv2%2Fweb%2Fauth-code
+       &scope=openid+profile+email+urn%3Aglobus%3Aauth%3Ascope%3Atransfer.api.globus.org%3Aall
+       &state=_default&response_type=code&code_challenge=<challenge_id>
+       &code_challenge_method=S256&access_type=offline",
+   "sessionId": "<session_id>"
+ }
+
+The user should copy the url (as a single string, no line breaks) and make note of the session Id for later use.
+The user then visits the provided URL and is presented with a Globus logon page that will allow them
+to authenticate using one of thousands of supported identity providers, including through their existing organization
+using CILogon.
+
+The user must use the following flow to obtain an authorization code:
+
+1. Visit the provided URL and authenticate through Globus. After authentication, user is re-directed back to a
+   Globus page showing the access being requested by Tapis.
+2. Fill in a label for future reference and click *Allow* to authorize Tapis to access Globus on their behalf.
+3. Copy the provided authorization code in preparation for the final step. Note that the code is valid for a short time
+   (as of this writing it is valid for 10 minutes).
+
+Exchange Authorization Code for Tokens
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The final step is for the user to call the systems credential endpoint to exchange the authorization code and session ID
+for tokens which are stored by the Systems service in a credentials record.
+
+Using CURL, the request would look something like this::
+
+ $curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT"
+        https://dev.tapis.io/v3/systems/credential/<system>/user/<user>/globus/tokens/<authCode>/<sessionId>
+
+The response should look similar to the following::
+
+ {
+   "result": null,
+   "status": "success",
+   "message": "SYSAPI_CRED_UPDATED Credential updated. ...",
+   "version": "1.3.1",
+   "commit": "619aa7ce",
+   "build": "2023-04-02T19:06:38Z",
+   "metadata": null
+ }
+
+At this point the user will have registered credentials for a Tapis system that can be used as a source or destination
+for Globus operations.
 
 Viewing Systems
 ~~~~~~~~~~~~~~~
@@ -455,7 +532,7 @@ Using PySDK::
 
 Using CURL::
 
- $curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" http://localhost:8080/v3/systems/<parent-system-id>/unlinkChildren -d @./children_to_unlink.json
+ $curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/<parent-system-id>/unlinkChildren -d @./children_to_unlink.json
 
 Or all child systems using *all=True* (no json file required)
 
@@ -605,6 +682,7 @@ System Attributes Table
 | defaultAuthnMethod  | enum           | PKI_KEYS             | - How access authentication is handled by default.                                   |
 |                     |                |                      | - Can be overridden as part of a request to get a system or credential.              |
 |                     |                |                      | - Methods: PASSWORD, PKI_KEYS, ACCESS_KEY, TOKEN                                     |
+|                     |                |                      | - See table *Credential Attributes* below for more information.                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | authnCredential     | Credential     |                      | - On input credentials to be stored in Security Kernel.                              |
 |                     |                |                      | - *effectiveUserId* must be static, either a string constant or ${owner}.            |
@@ -718,23 +796,24 @@ Credential Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | authnMethod         | String         | PKI_KEYS             | - Indicates the authentication method associated with a retrieved credential.        |
 |                     |                |                      | - When a credential is retrieved it is for a specific authentication method.         |
+|                     |                |                      | - Methods: PASSWORD, PKI_KEYS, ACCESS_KEY, TOKEN                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | loginUser           | String         |                      | - Optional native username valid on the system.                                      |
 |                     |                |                      | - May be used to map a Tapis user to a native login user.                            |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| password            | String         |                      | - Password for when authnMethod is PASSWORD.                                         |
+| password            | String         |                      | - Password for when authnMethod is PASSWORD. For LINUX and IRODS systems.            |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| privateKey          | String         |                      | - Private key for when authnMethod is PKI_KEYS.                                      |
+| privateKey          | String         |                      | - Private key for when authnMethod is PKI_KEYS. For LINUX systems.                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| publicKey           | String         |                      | - Public key for when authnMethod is PKI_KEYS.                                       |
+| publicKey           | String         |                      | - Public key for when authnMethod is PKI_KEYS.  For LINUX systems.                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| accessKey           | String         |                      | - Access key used to authenticate to an S3 system.                                   |
+| accessKey           | String         |                      | - Access key for when authnMethod is ACCESS_KEY. For S3 systems.                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| accessSecret        | String         |                      | - Access secret used to authenticate to an S3 system.                                |
+| accessSecret        | String         |                      | - Access secret for when authnMethod is ACCESS_KEY. For S3 systems.                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| accessToken         | String         |                      | - Access token for Globus authentication.                                            |
+| accessToken         | String         |                      | - Access token for when authnMethod is TOKEN. For GLOBUS systems.                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| refreshToken        | String         |                      | - Refresh token for Globus authentication.                                           |
+| refreshToken        | String         |                      | - Refresh token for when authnMethod is TOKEN. For GLOBUS systems.                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 
 -----------------------------
