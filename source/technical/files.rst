@@ -784,10 +784,6 @@ If the path is a directory this will also be done for all sub-paths.
 
     curl -H "X-Tapis-Token: $JWT" -X POST https://tacc.tapis.io/v3/files/unshare_all/aturing-storage/experiment1/
 
-.. rubric:: Footnotes
-
-.. [#] With the exception of the *sourceUri* in a transfer request when the protocol is *http* or *https*.
-
 -----------------------------
 PostIts
 -----------------------------
@@ -1132,4 +1128,8 @@ Using python
 .. code-block:: python
 
     tapis.files.deletePostIt(postitId="e614ce8e-447c-4195-a3f7-55f5dec5d243-010")
+
+.. rubric:: Footnotes
+
+.. [#] With the exception of the *sourceUri* in a transfer request when the protocol is *http* or *https*.
 
