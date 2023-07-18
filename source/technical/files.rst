@@ -694,12 +694,14 @@ issue a DELETE request on the path and specify the username in order to revoke a
 
 
 -----------------------------
-File Sharing
+File Path Sharing
 -----------------------------
 
 In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
 This approach is known simply as *sharing*. The sharing API allows you to share a path with a set of users
-as well as share publicly with all users in a tenant. Sharing a path grants READ access to the path.
+as well as share publicly with all users in a tenant.
+Sharing a path grants users READ access to the path or, in the context of running a job, it grants users READ
+and MODIFY access to the path.
 
 Please note that the underlying host associated with a system typically also has it's own access controls.
 
@@ -718,6 +720,8 @@ Sharing a path with users
 
 Create or update sharing information for a path on a system. The path will be shared with the list of users provided in
 the request body. Requester must be owner of the system. For LINUX systems path sharing is hierarchical.
+Sharing a path grants users READ access to the path or, in the context of running a job, it grants users READ
+and MODIFY access to the path.
 
 .. code-block:: shell
 
@@ -735,6 +739,8 @@ Sharing a path publicly
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Share a path on a system with all users in the tenant. Requester must be owner of the system.
+Sharing a path grants users READ access to the path or, in the context of running a job, it grants users READ
+and MODIFY access to the path.
 
 .. code-block:: shell
 
