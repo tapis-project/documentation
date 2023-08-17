@@ -269,8 +269,6 @@ When a job request is submitted, each of the job's four execution and archive sy
      archiveSystemDir:     /jobs/${JobUUID}/archive                 (if archiveSystemId is set)
    If DTN defined for execution system:
      execSystemInputDir:   /jobs/${JobUUID}
-   If DTN defined for archive system:
-     archiveSystemDir:     ${DtnMountSourcePath}/jobs/${JobUUID}/archive
 
 FileInputs
 ----------
@@ -821,20 +819,23 @@ For proper job execution, DTN usage requires the coordinated configuration of a 
 an archive system. In addition, outside of Tapis, a system administrator will need to mount the exported DTN file
 system at the expected mount point on an execution system if such a mount point has not yet been created.
 
-Modified Job Behavior
-^^^^^^^^^^^^^^^^^^^^^
+Modified Jobs Service Behavior
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When an application is run and the execution system or the archive system specifies a DTN, the Jobs service will modify
 it's behavior as follows:
 
 **During staging of input files**
-  The target system for the transfer request sent to the Files service will be the DTN system from the execution system
-  definition. The target path will be *${DtnMountSourcePath}/${ExecSystemInputDir}*.
-  The application code can locate the input files using the path *${DtnMountPoint}/${ExecSystemInputDir}*
+  If the execution system specifies a DTN, the target system for the transfer request sent to the Files service will be
+  the DTN system from the execution system definition. The target path will be *${DtnMountSourcePath}/${ExecSystemInputDir}*.
+  The application code can access the input files using the path *${DtnMountPoint}/${ExecSystemInputDir}*
 
 **During archiving of output**
-  The target system for the transfer request sent to the Files service will be the DTN system from the archive system
-  definition. The target path will be *${DtnMountSourcePath}/${ArchiveSystemDir}*
+  If the archive system specifies a DTN, the target system for the transfer request sent to the Files service will be
+  the DTN system from the archive system definition. The target path will be *${DtnMountSourcePath}/${ArchiveSystemDir}*
+
+  If the execution system specifies a DTN, the source system for the transfer request sent to the Files service will be
+  the DTN system from the execution system definition. The target path will be *${DtnMountSourcePath}/???????????*
 
 Example DTN Configuration and Usage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
