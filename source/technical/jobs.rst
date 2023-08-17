@@ -835,7 +835,7 @@ it's behavior as follows:
   the DTN system from the archive system definition. The target path will be *${DtnMountSourcePath}/${ArchiveSystemDir}*
 
   If the execution system specifies a DTN, the source system for the transfer request sent to the Files service will be
-  the DTN system from the execution system definition. The target path will be *${DtnMountSourcePath}/???????????*
+  the DTN system from the execution system definition. The source path will be *${DtnMountSourcePath}/???????????????*
 
 Example DTN Configuration and Usage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -954,8 +954,8 @@ involved would be as follows:
 
 * **jobWorkingDir** exec.host.example.com:/scratch/testuser1/dtn_test/jobs
 * **execSystemExecDir** exec.host.example.com:/scratch/testuser1/dtn_test/jobs/<job_uuid>
-* **execSystemInputDir** (staging inputs) corral.host.example.com:/dtnRoot/projects/example_project/shared/testuser2/input
-* **execSystemInputDir** (running application) exec.host.example.com:/execRoot/projects/example_project/shared/testuser2/input
+* **execSystemInputDir** (staging inputs) corral.host.example.com:/dtnRoot/main/projects/example_project/shared/testuser2/input
+* **execSystemInputDir** (running application) exec.host.example.com:/execRoot/corral/projects/example_project/shared/testuser2/input
 * **execSystemOutputDir** exec.host.example.com:/scratch/testuser1/dtn_test/jobs/<job_uuid>/output
 
 ------------------------------------------------------------
