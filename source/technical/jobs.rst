@@ -1,5 +1,5 @@
 ..
-    Comment: Heirarchy of headers will now be!
+    Comment: Hierarchy of headers will now be!
     1: ### over and under
     2: === under
     3: --- under
@@ -65,7 +65,7 @@ Hello                GET       /hello                                   Implemen
 Job Processing Overview
 -----------------------
 
-Before discussing the details of how to construct a job request, we take this opportunity to describe overall lifecycle of a job.  When a job request is recieved as the payload of an POST call, the following steps are taken:
+Before discussing the details of how to construct a job request, we take this opportunity to describe overall lifecycle of a job.  When a job request is received as the payload of an POST call, the following steps are taken:
 
 #. **Request authorization** - The tenant, owner, and user values from the request and Tapis JWT are used to authorize access to the application, execution system and, if specified, archive system.
 
@@ -219,15 +219,25 @@ The execution and archive system directories are calculated before the submissio
 Directory Definitions
 ^^^^^^^^^^^^^^^^^^^^^
 
-The directories assigned when a system is defined:
+The directories assigned when an execution system is defined:
 
 ::
 
-  rootDir - the root of the file system that is accessible through this Tapis system.
-  jobWorkingDir - the default directory for temporary files used or created during job execution.
-  dtnMountPoint - the path relative to the execution system's rootDir where the DTN file system is mounted.
+  rootDir - the effective root of the file system when accessed through this Tapis system.
+  jobWorkingDir - the default directory for files used or created during job execution.
+  dtnMountPoint - the path on the execution system relative to the system's rootDir where shared files are stored.
+                  Staged input files will reside at *dtnMountPoint/execSystemInputDir*
+  dtnMountSourcePath - the path on the DTN system relative to the system's rootDir where shared files are stored.
+                       Used as prefix to *execSystemInputDir* during input staging phase of job execution.
 
-An execution system may define a *Data Transfer Node* (DTN).  A DTN is a high throughput node used to stage job inputs and to archive job outputs.  The goal is to improve transfer performance.  The execution system mounts the DTN's file system at the *dtnMountPoint* so that executing jobs have access to its data, but Tapis will connect to the DTN rather than the execution system during transfers.  See `Data Transfer Nodes`_ for details.
+An execution system may define a *Data Transfer Node* (DTN). A DTN is a high throughput node used to stage job inputs
+or archive job outputs. The goal is to improve transfer performance. The execution system and the DTN must have
+shared storage. Typically, shared storage is set up using an NFS export. The execution system mounts the DTN's file
+system at the *dtnMountPoint* with *dtnMountSourcePath* as the source of the export on the DTN system. This allows
+executing jobs to have access to the data on the DTN. When initiating file transfers during the staging inputs phase,
+the Jobs service will connect to the DTN rather than the execution system and prefix *execSystemInputDir* with
+*dtnMountSourcePath*. Once file inputs are staged they will be available to the running application at path
+*dtnMountPoint/execSystemInputDir*. See `Data Transfer Nodes`_ for details.
 
 The directories assigned in application definitions and/or in a job submission requests:
 
@@ -252,16 +262,15 @@ When a job request is submitted, each of the job's four execution and archive sy
 
 ::
 
-   No DTN defined:
+   No DTNs defined:
      execSystemExecDir:    ${JobWorkingDir}/jobs/${JobUUID}
      execSystemInputDir:   ${JobWorkingDir}/jobs/${JobUUID}
      execSystemOutputDir:  ${JobWorkingDir}/jobs/${JobUUID}/output
      archiveSystemDir:     /jobs/${JobUUID}/archive                 (if archiveSystemId is set)
-   DTN defined:
-     execSystemExecDir:    ${DtnMountPoint}/jobs/${JobUUID}
-     execSystemInputDir:   ${DtnMountPoint}/jobs/${JobUUID}
-     execSystemOutputDir:  ${DtnMountPoint}/jobs/${JobUUID}/output
-     archiveSystemDir:     ${DtnMountPoint}/jobs/${JobUUID}/archive (if archiveSystemId is set)
+   If DTN defined for execution system:
+     execSystemInputDir:   /jobs/${JobUUID}
+   If DTN defined for archive system:
+     archiveSystemDir:     ${DtnMountSourcePath}/jobs/${JobUUID}/archive
 
 FileInputs
 ----------
@@ -481,7 +490,7 @@ The *cmdPrefix* parameter provides generalized support for launchers and is avai
 ExecSystemConstraints
 ---------------------
 
-Not implementated yet.
+Not implemented yet.
 
 Subscriptions
 -------------
@@ -638,8 +647,8 @@ The following standard environment variables are passed into each application co
     _tapisArchiveSystemDir - the archive system directory on which app output is archived
     _tapisArchiveSystemId - Tapis system used for archiving app output
     _tapisCoresPerNode - number of cores used per node by app
-    _tapisDtnMountPoint - the mountpoint on the execution system for the source DTN directory
-    _tapisDtnMountSourcePath - the directory exported by the DTN and mounted on the execution system
+    _tapisDtnMountPoint - the path on the execution system relative to the system's rootDir where shared files are stored.
+    _tapisDtnMountSourcePath - the path on the DTN system relative to the system's rootDir where shared files are stored
     _tapisDtnSystemId - the Data Transfer Node system ID
     _tapisDynamicExecSystem - true if dynamic system selection was used
     _tapisEffeciveUserId - the user ID under which the app runs
@@ -749,22 +758,22 @@ For events generated by the Jobs service, the *data* field in notification messa
 
 Each of the Job event types also include additional fields as shown:
 
-+--------------------------+-----------------------------------+
-| Job Event Type           | Additional Fields                 |
-+==========================+===================================+
-|JOB_NEW_STATUS            | newJobStatus, oldJobStatus        |
-+--------------------------+-----------------------------------+
-|JOB_INPUT_TRANSACTION_ID  | transferStatus, transactionId     |
-+--------------------------+-----------------------------------+
-|JOB_ARCHIVE_TRANSACTION_ID| transferStatus, transactionId     |
-+--------------------------+-----------------------------------+
-|JOB_SUBSCRIPTION          | action, numSubscriptions          |
-+--------------------------+-----------------------------------+
-|JOB_SHARE_EVENT           | resourceType, shareType,          |
-|                          | grantee, grantor                  |
-+--------------------------+-----------------------------------+
-|JOB_ERROR_MESSAGE         | jobStatus                         |
-+--------------------------+-----------------------------------+
++---------------------------+----------------------------------+
+| Job Event Type            | Additional Fields                |
++===========================+==================================+
+|JOB_NEW_STATUS             | newJobStatus, oldJobStatus       |
++---------------------------+----------------------------------+
+|JOB_INPUT_TRANSACTION_ID   | transferStatus, transactionId    |
++---------------------------+----------------------------------+
+|JOB_ARCHIVE_TRANSACTION_ID | transferStatus, transactionId    |
++---------------------------+----------------------------------+
+|JOB_SUBSCRIPTION           | action, numSubscriptions         |
++---------------------------+----------------------------------+
+|JOB_SHARE_EVENT            | resourceType, shareType,         |
+|                           | grantee, grantor                 |
++---------------------------+----------------------------------+
+|JOB_ERROR_MESSAGE          | jobStatus                        |
++---------------------------+----------------------------------+
 
 Additionally, when either of these conditions hold:
 
@@ -791,65 +800,162 @@ Job terminal statuses are FINISHED, CANCELLED and FAILED.
 Dynamic Execution System Selection
 ----------------------------------
 
-Not implementated yet.
+Not implemented yet.
 
 Data Transfer Nodes
 -------------------
 
-A Tapis system can be designated as a Data Transfer Node (DTN) as part of its definition.  When an execution system specifies DTN usage in its definition, then the Jobs service will use the DTN to stage input files and archive output files.
+A Tapis system can be designated as a Data Transfer Node (DTN) so that it can be referenced by another system and
+used as an alternative for data transfers during job execution. When an application is being run on an execution
+system that specifies a DTN system, the Jobs service will use the DTN for the target system when transferring files
+during the staging inputs phase. Also, during the archive phase of job execution, if the target archive system
+specifies a DTN, the Jobs service will use the DTN for the target system when transferring files.
 
-The DTN usage pattern is effective when (1) the DTN has high performance network and storage capabilities, and (2) an execution system can mount the DTN's file system.  In this situation, bulk data transfers performed by Jobs benefit from the DTN's high performance capabilities, while applications continue to access their execution system's files as usual.  From an application's point of view, its data are simply where they are expected to be, though they may have gotten there in a more expeditious manner.
+The DTN usage pattern is effective when (1) the DTN has high performance network and storage capabilities, and (2) the
+target system for data transfers and the DTN system have shared storage. In this situation, data transfers performed by
+Jobs benefit from the DTN's high performance capabilities, while applications continue to have access to their files.
+From an application's point of view, its data are simply where they are expected to be, though they may have gotten
+there in a more expeditious manner.
 
-DTN usage requires the coordinated configuration of a DTN, an execution system and a job.  In addition, outside of Tapis, a system administrator must mount the exported DTN file system at the expected mountpoint on an execution system.  We use the example below to illustrate DTN configuration and usage.
+For proper job execution, DTN usage requires the coordinated configuration of a DTN, an execution system and possibly
+an archive system. In addition, outside of Tapis, a system administrator will need to mount the exported DTN file
+system at the expected mount point on an execution system if such a mount point has not yet been created.
 
-::
+Modified Job Behavior
+^^^^^^^^^^^^^^^^^^^^^
 
-   System: ds-exec
-     rootDir: /execRoot
-     dtnMountSourcePath: tapis://corral-dtn/
-     dtnMountPoint: /corral-repl
-     jobWorkingDir: HOST_EVAL($SCRATCH)
+When an application is run and the execution system or the archive system specifies a DTN, the Jobs service will modify
+it's behavior as follows:
 
-   System: corral-dtn
-     host: cic-dtn01
-     isDtn: true
-     rootDir: /gpfs/corral3/repl
+**During staging of input files**
+  The target system for the transfer request sent to the Files service will be the DTN system from the execution system
+  definition. The target path will be *${DtnMountSourcePath}/${ExecSystemInputDir}*.
+  The application code can locate the input files using the path *${DtnMountPoint}/${ExecSystemInputDir}*
 
-   Job Request effective values:
-     execSystemId:         ds-exec
-     execSystemExecDir:    ${JobWorkingDir}/jobs/${JobUUID}
-     execSystemInputDir:   ${DtnMountPoint}/projects/NHERI/shared/${JobOwner}/jobs/${JobUUID}
-     execSystemOutputDir:  ${DtnMountPoint}/projects/NHERI/shared/${JobOwner}/jobs/${JobUUID}/output
+**During archiving of output**
+  The target system for the transfer request sent to the Files service will be the DTN system from the archive system
+  definition. The target path will be *${DtnMountSourcePath}/${ArchiveSystemDir}*
 
-   NFS Mount on ds-exec (done outside of Tapis):
-     mount -t nfs cic-dtn01:/gpfs/corral3/repl /execRoot/corral-repl
+Example DTN Configuration and Usage
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The example execution system, **ds-exec**, defines two DTN related values (both required to configure DTN usage):
+We provide the examples below to illustrate DTN configuration and usage.
 
+Example command run by system administrator on execution system host (external to Tapis)::
+
+     mount -t nfs corral.host.example.com:/dtnRoot/main /execRoot/corral
+
+DTN system definition::
+
+  {
+    "id":"example-dtn",
+    "host":"corral.host.example.com",
+    "systemType":"LINUX",
+    "effectiveUserId": "testuser1",
+    "defaultAuthnMethod":"PKI_KEYS",
+    "rootDir":"/dtnRoot",
+    "canExec": false,
+    "isDtn": true
+  }
+
+Execution system definition::
+
+  {
+    "id":"example-exec-with-dtn",
+    "host":"exec.host.example.com",
+    "systemType":"LINUX",
+    "effectiveUserId": "testuser1",
+    "defaultAuthnMethod":"PKI_KEYS",
+    "rootDir":"/execRoot",
+    "canExec": true
+    "canRunBatch": true,
+    "jobRuntimes": [ { "runtimeType": "SINGULARITY" } ],
+    "jobWorkingDir": "HOST_EVAL($SCRATCH)/dtn_test/jobs",
+    "dtnSystemId": "example-dtn",
+    "dtnMountPoint": "/corral",
+    "dtnMountSourcePath": "/main",
+    "batchScheduler": "SLURM",
+    "batchLogicalQueues": [
+    {
+      "name": "tapisNormal",
+      "hpcQueueName": "skx-normal",
+      "maxJobs": 50,
+      "maxJobsPerUser": 10,
+      "minNodeCount": 1,
+      "maxNodeCount": 16,
+      "minCoresPerNode": 1,
+      "maxCoresPerNode": 68,
+      "minMemoryMB": 1,
+      "maxMemoryMB": 16384,
+      "minMinutes": 1,
+      "maxMinutes": 60
+    }
+  ],
+  "batchDefaultLogicalQueue": "tapisNormal",
+  "batchSchedulerProfile": "tacc"
+  }
+
+
+Application definition::
+
+  {
+    "id":"example-app-with-dtn",
+    "version": "1",
+    "containerImage": "example/example-app:1",
+    "jobType": "BATCH",
+    "runtime": "SINGULARITY",
+    "runtimeOptions": ["SINGULARITY_RUN"],
+    "jobAttributes": {
+      "description": "Transfer file and verify transfer",
+      "execSystemId": "example-exec-with-dtn",
+      "execSystemExecDir": "${JobWorkingDir}/${JobUUID}",
+      "execSystemInputDir": "projects/example_project/shared/testuser2/input",
+      "execSystemOutputDir": "${JobWorkingDir}/${JobUUID}/output",
+      "fileInputs": [
+        {
+         "name": "file1",
+         "description": "A text file",
+         "inputMode": "REQUIRED",
+         "sourceUrl": "tapis://example-data-repo/data/file1.txt",
+         "targetPath": "file1.txt"
+        }
+      ]
+    }
+  }
+
+Job submission request::
+
+  {
+    "name": "Tapis V3 example job using a DTN",
+    "appId": "example-app-with-dtn",
+    "appVersion": "1",
+    "parameterSet": {
+      "schedulerOptions": [ { "arg": "-A EXAMPLE-ALLOCATION" } ]
+  }
+
+
+Note that the example execution system, **example-exec-with-dtn**, defines three DTN related values:
+
+**dtnSystemId**
+  The Tapis system to use as a DTN.
 **dtnMountSourcePath**
-  The tapis URL specifying the exported DTN path; the path is relative to the DTN system's rootDir (which is just "/" in this example).
+  The path on the DTN system relative to the system's rootDir where shared files are stored.
+  Input files will be staged to relative path *${DtnMountSourcePath}/${ExecSystemInputDir}*.
+  Full host and absolute path will be *dtn.host:/${rootDir}/${DtnMountSourcePath}/${ExecSystemInputDir}*
 **dtnMountPoint**
-  The path relative to the execution system's rootDir where the DtnMountSourcePath is mounted.
+  The path on the execution system relative to the system's *rootDir* where shared files are stored.
+  Once file inputs are staged they will be available to the application at relative path
+  *${DtnMountPoint}/${ExecSystemInputDir}*.
+  Full host and absolute path will be *exec.host:/${rootDir}/${DtnMountPoint}/${ExecSystemInputDir}*
 
-The execution system's jobWorkingDir is defined to be the runtime value of the $SCRATCH environment variable; its rootDir is defined at /execRoot.
+Assuming $SCRATCH resolves to /scratch/testuser1, the resolved host and absolute path for all directories
+involved would be as follows:
 
-The Tapis DTN system, **corral-dtn**, host machine is cic-dtn01.  The DTN's rootDir (/gpfs/corral3/repl) is the directory prefix used on all mounts.  Mounting takes place outside of Tapis by system administrators.  The actual NFS mount command has this general format:
-
-::
-
-     mount -t nfs <dtn_host>:/<dtn_root_dir>/<path> <exec_system_mount_point>
-
-The Job Request effective values depend on the DTN configuration are also shown.  These values could have been set in the application definition, the job request or in both.  Values set in the job request are given priority.  The execSystemId refers to the **ds-exec** system, which in this case specifies a DTN.
-
-Continuing with the above example, let's say user *Bud* issues an Opensees job request that creates a job with id 123.  The Jobs service will stage the application's input files using the DTN.  The transfer request to the Files_ service will write to this target URL:
-
-          tapis://corral-dtn/gpfs/corral3/repl/projects/NHERI/shared/Bud/jobs/123
-
-This is the standard tapis URL format:  tapis://<tapis-system>/<path>.  After inputs are staged, the Job service will inject this environment variable value (among others) into the launched job's container:
-
-          execSystemInputDir=/corral-repl/projects/NHERI/shared/Bud/jobs/123
-
-Since **ds-exec** mounts the corral root directory, the files staged to corral /gpfs/corral3/repl are accessible at execSystemInputDir on **ds-exec**, relative to rootDir /execRoot. A similar approach would be used to transfer files to an archive system using the DTN, except this time **corral-dtn** is the source of the file transfers rather than the target.
+* **jobWorkingDir** exec.host.example.com:/scratch/testuser1/dtn_test/jobs
+* **execSystemExecDir** exec.host.example.com:/scratch/testuser1/dtn_test/jobs/<job_uuid>
+* **execSystemInputDir** (staging inputs) corral.host.example.com:/dtnRoot/projects/example_project/shared/testuser2/input
+* **execSystemInputDir** (running application) exec.host.example.com:/execRoot/projects/example_project/shared/testuser2/input
+* **execSystemOutputDir** exec.host.example.com:/scratch/testuser1/dtn_test/jobs/<job_uuid>/output
 
 ------------------------------------------------------------
 
