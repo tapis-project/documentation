@@ -815,9 +815,10 @@ Jobs benefit from the DTN's high performance capabilities, while applications co
 From an application's point of view, its data are simply where they are expected to be, though they may have gotten
 there in a more expeditious manner.
 
-For proper job execution, DTN usage requires the coordinated configuration of a DTN, an execution system and possibly
-an archive system. In addition, outside of Tapis, a system administrator will need to mount the exported DTN file
-system at the expected mount point on an execution system if such a mount point has not yet been created.
+For proper job execution, DTN usage requires the coordinated configuration of a DTN, an execution system, an
+application, and possibly an archive system. In addition, outside of Tapis, a system administrator will need to mount
+the exported DTN file system at the expected mount point on an execution system if such a mount point has not yet
+been created.
 
 Modified Jobs Service Behavior
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -844,13 +845,13 @@ We provide the examples below to illustrate DTN configuration and usage.
 
 Example command run by system administrator on execution system host (external to Tapis)::
 
-     mount -t nfs corral.host.example.com:/dtnRoot/main /execRoot/corral
+     mount -t nfs dtn.host.example.com:/dtnRoot/main /execRoot/shared
 
 DTN system definition::
 
   {
     "id":"example-dtn",
-    "host":"corral.host.example.com",
+    "host":"dtn.host.example.com",
     "systemType":"LINUX",
     "effectiveUserId": "testuser1",
     "defaultAuthnMethod":"PKI_KEYS",
@@ -873,7 +874,7 @@ Execution system definition::
     "jobRuntimes": [ { "runtimeType": "SINGULARITY" } ],
     "jobWorkingDir": "HOST_EVAL($SCRATCH)/dtn_test/jobs",
     "dtnSystemId": "example-dtn",
-    "dtnMountPoint": "/corral",
+    "dtnMountPoint": "/shared",
     "dtnMountSourcePath": "/main",
     "batchScheduler": "SLURM",
     "batchLogicalQueues": [
@@ -910,7 +911,7 @@ Application definition::
       "description": "Transfer file and verify transfer",
       "execSystemId": "example-exec-with-dtn",
       "execSystemExecDir": "${JobWorkingDir}/${JobUUID}",
-      "execSystemInputDir": "projects/example_project/shared/testuser2/input",
+      "execSystemInputDir": "projects/example_project/shared/testuser1/input",
       "execSystemOutputDir": "${JobWorkingDir}/${JobUUID}/output",
       "fileInputs": [
         {
@@ -929,7 +930,7 @@ Job submission request::
   {
     "name": "Tapis V3 example job using a DTN",
     "appId": "example-app-with-dtn",
-    "appVersion": "1",
+    "appVersion": "0.0.1",
     "parameterSet": {
       "schedulerOptions": [ { "arg": "-A EXAMPLE-ALLOCATION" } ]
   }
@@ -954,8 +955,8 @@ involved would be as follows:
 
 * **jobWorkingDir** exec.host.example.com:/scratch/testuser1/dtn_test/jobs
 * **execSystemExecDir** exec.host.example.com:/scratch/testuser1/dtn_test/jobs/<job_uuid>
-* **execSystemInputDir** (staging inputs) corral.host.example.com:/dtnRoot/main/projects/example_project/shared/testuser2/input
-* **execSystemInputDir** (running application) exec.host.example.com:/execRoot/corral/projects/example_project/shared/testuser2/input
+* **execSystemInputDir** (staging inputs) dtn.host.example.com:/dtnRoot/main/projects/example_project/shared/testuser1/input
+* **execSystemInputDir** (running application) exec.host.example.com:/execRoot/shared/projects/example_project/shared/testuser1/input
 * **execSystemOutputDir** exec.host.example.com:/scratch/testuser1/dtn_test/jobs/<job_uuid>/output
 
 ------------------------------------------------------------
