@@ -288,7 +288,8 @@ The fileInputs array in job requests contains elements that conform to the follo
                "description": { "type": "string", "minLength": 1, "maxLength": 8096 },
                "autoMountLocal": { "type": "boolean"},
                "sourceUrl":  {"type": "string", "minLength": 1, "format": "uri"},
-               "targetPath": {"type": "string", "minLength": 0}
+               "targetPath": {"type": "string", "minLength": 0},
+               "notes": {"type": "string", "minLength": 0}
            },
        "additionalProperties": false
    }
@@ -296,6 +297,8 @@ The fileInputs array in job requests contains elements that conform to the follo
 JobFileInputs can be named or unnamed.  When the *name* field is assigned, Jobs will look for an input with the same name in the application definition (all application inputs are named).  When a match is found, values from the AppFileInput are merged into unassigned fields in the JobFileInput.
 
 The *name* must start with an alphabetic character or an underscore (_) followed by zero or more alphanumberic or underscore characters.  If the name does not match one of the input names defined in the application, then the application must have *strictFileInputs=false*.  If the name matches an input name defined in the application, then the application's inputMode must be REQUIRED or OPTIONAL.  An error occurs if the inputMode is FIXED and there is a name match--job inputs cannot override FIXED application inputs.
+
+The optional *notes* field can contain any valid user-specified JSON object. 
 
 Except for in-place inputs discussed below, the *sourceUrl* is the location from which data are copied to the *targetPath*.  In Posix systems the sourceUrl can reference a file or a directory.  When a directory is specified, the complete directory subtree is copied.
 
@@ -353,7 +356,8 @@ The fileInputArrays parameter in job requests contains elements that conform to 
             "description": { "type": "string", "minLength": 1, "maxLength": 8096},
             "sourceUrls": { "type": ["array", "null"],
                             "items": { "type": "string", "format": "uri", "minLength": 1 } },
-            "targetDir": { "type": "string", "minLength": 1 }
+            "targetDir": { "type": "string", "minLength": 1 },
+            "notes": {"type": "string", "minLength": 0}
         }
    }
 
@@ -364,6 +368,8 @@ An application's fileInputArrays are added to or merged with those in a job requ
 Each *sourceUrls* entry is a location from which data is copied to the *targetDir*.  In Posix systems each URL can reference a file or a directory.  In the latter case, the complete directory subtree is transferred.  All URLs recognized by the Tapis Files_ service can be used (*tapislocal* is not recognized by Files).
 
 The *targetDir* is the directory into which all *sourceUrls* are copied.  The *targetDir* is always rooted at the *ExecSystemInputDir* and if *targetDir* is "*" or not specified, then it is assigned *ExecSystemInputDir*.  The simple name of each *sourceUrls* entry is the destination name used in *targetDir*.  Use different JobFileInputArrays with different targetDir's if name conflicts between *sourceUrls* entries exist.
+
+The optional *notes* field can contain any valid user-specified JSON object.
 
 
 ParameterSet
@@ -379,6 +385,7 @@ containerArgs       `JobArgSpec`_ array     Arguments passed to container runtim
 schedulerOptions    `JobArgSpec`_ array     Arguments passed to HPC batch scheduler
 envVariables        `KeyValuePair`_ array   Environment variables injected into application container
 archiveFilter       object                  File archiving selector
+logConfig           `LogConfig`_            User-specified stdout and stderr redirection
 ================    =====================   ===================================================
 
 Each of these objects can be specifed in Tapis application definitions and/or in job submission requests.  In addition, the execution system can also specify environment variable settings.
@@ -419,7 +426,7 @@ As an example, below is the JSON input used to create the TACC scheduler profile
 
 **Scheduler-Specific Processing**
 
-Jobs will perform :ref:`macro-substition` on Slurm scheduler options *--job-name* or *-J*.  This substitution allows Slurm job names to be dynamically generated before submitting them.
+Jobs will perform `macro-substitution`_ on Slurm scheduler options *--job-name* or *-J*.  This substitution allows Slurm job names to be dynamically generated before submitting them.
 
 envVariables
 ^^^^^^^^^^^^
@@ -459,6 +466,15 @@ Each *includes* and *excludes* entry is a string, a string with wildcards or a r
 When *includeLaunchFiles* is true (the default), then the script (*tapisjob.sh*) and environment (*tapisjob.env*) files that Tapis generates in the *execSystemExecDir* are also archived.  These launch files provide valuable information about how a job was configured and launched, so archiving them can help with debugging and improve reproducibility.  Since these files may contain application secrets, such database passwords or other credentials, care must be taken to not expose private data through archiving.
 
 If no filtering is specified at all, then all files in *execSystemOutputDir* and the launch files are archived.
+
+logConfig Spec
+^^^^^^^^^^^^^^
+
+A `LogConfig`_ can be supplied in the job submission request and/or in the application definition, with the former overriding the latter when both are supplied.  In supported runtimes (currently Singularity), the *logConfig* parameter can be used to redirect the application container's stdout and stderr to user-specified files.
+
+
+
+
 
 .. _regex: https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/util/regex/Pattern.html
 
@@ -619,6 +635,27 @@ The JSON schema for defining key/value pairs of strings in various `ParameterSet
 
 Both the *key* and *value* are required, though the *value* can be an empty string.  Descriptions are optional.
 
+LogConfig
+^^^^^^^^^
+
+The JSON schema for used to redirect stdout and stderr to named file(s) in supported runtimes.  
+
+::
+
+   "logConfig": {
+       "$comment": "Log file redirection and customization in supported runtimes",
+       "type": "object",
+       "required": [ "stdoutFilename", "stderrFilename" ],
+       "additionalProperties": false,
+           "properties": {
+               "stdoutFilename": {"type": "string", "minLength": 1},
+               "stderrFilename": {"type": "string", "minLength": 1}
+           }
+   }
+
+Currently, only the Singularity (Apptainer) runtime is supported.  
+
+When specified, both file names must be explicitly assigned, though they can be assigned to the file.  If the logConfig is not specified, or in runtimes where it's not supported, then both stdout and stderr are directed to the default **tapisjob.out** file in the job's output directory.  The output files are always relative to the ExecSystemOuputDir (see `Directory Definitions`_).
 
 -------------------------------------------------
 
@@ -665,7 +702,7 @@ The following standard environment variables are passed into each application co
     _tapisSysRootDir - the root directory on the exec system
     _tapisTenant - the tenant in which the job runs
 
-.. _macro-substition:
+.. _macro-substitution:
 
 Macro Substitution
 ------------------
@@ -885,7 +922,7 @@ Logging
 
 Logging should be considered up front when defining Tapis applications to run under Docker.  Since Jobs removes Docker containers after they execute, the container's log is lost under the default Docker logging_ configuration.  Typically, Docker pipes *stdout* and *stderr* to the container's log, which requires the application to take deliberate steps to preserve these outputs.
 
-An application can maintain control over its log output by logging to a file outside of the container.  The application can do this by redirecting *stdout* and *stderr* or by explicitly writing to a file.  As discussed in :ref:`dir-definitions`, the application always has read/write access to the host's *execSystemOutputDir*, which is mounted at /TapisOutput in the container (see next section).
+An application can maintain control over its log output by logging to a file outside of the container.  The application can do this by redirecting *stdout* and *stderr* or by explicitly writing to a file.  As discussed in `dir-definitions`_, the application always has read/write access to the host's *execSystemOutputDir*, which is mounted at /TapisOutput in the container (see next section).
 
 On the other hand, applications can run on machines where the default Docker log driver is configured to write to files or services outside of containers.  In addition, Tapis passes any user-specified *log-driver* and *log-opts* options to *docker run*, so all customizations_ supported by Docker are possible.
 
