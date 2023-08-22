@@ -655,7 +655,7 @@ The JSON schema for used to redirect stdout and stderr to named file(s) in suppo
 
 Currently, only the Singularity (Apptainer) runtime is supported.  
 
-When specified, both file names must be explicitly assigned, though they can be assigned to the file.  If the logConfig is not specified, or in runtimes where it's not supported, then both stdout and stderr are directed to the default **tapisjob.out** file in the job's output directory.  The output files are always relative to the ExecSystemOuputDir (see `Directory Definitions`_).
+When specified, both file name fields must be explicitly assigned, though they can be assigned to the same file.  If a *logConfig* object is not specified, or in runtimes where it's not supported, then both stdout and stderr are directed to the default **tapisjob.out** file in the job's output directory.  Output files, even when *logConfig* is used, are always relative to the ExecSystemOuputDir (see `Directory Definitions`_).
 
 -------------------------------------------------
 
