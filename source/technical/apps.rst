@@ -331,7 +331,8 @@ Sharing
 -----------------
 In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
 This approach is known simply as *sharing*. The sharing API allows you to share an application with a set of users
-as well as share publicly with all users in a tenant. Sharing grants ``READ+EXECUTE`` access.
+as well as share publicly with all users in a tenant. Sharing grants ``READ+EXECUTE`` access and, more importantly,
+facilitates allowing others to run a job using the application.
 
 Sharing an application gives a user certain implicit access to resources in the context of running a job.
 When a properly designed application is shared it may be used by many users to run jobs without the need to explicitly

@@ -586,7 +586,10 @@ Sharing
 -----------------
 In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
 This approach is known simply as *sharing*. The sharing API allows you to share a system with a set of users
-as well as share publicly with all users in a tenant. Sharing grants ``READ+EXECUTE`` access.
+as well as share publicly with all users in a tenant. Sharing provides ``READ+EXECUTE`` access.
+When the system has a dynamic *effectiveUserId*, sharing also allows for MODIFY access to all paths for calls
+made through the Files service.
+Note that Tapis permissions and sharing are independent of native permissions enforced by the underlying system host.
 
 The most common use case for sharing a system is to publicly share the system with all users in the tenant.
 This would allow any user to use the system for execution or storage when running an application.
