@@ -31,6 +31,7 @@ Welcome to Tapis's Documentation!
    technical/security
    technical/streams
    technical/workflows
+   technical/notifications
    technical/sharing
    technical/pythondev
 

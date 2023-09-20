@@ -28,6 +28,9 @@ referred to as *effectiveUserId*. This access user can be a specific user (such 
 specified as ``${apiUserId}``. For the case of ``${apiUserId}``, the username is extracted from the identity
 associated with the request to the service.
 
+-----------------
+Model
+-----------------
 At a high level a system represents the following information:
 
 *id*
