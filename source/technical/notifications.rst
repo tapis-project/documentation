@@ -1,8 +1,8 @@
 .. _notifications:
 
-=======================================
+=============
 Notifications
-=======================================
+=============
 
 The Notifications service supports the publish-subscribe model for delivering information to intereseted parties.
 Currently only a Tapis service may directly create subscriptions and post events through this service. Users may
@@ -11,9 +11,9 @@ For more information on creating subscriptions through the Jobs service please s
 
 .. _JobsSubscriptions: https://tapis.readthedocs.io/en/latest/technical/jobs.html#subscriptions
 
------------------
+--------
 Overview
------------------
+--------
 In Tapis, a notification *event* represents an occurrence that may be of interest to other parties. The
 events are delivered asynchronously using a publish-subscribe model.
 Currently only services may directly create subscriptions and post events.
@@ -27,10 +27,10 @@ Please note that although currently the Notifications service is only accessed b
 service, this document discusses the general design and features of the service in order to provide
 information for future planned development.
 
------------------
+-----------
 Event Model
------------------
-At a high level the event contains the following information:
+-----------
+An event contains the following information:
 
 *source*
   Context in which the event happened. For example, for a job related event originating from Tapis at the
@@ -38,7 +38,7 @@ At a high level the event contains the following information:
 *type*
   Type of event. Used for routing notifications. A series of 3 fields separated by the dot character.
   The first field is the service name, the second field is the category and the third field is the detail.
-  For example, when a job transistions to the FINISHED state the type is *jobs.JOB_NEW_STATUS.FINISHED*.
+  For example, when a job transistions to the FINISHED state the type is ``jobs.JOB_NEW_STATUS.FINISHED``.
 *subject*
   Subject of event in context of service. Examples: job Id, system Id, file path, role name, etc.
 *seriesId*
@@ -62,9 +62,9 @@ subscriptions with an event type filter in order to select the events delivered 
 event type must have three parts in the format **<service>.<category>.<detail>**.
 For example *jobs.JOB_NEW_STATUS.PENDING*, *apps.APP.UPDATE* or *files.OBJECT.DELETE*.
 
---------------------------------
+------------
 Subscription
---------------------------------
+------------
 A service can create a subscription for an event type in order to allow users and services to receive events.
 Two delivery methods are supported, WEBHOOK and EMAIL.
 
@@ -72,7 +72,7 @@ At a high level, a subscription contains the following information:
 
 *name*
   Optional short descriptive name. *owner+name* must be unique. Composed of alphanumeric characters and the following
-  special characters: ``-._~``. If not provided the service will create one.
+  special characters: ``-._~``. If not provided, the service will create one.
 *owner*
   A specific user set at create time. Default is *${apiUserId}*.
 *description*
@@ -100,7 +100,7 @@ Subscription Name
 ~~~~~~~~~~~~~~~~~
 
 For each owner the name must be unique and can be composed of alphanumeric characters and the following special
-characters: ``-._~``. If the attribute *name* is not provided then the service will generate one using the template::
+characters: ``-._~``. If the attribute *name* is not provided, then the service will generate one using the template::
 
  <jwtUser>~<owner>~<oboTenant>~<subjectFilter>~<random4>
 
@@ -111,7 +111,7 @@ For example::
 Note that when constructing the name:
 
 * *subjectFilter* will be truncated to 40 characters
-* If *subjectFilter* is the wildcard character ``*``, it is replaced with the string ``ALL``
+* If *subjectFilter* is the wildcard character ``*``, it is replaced with the string ``ALL`` when constructing the name.
 * The last 4 characters are generated at random from the set of alphanumeric characters including upper case, lower case and digits.
 
 
@@ -127,20 +127,20 @@ A delivery target contains the following information:
 * *deliveryAddress* - URL for WEBHOOK or email address for EMAIL
 
 
---------------------------------
-Notification
---------------------------------
-A notification is an object containing the information sent to a delivery target. It contains the following::
+------------------
+Notification Model
+------------------
+A notification is an object encapsulating the information sent to a delivery target. It contains the following:
 
 * *uuid* - Unique identifier for the notification.
-* *event* - All information contained in the event. See the section above titled Event.
+* *event* - All information contained in the event. See above under the section `Event Model`_.
 * *eventUuid* - Unique identifier for the event.
 * *tenant* - tenant associated with the notification.
 * *subscriptionName* - Name of subscription associated with the notification.
 * *deliveryTarget* - the delivery target
 * *created* Timestamp for when the notification was created.
 
-Example of notification sent to a webhook::
+Example of a notification sent to a webhook::
 
  {
    "uuid": "30d70395-d5e9-43a4-ae90-2306b6bb00d6",
@@ -166,7 +166,7 @@ Example of notification sent to a webhook::
    "created": "2023-09-15T14:47:50.315188203Z"
  }
 
-Example of notification sent to an email address::
+Example of a notification sent to an email address::
 
  {
    "uuid": "befe2475-58ad-4a5c-bcf2-593f04e49a20",
@@ -193,9 +193,100 @@ Example of notification sent to an email address::
  }
 
 
------------------------------
-Subscription Attributes Table
------------------------------
+---------------------
+Notification Delivery
+---------------------
+
+Background
+~~~~~~~~~~
+
+When events are published to the Notifications front end api service, they are initially placed on a message
+broker queue to be picked up asynchronously by a back end worker process known as the dispatch service.
+Currently RabbitMQ is used as the message broker. 
+
+The dispatch service reads events from the queue and assigns them to workers known as *delivery bucket managers*.
+Delivery bucket managers are threads that receive their assigned events from in-memory queues.
+The dispatch service assigns events to a bucket manager by taking a hash of the event *source*,
+*subject* and *seriesId*.
+
+When a bucket manager worker receives an event to process, it first finds all matching subscriptions by
+querying a database. As discussed above, the matching is based on the *typeFilter* and *subjectFilter*
+defined in a subscription.
+
+For each delivery target in each matching subscription, the worker creates a Notification object and persists it
+to a database. By persisting to a database we are able to support recovery and retries. The worker then begins
+the process of delivering the notifications.
+
+
+Configuring for EMAIL Delivery
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Supporting delivery by EMAIL involves configuring the Tapis Notifications service to use an SMTP relay.
+This must be done by the Tapis systems administrator. Parameters for the relay are set as environment variables
+to be picked up by the dispatcher service when it is started during a deployment.
+For more information on deployer configuration please see `Notifications_Email_Config`_.
+
+.. _Notifications_Email_Config: https://tapis.readthedocs.io/en/latest/deployment/deployer.html#configuring-support-for-notifications-by-email
+
+The environment variables used to configure email delivery are:
+
+*TAPIS_MAIL_PROVIDER*
+  Optional. Supported values: SMTP, LOG, NONE. Default is LOG.
+  This should typically be set to SMTP. Setting to LOG results in the dispatcher generating a log message showing
+  the email information. Setting to NONE results in delivery being a NO-OP.
+*TAPIS_SMTP_HOST*
+  Required if provider is SMTP. Host to use as relay when sending email via SMTP.
+*TAPIS_SMTP_PORT*
+  Optional. Port used when sending email using SMTP. Default is 25.
+*TAPIS_SMTP_FROM_NAME*
+  Optional. Name for the email `From:` field. Default value is *Tapis Notifications Service*.
+*TAPIS_SMTP_FROM_ADDRESS*
+  Optional. Address for the email `From:` field. Default value is *no-reply@nowhere.com*.
+*TAPIS_SMTP_AUTH*
+  Optional. Boolean indicating if SMTP server requires a username and password. Default is *false*.
+*TAPIS_SMTP_USER*
+  Required if TAPIS_SMTP_AUTH is *true*.
+*TAPIS_SMTP_PASSWORD*
+  Required if TAPIS_SMTP_AUTH is *true*.
+
+EMAIL Delivery
+~~~~~~~~~~~~~~
+When the notification delivery method is of type EMAIL, the dispatch worker will send an email using SMTP.
+
+The ``To:`` field for the email will be the notification delivery address.
+
+The ``From:`` field for the email will depend on the configuration parameters, as discussed above in the
+section `Configuring for EMAIL Delivery`_. By default this will be::
+
+  Tapis Notifications Service <no-reply@nowhere.com>
+
+The ``Subject:`` of the email will have the following format::
+
+  Tapis v3 notification. Event type: <event_type> subject: <subject>
+
+If the event has no *subject* then the email subject will not have the subject portion.
+
+An example email subject for the case where the event contains a *subject* attribute::
+
+  Tapis v3 notification. Event type: jobs.JOB_NEW_STATUS.FINISHED subject: 1451b0ef-c057-4177-acd5-51a4901acb07-007
+
+The body of the email will contain the notification data as json. An example may be found above under the section
+`Notification Model`_. 
+
+WEBHOOK Delivery
+~~~~~~~~~~~~~~~~
+When the notification delivery method is of type WEBHOOK, the dispatch worker will deliver the notification using an
+HTTP POST request. The media type for the request will be *application/json* and the following header will be
+added: ``User-Agent: Tapis/v3``.
+
+The request body will be a json structure with the notification information.
+An example may be found above under the section `Notification Model`_. 
+
+------
+Tables
+------
+
+Subscription Attributes
+~~~~~~~~~~~~~~~~~~~~~~~
 
 +-----------------+----------------+--------------------+-------------------------------------------------------------------------+
 | Attribute       | Type           | Example            | Notes                                                                   |
@@ -250,9 +341,8 @@ Subscription Attributes Table
 | updated         | Timestamp      |2020-06-20T23:21:22Z| - When the subscription was last updated. Maintained by service.        |
 +-----------------+----------------+--------------------+-------------------------------------------------------------------------+
 
----------------------------
-Event Attributes Table
----------------------------
+Event Attributes
+~~~~~~~~~~~~~~~~
 
 +-----------+--------+------------------------+--------------------------------------------------------------------+
 | Attribute | Type   | Example                | Notes                                                              |
@@ -274,9 +364,8 @@ Event Attributes Table
 | timestamp | String | 2020-06-19T15:10:43Z   | - When the event happened.                                         |
 +-----------+--------+------------------------+--------------------------------------------------------------------+
 
------------------------------
-Notification Attributes Table
------------------------------
+Notification Attributes
+~~~~~~~~~~~~~~~~~~~~~~~
 
 +----------------+--------+----------------------------------------------------------------+
 | Attribute      | Type   | Notes                                                          |
