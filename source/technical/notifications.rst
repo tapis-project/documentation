@@ -15,7 +15,10 @@ For more information on creating subscriptions through the Jobs service please s
 Overview
 --------
 In Tapis, a notification *event* represents an occurrence that may be of interest to other parties. The
-events are delivered asynchronously using a publish-subscribe model.
+events are delivered asynchronously using a publish-subscribe model. Once an interested party has created a
+*subscription*, matching *events* are delivered to the interested party as part of a *notification* object.
+Deliveries are made via webhook or email. 
+
 Currently only services may directly create subscriptions and post events.
 
 The model for a notification event is based on the CloudEvent specification version 1.0.
@@ -24,7 +27,7 @@ https://github.com/cloudevents/spec.
 
 
 Please note that although currently the Notifications service is only accessed by users through the Jobs
-service, this document discusses the general design and features of the service in order to provide
+service, this document discusses the general design and details of the service in order to provide
 information for future planned development.
 
 -----------
@@ -225,7 +228,11 @@ This must be done by the Tapis systems administrator. Parameters for the relay a
 to be picked up by the dispatcher service when it is started during a deployment.
 For more information on deployer configuration please see `Notifications_Email_Config`_.
 
-.. _Notifications_Email_Config: https://tapis.readthedocs.io/en/latest/deployment/deployer.html#configuring-support-for-notifications-by-email
+.. _Notifications_Email_Config: https://tapis.readthedocs.io/en/latest/deployment/deployer.html#configuring-support-for-email-notifications
+
+
+Please note that deployer currently only supports template variables for TAPIS_MAIL_PROVIDER, TAPIS_SMTP_HOST and TAPIS_SMTP_PORT.
+Other environment variables must be set manually in the deployment. 
 
 The environment variables used to configure email delivery are:
 

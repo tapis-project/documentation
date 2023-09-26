@@ -734,11 +734,13 @@ Bootstrapping an Initial Associate Site Deployment
 Configuring Support for GLOBUS
 ------------------------------
 
+Inlcuding support for GLOBUS is optional.
+
 In order for a primary or associate site to support Tapis systems of type GLOBUS, a Globus project must be
 created and registered. This yields a Globus client ID that must be configured as part of the Tapis environment.
 For more information on creating a Globus project, please see the
 `Globus Auth Developer Guide <https://docs.globus.org/api/auth/developer-guide>`_.
-Each Tapis installation can be configured with it’s own Globus client ID.
+Each Tapis installation can be configured with it's own Globus client ID.
 
 The resulting client ID must be set in the host_vars file using the field ``systems_globus_client_id``.
 This field is referenced as part of the deployment for the Systems and Files services. This is done by adding lines
@@ -757,6 +759,32 @@ protocol is used to perform a three-legged OAuth2 authorization code grant.
 For more information, please see Systems
 `Support For Globus <https://tapis.readthedocs.io/en/latest/technical/systems.html#support-for-globus>`_.
 
+-------------------------------------------
+Configuring Support for Email Notifications
+-------------------------------------------
+
+Including support for notifications by EMAIL is optional.
+
+In order for the Tapis Notifications service to support delivery of notifications by EMAIL, the service deployment
+files must be updated to include parameters for an SMTP relay. Parameters for the relay are set as environment variables
+to be picked up by the dispatcher service when it is started during a deployment.
+Each Tapis installation can be configured with it's own SMTP relay.
+
+For more information on Notifications EMAIL support and a full list of relevant environment variables, please see 
+`Notification Delivery <http://localhost:7898/technical/notifications.html#notification-delivery>`_.
+
+Site specific values must be set in the host_vars file. Values for environment variables ``TAPIS_MAIL_PROVIDER``,
+``TAPIS_SMTP_HOST`` must be set. Typically a value for ``TAPIS_SMTP_PORT`` is also included.
+These fields are referenced as part of the deployment for the Notifications service. This is done by adding lines
+similar to the following to the host_vars file:
+
+  .. code-block:: yaml
+
+    # notifications
+    notifications_mail_provider: SMTP
+    notifications_mail_host: relay.example.com
+    notifications_mail_port: 25
+  
 
 ----------------------------------
 Advanced Configuration Options
