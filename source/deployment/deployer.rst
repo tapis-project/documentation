@@ -771,7 +771,7 @@ to be picked up by the dispatcher service when it is started during a deployment
 Each Tapis installation can be configured with it's own SMTP relay.
 
 For more information on Notifications EMAIL support and a full list of relevant environment variables, please see 
-`Notification Delivery <http://localhost:7898/technical/notifications.html#notification-delivery>`_.
+`Notification Delivery <https://tapis.readthedocs.io/en/latest/technical/notifications.html#notification-delivery>`_.
 
 Site specific values must be set in the host_vars file. Values for environment variables ``TAPIS_MAIL_PROVIDER``,
 ``TAPIS_SMTP_HOST`` must be set. Typically a value for ``TAPIS_SMTP_PORT`` is also included.
