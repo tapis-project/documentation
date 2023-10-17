@@ -56,7 +56,7 @@ Versioned Attributes
 *description*
   An optional more verbose description for the application.
 *runtime*
-  Runtime to be used when executing the application. DOCKER, SINGULARITY. Default is DOCKER.
+  Runtime to be used when executing the application. DOCKER, SINGULARITY, ZIP. Default is DOCKER.
 *runtimeVersion*
   Runtime version to be used when executing the application.
 *runtimeOptions*
@@ -477,7 +477,7 @@ Application Attributes Table
 | enabled             | boolean        | FALSE                | - Indicates if application currently enabled for use. Default is TRUE.               |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | runtime             | enum           | SINGULARITY          | - Runtime to be used when executing the application.                                 |
-|                     |                |                      | - Runtimes: DOCKER, SINGULARITY                                                      |
+|                     |                |                      | - Runtimes: DOCKER, SINGULARITY, ZIP                                                 |
 |                     |                |                      | - Default is DOCKER                                                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | runtimeVersion      | String         | 2.5.2                | - Optional version or range of versions required.                                    |
