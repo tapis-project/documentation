@@ -172,7 +172,7 @@ the pod we want to register through the function parameters. For example:
 
 .. code-block:: python
 
-    t.pods.create_pod(pod_id='docpod', pod_template='neo4j', description='My example pod!')
+    t.pods.create_pod(pod_id='docpod', pod_template='template/neo4j', description='My example pod!')
 
 As you can see, we're using pod_template equal to `neo4j`, that is one of our templated pods.
 You should see a response like this:
