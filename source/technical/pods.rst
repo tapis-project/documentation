@@ -174,7 +174,7 @@ the pod we want to register through the function parameters. For example:
 
     t.pods.create_pod(pod_id='docpod', pod_template='template/neo4j', description='My example pod!')
 
-As you can see, we're using pod_template equal to `neo4j`, that is one of our templated pods.
+As you can see, we're using pod_template equal to `template/neo4j`, that is one of our templated pods.
 You should see a response like this:
 
 .. code-block:: bash
@@ -186,7 +186,7 @@ You should see a response like this:
     environment_variables: 
 
     pod_id: test
-    pod_template: neo4j
+    pod_template: template/neo4j
     roles_inherited: []
     roles_required: []
     status: REQUESTED
