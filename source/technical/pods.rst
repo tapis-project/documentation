@@ -289,6 +289,7 @@ Neo4j
 Assuming the user has created a Neo4j pod and retrieved credentials (user/pass), the user can now connect to the DB with the Neo4j browser interface or Python Neo4j driver.
 
 .. tabs::
+
     .. tab:: Python
 
         .. code-block:: python
@@ -335,6 +336,7 @@ Assuming the user has created a Postgres pod and retrieved credentials (user/pas
 DB with the Postgres' PgAdmin interface or Python Postgres drivers.
 
 .. tabs::
+    
     .. tab:: Python
         To note, psycopg2 will be the Postgres driver used, there are more, use your preference.
 
