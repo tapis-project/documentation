@@ -118,7 +118,7 @@ resulting path will become the key.
 
 .. note::
   When *rootDir* is defined for an S3 system it typically should not begin with ``/``.
-  For S3 keys are typically created and manipulated using URLs and do not have a leading ``/``.
+  S3 keys are usually created and manipulated using URLs and do not have a leading ``/``.
 
 Handling of symbolic links on Linux systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -58,7 +58,9 @@ At a high level a system represents the following information:
 *rootDir* - Effective root directory
   Directory to be used when listing files or moving files to and from the system. For LINUX and IRODS this is required
   and must begin with ``/``.
-  For S3 this is optional and typically will not begin with ``/``.
+  For S3 and GLOBUS this is optional.
+  For S3, typically will not begin with ``/``. S3 keys are usually created and manipulated using URLs and do not
+  have a leading ``/``.
   May not be updated. Contact support to request a change.
 *dtnSystemId* - DTN system Id
   An alternate system to use as a Data Transfer Node (DTN) during job execution. The execution system and the DTN
@@ -142,6 +144,9 @@ Various authentication methods can be used to access a system, such as PASSWORD,
 TOKEN authentication method is for systems of type GLOBUS. Registering credentials for a GLOBUS type system is a special
 case that involves steps different from those described in this section. Please see the section below on
 `Registering Credentials for a Globus System`_ for more information.
+
+Please note that there is support for only one set of credentials per user per system. Updating credentials overwrites
+previously registered data.
 
 Here we will cover registering PKI_KEYS (i.e. ssh keys) as an example.
 
@@ -445,7 +450,7 @@ independently for child systems:
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or IRODS or *isDtn* = true.                      |
 |                     |                |                      | - For LINUX or IRODS must begin with ``/``.                                          |
-|                     |                |                      | - Optional for S3 and will typically not begin with ``/``.                           |
+|                     |                |                      | - Optional for S3 and GLOBUS. For S3 will typically not begin with ``/``.            |
 |                     |                |                      | - Variable references are resolved at create time.                                   |
 |                     |                |                      | - Serves as effective root directory when listing or moving files.                   |
 |                     |                |                      | - May not be updated. Contact support to request a change.                           |
@@ -615,6 +620,9 @@ when accessing the system.
 Note that the Systems service does not store credentials. Credentials are persisted by the Security Kernel service
 and only specific Tapis services are authorized to retrieve credentials.
 
+Also, note that there is support for only one set of credentials per user per system. Updating credentials
+overwrites previously registered data.
+
 By default any credentials provided for LINUX and S3 type systems are verified. The query parameter
 *skipCredentialCheck=true* may be used to bypass the initial verification of credentials.
 
@@ -706,7 +714,7 @@ System Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or IRODS or *isDtn* = true.                      |
 |                     |                |                      | - For LINUX or IRODS must begin with ``/``.                                          |
-|                     |                |                      | - Optional for S3 and will typically not begin with ``/``.                           |
+|                     |                |                      | - Optional for S3 and GLOBUS. For S3 will typically not begin with ``/``.            |
 |                     |                |                      | - Variable references are resolved at create time.                                   |
 |                     |                |                      | - Serves as effective root directory when listing or moving files.                   |
 |                     |                |                      | - May not be updated. Contact support to request a change.                           |
