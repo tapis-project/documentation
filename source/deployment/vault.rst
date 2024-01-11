@@ -198,9 +198,9 @@ On the remote machine terminal, export the root VAULT_TOKEN as shown in Step 10.
 | *git clone https://github.com/tapis-project/tapis-vault-vm.git*
 | *cd tapis-vault-vm*
 
-| *curl -X POST -H "X-Vault-Token: $VAULT_TOKEN" --data @roles/sk-role.json https://tapis-vault.mydomain.com:8200/v1/auth/approle/role/sk*
+| *curl -X POST -H "X-Vault-Token: $VAULT_TOKEN" \-\-data @roles/sk-role.json https://tapis-vault.mydomain.com:8200/v1/auth/approle/role/sk*
 
-| *curl -X POST -H "X-Vault-Token: $VAULT_TOKEN" --data @roles/sk-admin-role.json https://tapis-vault.mydomain.com:8200/v1/auth/approle/role/sk-admin*
+| *curl -X POST -H "X-Vault-Token: $VAULT_TOKEN" \-\-data @roles/sk-admin-role.json https://tapis-vault.mydomain.com:8200/v1/auth/approle/role/sk-admin*
 
 **Step 13 - Test SK Roles (optional)**
 
@@ -249,7 +249,7 @@ Create a file named tapisroot.json with the content::
 
 Run this command:
 
-| *curl -X POST -s -H "X-Vault-Token: $VAULT_TOKEN" --data @tapisroot.json https://tapis-vault.mydomain.com:8200/v1/auth/token/create | jq*
+| *curl -X POST -s -H "X-Vault-Token: $VAULT_TOKEN" \-\-data @tapisroot.json https://tapis-vault.mydomain.com:8200/v1/auth/token/create | jq*
 
 Save the returned "client_token" in a secure place, such as stache or wherever you saved the original root token and unseal keys.
 
