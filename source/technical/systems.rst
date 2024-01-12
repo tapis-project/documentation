@@ -629,7 +629,7 @@ By default any credentials provided for LINUX and S3 type systems are verified. 
 --------------------------
 Runtime
 --------------------------
-Runtime environment supported by the system that may be used to run applications, such as docker or singularity.
+Runtime environment supported by the system that may be used to run applications, such as docker, singularity or ZIP.
 Consists of the runtime type and version.
 
 --------------------------
@@ -750,7 +750,7 @@ System Attributes Table
 | jobRuntimes         | [Runtime]      |                      | - List of runtime environments supported by the system.                              |
 |                     |                |                      | - At least one entry required if *canExec* is true.                                  |
 |                     |                |                      | - Each Runtime specifies the Runtime type and version                                |
-|                     |                |                      | - Runtime type is required and must be one of: DOCKER, SINGULARITY.                  |
+|                     |                |                      | - Runtime type is required and must be one of: DOCKER, SINGULARITY, ZIP.             |
 |                     |                |                      | - Runtime version is optional.                                                       |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobWorkingDir       | String         | HOST_EVAL($SCRATCH)  | - Parent directory from which a job is run.                                          |

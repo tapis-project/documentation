@@ -24,7 +24,7 @@ Jobs
 Introduction to Jobs
 ====================
 
-The Tapis v3 Jobs service is specialized to run containerized applications on any host that supports container runtimes.  Currently, Docker and Singularity containers are supported.  The Jobs service uses the Systems, Apps, Files and Security Kernel services to process jobs.
+The Tapis v3 Jobs service is specialized to run containerized applications on any host that supports container runtimes.  Currently, Docker, Singularity and ZIP containers are supported.  The Jobs service uses the Systems, Apps, Files and Security Kernel services to process jobs.
 
 Implementation Status
 ---------------------
@@ -899,7 +899,7 @@ Since **ds-exec** mounts the corral root directory, the files staged to corral /
 Container Runtimes
 ==================
 
-The Tapis v3 Jobs service currently supports Docker and Singularity containers run natively (i.e., not run using a batch scheduler like Slurm).  In general, Jobs launches an application's container on a remote system, monitors the container's execution, and captures the application's exit code after it terminates.  Jobs uses SSH to connect to the execution system to issue Docker, Singularity or native operating system commands.
+The Tapis v3 Jobs service supports Docker, Singularity and ZIP containers run natively (i.e., not run using a batch scheduler like Slurm).  In general, Jobs launches an application's container on a remote system, monitors the container's execution, and captures the application's exit code after it terminates.  Jobs uses SSH to connect to the execution system to issue Docker, Singularity or native operating system commands.
 
 To launch a job, the Jobs service creates a bash script, **tapisjob.sh**, with the runtime-specific commands needed to execute the container.  This script references **tapisjob.env**, a file Jobs creates to pass environment variables to application containers.  Both files are staged in the job's execSystemExecDir and, by default, are archived with job output on the archive system.  See `archiveFilter`_ to override this default behavior, especially if archives will be shared and the scripts pass sensitive information into containers.
 
@@ -1037,10 +1037,10 @@ To define a ZIP application, specify "ZIP" as the *runtime* parameter in an `app
 
 An application's archive file can contain scripts, binary executables, libraries and any other data the application developer needs---Tapis does not restrict content.  The archive must be in `zip`_ format or any format readable by `tar`_.  In order to run correctly, the application must:
 
-#. Designate an executable program for Tapis to launch,
+#. Have a designated executable program for Tapis to launch,
 #. guarantee that the executable code is compatible with the target system's runtime,
 #. guarantee that for FORK jobs the launched program continues to run until the application completes, 
-#. and include in the archive all application dependencies not present on the target system.
+#. include in the archive all application dependencies not present on the target system.
 
 There are also a number of conventions that ZIP applications should observe:
 
@@ -1061,12 +1061,13 @@ ZIP jobs package executable code and data in an archive file that either already
 
 The archive file's location is specified in the *containerImage* attribute of the application. The location may either be an absolute path to a location on the execution system or a URL.  The following protocols are supported: *http://*, *https://* and *tapis://*. If Jobs needs to transfer an archive file, the destination for the transfer will be *execSystemExecDir*.
 
+Archive files are always unpacked into *execSystemExecDir* using either *unzip* or *tar* as shown below.  
 ::
 
         unzip <pathToArchiveFile>
         tar -xf <pathToArchiveFile>
 
-Archive files are always unpacked into *execSystemExecDir* using either *unzip* or *tar* as shown above.  The *<pathToArchiveFile>* is the absolute path to the archive file, such as */path/to/archive/app.zip* or */path/to/archive/app.tgz*.  When *containerImage* is a URL, *<pathToArchiveFile>* is the *execSystemExecDir*.  When *containerImage* is an absolute path, it must be present and accessible on the execution system.  In this case, the archive is not be copied, but its contents are extracted directly into the *execSystemExecDir*.
+The *<pathToArchiveFile>* is the absolute path to the archive file, such as */path/to/archive/app.zip* or */path/to/archive/app.tgz*.  When *containerImage* is a URL, the archive file is placed in the *execSystemExecDir*.  When *containerImage* is an absolute path, it must be present and accessible on the execution system.  In this case, the archive is not be copied, but its contents are extracted directly into the *execSystemExecDir*.
 
 Note that the version of tar distributed with typical Linux distributions can unpack a number of compression formats, including gzip, bzip2 and xz, but **not** zip. When an archive file name uses the *.zip* suffix, Tapis assumes *zip* formatting is being used.  Tapis checks that the *unzip* command is available on the execution system and, if not, the job aborts.
 
@@ -1093,14 +1094,17 @@ Other than *tapisjob.manifest* and *tapisjob_app.sh*, no user-defined files in t
 
 ZIP applications can expect to run in a environment that closely matches other Tapis runtimes.  In particular, Jobs exports all user-specified and Tapis-generated environment variables in the SSH terminal from which it launches the application's executable.  These are the same variables available to applications in other runtime environments.  Similarly, *appArgs*, *containerArgs* and *schedulerOptions* semantics are unchanged.
 
-Jobs also sets up the redirection of stdout and stderr using the `LogConfig`_ parameter as it does in other environments. Both streams are directed to *tapisjob.out* by default. 
+Jobs also sets up the redirection of stdout and stderr using the `LogConfig`_ parameter as it does in other environments. Both streams are directed to *execSystemOutputDir/tapisjob.out* by default. 
 
 Monitoring the Application
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For ZIP BATCH jobs, Tapis monitors the slurm job just as it does for other runtime types.
 
-For ZIP FORK jobs, Tapis monitors the PID of the process launched by *tapisjob.sh*.  When that PID goes away, Jobs assumes application processing has completed.  *It is the application developer's responsibility to terminate the executable launched by Tapis ONLY AFTER all other processes spawned by the application have terminated.*
+For ZIP FORK jobs, Tapis monitors the PID of the process launched by *tapisjob.sh*.  When that PID goes away, Jobs assumes application processing has completed.  
+
+.. note::
+  It is the application developer's responsibility to terminate the executable launched by Tapis ONLY AFTER all other processes spawned by the application have terminated.
 
 After a ZIP FORK job completes, Jobs looks for a file named **tapisjob.exitcode** in the *execSystemOutputDir*. If present, it is assumed to contain a single line with the application's exit code. A non-zero code is interpreted as a failure. If the file is not found, Jobs assumes success and reports an exit code of zero. 
 
