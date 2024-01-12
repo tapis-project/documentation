@@ -1068,7 +1068,7 @@ The archive file's location is specified in the *containerImage* attribute of th
 
 Archive files are always unpacked into *execSystemExecDir* using either *unzip* or *tar* as shown above.  The *<pathToArchiveFile>* is the absolute path to the archive file, such as */path/to/archive/app.zip* or */path/to/archive/app.tgz*.  When *containerImage* is a URL, *<pathToArchiveFile>* is the *execSystemExecDir*.  When *containerImage* is an absolute path, it must be present and accessible on the execution system.  In this case, the archive is not be copied, but its contents are extracted directly into the *execSystemExecDir*.
 
-Note that the version of tar distributed with typical Linux distributions can unpack a number of compression formats, including gzip, bzip2 and xz, but **not** zip. When an archive file name uses the *.zip* suffix, Tapis assumes *zip* formatting is being used.  Tapis checks that the *unzip* command is available on the execution system.  If *unzip* is not available, the job aborts.
+Note that the version of tar distributed with typical Linux distributions can unpack a number of compression formats, including gzip, bzip2 and xz, but **not** zip. When an archive file name uses the *.zip* suffix, Tapis assumes *zip* formatting is being used.  Tapis checks that the *unzip* command is available on the execution system and, if not, the job aborts.
 
 Launching the Application
 ^^^^^^^^^^^^^^^^^^^^^^^^^
