@@ -1033,19 +1033,19 @@ ZIP
 
 Standard archive files, such as zip and compressed tar, can be treated as a type of custom *application image* and launched in a runtime environment defined by Tapis.  This *ZIP runtime environment* maximizes applications flexibility while retaining much of the reproducibility and automation benefits of Tapis.   
 
-To define a ZIP application, specify "ZIP" as the *runtime* parameter in an `application definition`_. The ZIP runtime works with either BATCH or FORK job types.  For the ZIP runtime, *containerImage* must be an absolute path or a URL in a format supported by the Files service, such as URLs using http, https or tapis protocols.  The Applications service validates the *containerImage* attribute when an application is created or updated. 
+To define a ZIP application, specify "ZIP" as the *runtime* parameter in an `application definition`_. The ZIP runtime works with either BATCH or FORK job types.  For the ZIP runtime, *containerImage* must be an absolute path or a URL in a format supported by the Files service, such as URLs using the http, https or tapis protocols.  The Applications service validates the *containerImage* attribute when an application is created or updated. 
 
-An application's archive file can contain scripts, binary executables, libraries or any other data the application developer chooses--Tapis does not restrict content.  The archive must be in `zip`_ format or any format readable by `tar`_.  In order to run correctly, the application must:
+An application's archive file can contain scripts, binary executables, libraries and any other data the application developer needs---Tapis does not restrict content.  The archive must be in `zip`_ format or any format readable by `tar`_.  In order to run correctly, the application must:
 
 #. Designate an executable program for Tapis to launch,
 #. guarantee that the executable code is compatible with the target system's runtime,
 #. guarantee that for FORK jobs the launched program continues to run until the application completes, 
-#. and include all application dependencies not present on the target system in the archive.
+#. and include in the archive all application dependencies not present on the target system.
 
 There are also a number of conventions that ZIP applications should observe:
 
 #. FORK jobs should write their exit code to *${execSystemOutputDir}/tapisjob.exitcode*.
-#. Except during testing, allow Tapis to remove downloaded archives file from the execution system after job completion.
+#. Except during testing, allow Tapis to remove downloaded archive files from the execution system after job completion.
 
 The following sections describe the ZIP runtime processing during each phase of a job's lifecycle.
 
@@ -1066,14 +1066,14 @@ The archive file's location is specified in the *containerImage* attribute of th
         unzip <pathToArchiveFile>
         tar -xf <pathToArchiveFile>
 
-Archive files are always unpacked into *execSystemExecDir* using either *unzip* or *tar* as shown above.  The *<pathToArchiveFile>* is the absolute path to the archive file, such as */path/to/archive/app.zip* or */path/to/archive/app.tgz*.  When *containerImage* is a URL, *<pathToArchiveFile>* is the *execSystemExecDir*.  When *containerImage* is an absolute path, it must be present and accessible on the execution system.  In this case, the archive is not be copied, but its contents are extracted to the *execSystemExecDir*.
+Archive files are always unpacked into *execSystemExecDir* using either *unzip* or *tar* as shown above.  The *<pathToArchiveFile>* is the absolute path to the archive file, such as */path/to/archive/app.zip* or */path/to/archive/app.tgz*.  When *containerImage* is a URL, *<pathToArchiveFile>* is the *execSystemExecDir*.  When *containerImage* is an absolute path, it must be present and accessible on the execution system.  In this case, the archive is not be copied, but its contents are extracted directly into the *execSystemExecDir*.
 
-Note that the version of tar distributed with typical Linux distributions can unpack a number of compression formats, including gzip, bzip2 and xz, but **not** zip. When *\*.zip* archive files are used, Tapis checks that the *unzip* command is available on the execution system.  If *unzip* is not available, the job aborts.
+Note that the version of tar distributed with typical Linux distributions can unpack a number of compression formats, including gzip, bzip2 and xz, but **not** zip. When an archive file name uses the *.zip* suffix, Tapis assumes *zip* formatting is being used.  Tapis checks that the *unzip* command is available on the execution system.  If *unzip* is not available, the job aborts.
 
 Launching the Application
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once the application archive is unpacked, Jobs creates its own launch script, *tapisjob.sh*, and places it in the *execSystemExecDir*.  From the that directory, *tapisjob.sh* calls a user-provided executable.  This executable is either **./tapisjob_app.sh**, if it exists, or an executable named in the **./tapisjob.manifest** file.  The manifest file has these characteristics:
+Once an application archive is unpacked, Jobs creates its own launch script, *tapisjob.sh*, and places it in the *execSystemExecDir*.  From the that directory, *tapisjob.sh* calls the user-provided executable.  This executable is either **./tapisjob_app.sh**, if it exists, or an executable named in the **./tapisjob.manifest** file.  The manifest file has these characteristics:
 
 * The manifest file is optional.
 * If *tapisjob_app.sh* does not exist then *tapisjob.manifest* must exist at the top-level of the archive and must specify the key/value pair:  *tapisjob_executable=<relative path to executable file>*.
@@ -1082,18 +1082,18 @@ Once the application archive is unpacked, Jobs creates its own launch script, *t
    * The *tapisjob_executable* value cannot contain a double dot ".." or semicolon ";".
 * If both *tapisjob_app.sh* and *tapisjob.manifest* exist, then *tapisjob_app.sh* will be used.
 * If Jobs is not able to determine an executable to run then the job will fail.
-* The application can put other descriptive information in *tapisjob.manifest*, such as build number, application version, etc.
+* The application can put other information in *tapisjob.manifest*, such as build number, application version, etc.
    
    *  The format of all entries in the manifest is: <key>=<value>, each on its own line.
    *  Tapis ignores additional entries in manifest.
 
-Other than *tapisjob.manifest* and *tapisjob_app.sh*, no user-defined files in the top level directory should have a name that starts with "tapisjob".  All such file names are reserved and may be overwritten by the Jobs service. Specifically, the Jobs service creates files named *tapisjob.sh*, *tapisjob.env* and several temporary files named with the same prefix.
+Other than *tapisjob.manifest* and *tapisjob_app.sh*, no user-defined files in the top level archive directory should have a name that starts with "tapisjob".  All such file names are reserved by Tapis and may be overwritten by the Jobs service. Specifically, the Jobs service creates files named *tapisjob.sh*, *tapisjob.env* and several temporary files named with the "tapisjob" prefix.
 
 **Environment and Executable Output**
 
-ZIP applications can expect to run in a environment that closely matches other Tapis runtimes.  In particular, Job exports all user-specified and Tapis-generated environment variables in the SSH terminal from which it launches the application's executable, so the same variables available to applications in other environments are accessible to ZIP applications.  Similarly, *appArgs*, *containerArgs* and *schedulerOptions* work as expected.
+ZIP applications can expect to run in a environment that closely matches other Tapis runtimes.  In particular, Jobs exports all user-specified and Tapis-generated environment variables in the SSH terminal from which it launches the application's executable.  These are the same variables available to applications in other runtime environments.  Similarly, *appArgs*, *containerArgs* and *schedulerOptions* semantics are unchanged.
 
-Jobs sets up the redirection of stdout and stderr using the `LogConfig`_ parameter as it does in other environments. Both streams are directed to *tapisjob.out* by default. 
+Jobs also sets up the redirection of stdout and stderr using the `LogConfig`_ parameter as it does in other environments. Both streams are directed to *tapisjob.out* by default. 
 
 Monitoring the Application
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1111,10 +1111,9 @@ Archiving Application Output
 
 ZIP job outputs are archived using the same source and target specifications as other runtime types.
 
+For ZIP jobs that specify their *containerImage* with an absolute path, the application archive file is never removed.
+
 For ZIP jobs that specify their *containerImage* with a URL, Jobs removes the downloaded archive file by default to conserve storage. To prevent this automatic clean up, a new *containerArgs* flag, **\-\-tapis-zip-save**, is defined. The flag takes no value and can be specified in the *containerArgs* list in the application definition or in the job submission request.  If this argument is present, then the application's archive file will be left in the *execSystemExecDir*.
-
-For ZIP jobs that specify their *containerImage* with an absolute path, the application archive file never removed.
-
 
 Usage Notes
 ^^^^^^^^^^^
@@ -1122,7 +1121,7 @@ Usage Notes
 To minimize ZIP archive size, jobs that invoke singularity containers may want to pre-position any large SIF files in shared directories on execution systems.
 
 
-If *isMPI=true*, then Jobs will insert the MPI run command on the command line.  This is true for both BATCH and FORK job types.  If a user's designated executable program launches MPI jobs itself, setting *isMPI=false* prevents Jobs from making conflicting MPI calls.
+If *isMPI=true*, then Jobs will insert the MPI run command on the command line as usual.  This is true for both BATCH and FORK job types.  If the user-designated executable program launches MPI jobs itself, setting *isMPI=false* (the default) prevents Jobs from making conflicting MPI calls.
 
 
 .. _application definition: https://tapis-project.github.io/live-docs/?service=Apps#tag/Applications/operation/createAppVersion
