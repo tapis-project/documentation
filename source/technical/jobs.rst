@@ -1031,7 +1031,7 @@ Applications are not required to support the **TapisJob.exitcode** file conventi
 ZIP
 ---
 
-Standard archive files, such as zip and compressed tar, can be treated as a type of custom *application image* and launched in a runtime environment defined by Tapis.  This *ZIP runtime environment* maximizes applications flexibility while retaining much of the reproducibility and automation benefits of Tapis.   
+Standard archive files, such as zip and compressed tar, can be treated as a type of custom *application image* and launched in a runtime environment defined by Tapis.  This *ZIP runtime environment* maximizes application flexibility while retaining much of the reproducibility and automation benefits of Tapis.   
 
 To define a ZIP application, specify "ZIP" as the *runtime* parameter in an `application definition`_. The ZIP runtime works with either BATCH or FORK job types.  For the ZIP runtime, *containerImage* must be an absolute path or a URL in a format supported by the Files service, such as URLs using the http, https or tapis protocols.  The Applications service validates the *containerImage* attribute when an application is created or updated. 
 
