@@ -1087,7 +1087,7 @@ Once an application archive is unpacked, Jobs creates its own launch script, *ta
    *  The format of all entries in the manifest is: <key>=<value>, each on its own line.
    *  Tapis ignores additional entries in the manifest.
 
-Other than *tapisjob.manifest* and *tapisjob_app.sh*, no user-defined files in the top level archive directory should have a name that starts with "tapisjob".  All such file names are reserved by Tapis and may be overwritten by the Jobs service. Specifically, the Jobs service creates files named *tapisjob.sh*, *tapisjob.env* and several temporary files named with the "tapisjob" prefix.
+Other than *tapisjob.manifest* and *tapisjob_app.sh*, no user-defined files in the top level archive directory should have a name that starts with "tapisjob".  All such file names are reserved by Tapis and may be overwritten by the Jobs service. Specifically, the Jobs service creates files named *tapisjob.sh*, *tapisjob.env* and several temporary files that start with "tapisjob".
 
 **Environment and Executable Output**
 
