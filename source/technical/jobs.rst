@@ -186,6 +186,7 @@ The following subsections discuss the meaning and usage of each of the parameter
 
 ..  _library: https://github.com/tapis-project/tapis-shared-java/blob/dev/tapis-shared-lib/src/main/resources/edu/utexas/tacc/tapis/shared/jsonschema/defs/TapisDefinitions.json
 
+
 Parameter Precedence
 --------------------
 
@@ -528,6 +529,50 @@ A JOB_USER_EVENT contains a user-specified payload that targets an active job by
 .. _subscription: https://tapis-project.github.io/live-docs/?service=Jobs#tag/subscriptions
 
 .. _Notifications: https://tapis-project.github.io/live-docs/?service=Notifications
+
+Request Validation 
+------------------
+
+Jobs detects invalid request input early to streamline application debugging and to guard against improper execution.  In particular, Tapis usually double quotes strings that contain *dangerous* characters when those strings will appear on a command line. The set of command line dangerous characters is { **&**, **>**, **<**, **\|**, **`**, **;** }, all of which have special meaning when issued in a shell. 
+
+String validation on job submission requests is as follows:
+
+*  The request must conform to the job submission JSON schema_.
+*  Strings **rejected** if they contain *ISO control characters* (0x00-0x1F and 0x7f-0x9f, which include tab, new line and carriage return): 
+
+   *  job name
+   *  environment variables
+   *  system profile name
+   *  execution system constraints
+   *  scheduler options
+   *  container arguments
+   *  application arguments
+   *  path names
+   *  URLs  
+
+*  Strings **rejected** if they contain *dangerous characters*: 
+
+   *  scheduler option names
+   *  container argument names
+   *  application arguments
+   *  environment variable keys
+   *  mpi command
+   *  system ids
+   *  queue names
+   *  log file names
+   *  job owner
+   *  job tenant
+
+*  Strings **double quoted** if they contain *space characters* or *dangerous characters*: 
+
+   *  path names
+   *  scheduler options
+   *  container arguments
+   *  environment variable values
+
+.. note::
+  Application arguments can contain spaces. Tapis, however, does not automatically double quote these arguments since applications define their own command line conventions. *Therefore, it is the responsibility of the job submitter to use single quotes or escaped double quotes (\\\") if so desired.*  
+
 
 Shared Components
 -----------------
