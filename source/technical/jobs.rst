@@ -1104,22 +1104,22 @@ Staging Application Assets
 
 ZIP jobs package executable code and data in an archive file that either already exists on the execution system or gets downloaded as part of job execution. The archive file is unpacked into the *execSystemExecDir*.
 
-The archive file's location is specified in the *containerImage* attribute of the application. The location may either be an absolute path to a location on the execution system or a URL.  The following protocols are supported: *http://*, *https://* and *tapis://*. If Jobs needs to transfer an archive file, the destination for the transfer will be *execSystemExecDir*.
+The archive file's location is specified in the *containerImage* attribute of the application. The location may either be (1) an absolute path on the execution system or (2) a URL.  When an absolute path is used, the application archive already resides on the execution system.  When a URLs is used, the archive is downloaded using one of following protocols: *http://*, *https://* and *tapis://*.  The destination is always *execSystemExecDir* when URLs are used.
 
-Archive files are always unpacked into *execSystemExecDir* using either *unzip* or *tar* as shown below.  
+Application archives are always unpacked into *execSystemExecDir* whether the archive already existed on the system or was downloaded to the system.  Jobs uses either *unzip* or *tar* as shown below.  
 ::
 
         unzip <pathToArchiveFile>
         tar -xf <pathToArchiveFile>
 
-The *<pathToArchiveFile>* is the absolute path to the archive file, such as */path/to/archive/app.zip* or */path/to/archive/app.tgz*.  When *containerImage* is a URL, the archive file is placed in the *execSystemExecDir*.  When *containerImage* is an absolute path, it must be present and accessible on the execution system.  In this case, the archive is not be copied, but its contents are extracted directly into the *execSystemExecDir*.
+The *<pathToArchiveFile>* is the absolute path to the archive file, such as */path/to/archive/app.zip* or */path/to/archive/app.tgz*.  The *<pathToArchiveFile>* must be present and accessible on the execution system.  When an application archive is already present on the system (the non-URL case), the archive is not be copied, but its contents are extracted directly into the *execSystemExecDir*.
 
 Note that the version of tar distributed with typical Linux distributions can unpack a number of compression formats, including gzip, bzip2 and xz, but **not** zip. When an archive file name uses the *.zip* suffix, Tapis assumes *zip* formatting is being used.  Tapis checks that the *unzip* command is available on the execution system and, if not, the job aborts.
 
 Launching the Application
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once an application archive is unpacked, Jobs creates its own launch script, *tapisjob.sh*, and places it in the *execSystemExecDir*.  From the that directory, *tapisjob.sh* calls the user-provided executable.  This executable is either **./tapisjob_app.sh**, if it exists, or an executable named in the **./tapisjob.manifest** file.  The manifest file has these characteristics:
+Once an application archive is unpacked, Jobs creates its own launch script, *tapisjob.sh*, and places it in the *execSystemExecDir*.  From that directory, *tapisjob.sh* calls the user-provided executable.  This executable is either **./tapisjob_app.sh**, if it exists, or an executable named in the **./tapisjob.manifest** file.  The manifest file has these characteristics:
 
 * The manifest file is optional.
 * If *tapisjob_app.sh* does not exist then *tapisjob.manifest* must exist at the top-level of the archive and must specify the key/value pair:  *tapisjob_executable=<relative path to executable file>*.
