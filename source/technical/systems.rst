@@ -398,11 +398,14 @@ Child Systems
 Creating Child Systems
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The ability to create child systems provides a way to easily clone and manage systems based on existing systems.
-Child systems allow a user to set only a few fields, and use all other values from an existing system. This reduces the
-difficulty in creating a child system, but also allows the child system to be updated when the parent is updated.
+A system that has *allowChildren* set to *true* allows for creation of child systems based on it.
+This ability provides a way to easily clone and manage systems based on existing systems.
+Child systems allow a user to set only a few fields, and use all other values from an existing parent system.
+This can reduce the difficulty in managing systems. It allows for all child systems to be updated when the
+parent is updated.
 
-To create a child system, create a local file (for example child_system_example.json) with the following::
+To create a child system, first ensure that the system intended to serve as the parent as *allowChildren* set to *true*.
+Next, create a local file (for example child_system_example.json) similar to the following::
 
  {
     "id": "my-child-<userid>",
