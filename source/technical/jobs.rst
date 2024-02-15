@@ -731,6 +731,8 @@ The following standard environment variables are passed into each application co
     _tapisExecSystemInputDir - the exec system directory where input files are staged
     _tapisExecSystemLogicalQueue - the Tapis queue definition that specifies an HPC queue
     _tapisExecSystemOutputDir - the exec system directory where the app writes its output
+    _tapisStdoutFilename - Name of file to use for stdout.
+    _tapisStderrFilename - Name of file to use for stderr.
     _tapisJobCreateDate - ISO 8601 date, example: 2021-04-26Z
     _tapisJobCreateTime - ISO 8601 time, example: 18:44:55.544145884Z
     _tapisJobCreateTimestamp - ISO 8601 timestamp, example: 2021-04-26T18:44:55.544145884Z
