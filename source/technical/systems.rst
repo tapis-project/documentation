@@ -82,6 +82,8 @@ At a high level a system represents the following information:
 *enableCmdPrefix*
   Indicates if system allows a job submission request to specify a *cmdPrefix*. Since *cmdPrefix* is a free form
   command it is a security concern. By default this is *false*.
+*allowChildren*
+  Indicates if system supports creating child systems using this system as the parent. By default this is *false*.
 Job related attributes
   Various attributes related to job execution such as *jobRuntimes*, *jobWorkingDir*,
   *batchScheduler*, *batchLogicalQueues*
@@ -344,6 +346,7 @@ The response should look similar to the following::
         "canExec": false,
         "canRunBatch": false,
         "enableCmdPrefix": false,
+        "allowChildren": false,
         "jobRuntimes": [],
         "jobWorkingDir": null,
         "jobEnvVariables": [],
@@ -745,6 +748,9 @@ System Attributes Table
 |                     |                |                      | - By default this is *false*.                                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | enableCmdPrefix     | boolean        |                      | - Indicates if system allows a job submission request to specify a cmdPrefix.        |
+|                     |                |                      | - By default this is *false*.                                                        |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| allowChildren       | boolean        |                      | - Indicates if system supports creating child systems using this system as parent.   |
 |                     |                |                      | - By default this is *false*.                                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobRuntimes         | [Runtime]      |                      | - List of runtime environments supported by the system.                              |

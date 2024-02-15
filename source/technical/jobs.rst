@@ -1,5 +1,5 @@
 ..
-    Comment: Heirarchy of headers will now be!
+    Comment: Hierarchy of headers will now be!
     1: ### over and under
     2: === under
     3: --- under
@@ -65,7 +65,7 @@ Hello                GET       /hello                                   Implemen
 Job Processing Overview
 -----------------------
 
-Before discussing the details of how to construct a job request, we take this opportunity to describe overall lifecycle of a job.  When a job request is recieved as the payload of an POST call, the following steps are taken:
+Before discussing the details of how to construct a job request, we take this opportunity to describe overall lifecycle of a job.  When a job request is received as the payload of an POST call, the following steps are taken:
 
 #. **Request authorization** - The tenant, owner, and user values from the request and Tapis JWT are used to authorize access to the application, execution system and, if specified, archive system.
 
@@ -224,8 +224,8 @@ The directories assigned when a system is defined:
 
 ::
 
-  rootDir - the root of the file system that is accessible through this Tapis system.
-  jobWorkingDir - the default directory for temporary files used or created during job execution.
+  rootDir - the effective root of the file system when accessed through this Tapis system.
+  jobWorkingDir - the default directory for files used or created during job execution.
   dtnMountPoint - the path relative to the execution system's rootDir where the DTN file system is mounted.
 
 An execution system may define a *Data Transfer Node* (DTN).  A DTN is a high throughput node used to stage job inputs and to archive job outputs.  The goal is to improve transfer performance.  The execution system mounts the DTN's file system at the *dtnMountPoint* so that executing jobs have access to its data, but Tapis will connect to the DTN rather than the execution system during transfers.  See `Data Transfer Nodes`_ for details.
@@ -498,7 +498,7 @@ The *cmdPrefix* parameter provides generalized support for launchers and is avai
 ExecSystemConstraints
 ---------------------
 
-Not implementated yet.
+Not implemented yet.
 
 Subscriptions
 -------------
@@ -879,7 +879,7 @@ Job terminal statuses are FINISHED, CANCELLED and FAILED.
 Dynamic Execution System Selection
 ----------------------------------
 
-Not implementated yet.
+Not implemented yet.
 
 Data Transfer Nodes
 -------------------
