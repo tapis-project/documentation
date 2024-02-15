@@ -287,6 +287,7 @@ The fileInputs array in job requests contains elements that conform to the follo
            "properties": {
                "name": { "type": "string", "minLength": 1, "maxLength": 80 },
                "description": { "type": "string", "minLength": 1, "maxLength": 8096 },
+               "envKey": {"type": "string", "minLength": 1},
                "autoMountLocal": { "type": "boolean"},
                "sourceUrl":  {"type": "string", "minLength": 1, "format": "uri"},
                "targetPath": {"type": "string", "minLength": 0},
@@ -298,6 +299,8 @@ The fileInputs array in job requests contains elements that conform to the follo
 JobFileInputs can be named or unnamed.  When the *name* field is assigned, Jobs will look for an input with the same name in the application definition (all application inputs are named).  When a match is found, values from the AppFileInput are merged into unassigned fields in the JobFileInput.
 
 The *name* must start with an alphabetic character or an underscore (_) followed by zero or more alphanumberic or underscore characters.  If the name does not match one of the input names defined in the application, then the application must have *strictFileInputs=false*.  If the name matches an input name defined in the application, then the application's inputMode must be REQUIRED or OPTIONAL.  An error occurs if the inputMode is FIXED and there is a name match--job inputs cannot override FIXED application inputs.
+
+The *envKey* provides an easy way to insert the *targetPath* into the runtime environment of an application under a user-specified label.  The *envKey* string is used as the name of an environment variable that Jobs makes accessible to executing applications.  The environment variable's value is the *targetPath*.  *envKey* can only contain alphanumerics and underscore (_) and it's first character cannot be a number.  
 
 The optional *notes* field can contain any valid user-specified JSON object. 
 
@@ -355,6 +358,7 @@ The fileInputArrays parameter in job requests contains elements that conform to 
         "properties": {
             "name": { "type": "string", "minLength": 1, "maxLength": 80 },
             "description": { "type": "string", "minLength": 1, "maxLength": 8096},
+            "envKey": {"type": "string", "minLength": 1},
             "sourceUrls": { "type": ["array", "null"],
                             "items": { "type": "string", "format": "uri", "minLength": 1 } },
             "targetDir": { "type": "string", "minLength": 1 },
@@ -369,6 +373,8 @@ An application's fileInputArrays are added to or merged with those in a job requ
 Each *sourceUrls* entry is a location from which data is copied to the *targetDir*.  In Posix systems each URL can reference a file or a directory.  In the latter case, the complete directory subtree is transferred.  All URLs recognized by the Tapis Files_ service can be used (*tapislocal* is not recognized by Files).
 
 The *targetDir* is the directory into which all *sourceUrls* are copied.  The *targetDir* is always rooted at the *ExecSystemInputDir* and if *targetDir* is "*" or not specified, then it is assigned *ExecSystemInputDir*.  The simple name of each *sourceUrls* entry is the destination name used in *targetDir*.  Use different JobFileInputArrays with different targetDir's if name conflicts between *sourceUrls* entries exist.
+
+The *envKey* provides an easy way to insert the *targetDir* into the runtime environment of an application under a user-specified label.  The *envKey* string is used as the name of an environment variable that Jobs makes accessible to executing applications.  The environment variable's value is the *targetDir*.  *envKey* can only contain alphanumerics and underscore (_) and it's first character cannot be a number.  
 
 The optional *notes* field can contain any valid user-specified JSON object.
 
