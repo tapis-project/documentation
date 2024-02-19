@@ -55,6 +55,10 @@ Versioned Attributes
   Applications are expected to evolve over time. ``Id`` + ``version`` must be unique within a tenant.
 *description*
   An optional more verbose description for the application.
+*versionEnabled*
+  Indicates if specific version is currently considered active and available for use. Default is *true*.
+*locked*
+  Indicates if version is currently locked. When locked a version may not be modified. Default is *false*.
 *runtime*
   Runtime to be used when executing the application. DOCKER, SINGULARITY, ZIP. Default is DOCKER.
 *runtimeVersion*
@@ -185,6 +189,8 @@ The response should look similar to the following::
         "description": "My sample application",
         "owner": "<userid>",
         "enabled": true,
+        "versionEnabled": true,
+        "locked": false,
         "runtime": "DOCKER",
         "runtimeVersion": null,
         "runtimeOptions": [],
@@ -477,6 +483,11 @@ Application Attributes Table
 |                     |                |                      | - Default is *${apiUserId}*                                                          |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | enabled             | boolean        | FALSE                | - Indicates if application currently enabled for use. Default is TRUE.               |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| versionEnabled      | boolean        | FALSE                | - Indicates if specific version is currently enabled for use. Default is TRUE.       |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| locked              | boolean        | FALSE                | - Indicates if version is currently locked. Locking disallows updates.               |
+|                     |                |                      | - Default is FALSE                                                                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | runtime             | enum           | SINGULARITY          | - Runtime to be used when executing the application.                                 |
 |                     |                |                      | - Runtimes: DOCKER, SINGULARITY, ZIP                                                 |
