@@ -63,9 +63,10 @@ At a high level a system represents the following information:
   have a leading ``/``.
   May not be updated. Contact support to request a change.
 *dtnSystemId* - DTN system Id
-  A system that can be used during job executiona as a Data Transfer Node (DTN). Use is optional. The DTN is used
+  A system that can be used during job execution as a Data Transfer Node (DTN). Use is optional. The DTN is used
   if the job submission request or the application defintion specify *dtnSystemInputDir* or *dtnSystemOutputDir*.
-  The execution system and the DTN system must have shared storage.
+  *canExec* must be true. This execution system and the DTN system must have the same *rootDir* and the file
+  system must be shared storage.
 *canExec*
   Indicates if system can be used to execute jobs.
 *canRunBatch*
@@ -331,9 +332,6 @@ The response should look similar to the following::
         "proxyHost": "",
         "proxyPort": -1,
         "dtnSystemId": null,
-        "dtnMountPoint": null,
-        "dtnMountSourcePath": null,
-        "isDtn": false,
         "canExec": false,
         "canRunBatch": false,
         "enableCmdPrefix": false,
@@ -445,7 +443,7 @@ independently for child systems:
 |                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*                                    |
 |                     |                |                      | - On output variable reference will be resolved.                                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or IRODS or *isDtn* = true.                      |
+| rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or IRODS.                                        |
 |                     |                |                      | - For LINUX or IRODS must begin with ``/``.                                          |
 |                     |                |                      | - Optional for S3 and GLOBUS. For S3 will typically not begin with ``/``.            |
 |                     |                |                      | - Variable references are resolved at create time.                                   |
@@ -559,10 +557,9 @@ When creating a system the required attributes are: *id*, *systemType*, *host*, 
 Depending on the type of system and specific values for certain attributes there are other requirements.
 The restrictions are:
 
-* If *systemType* is S3 then *bucketName* is required, *canExec* and *isDtn* must be false.
+* If *systemType* is S3 then *bucketName* is required and *canExec* must be false.
 * If *systemType* is LINUX or IRODS then *rootDir* is required and must begin with ``/``.
 * If *effectiveUserId* is ``${apiUserId}`` (i.e. it is not static) then *authnCredential* may not be specified.
-* If *isDtn* is true then *rootDir* is required, *canExec* must be false and following may not be specified: *dtnSystemId*, *dtnMountSourcePath*, *dtnMountPoint*, all job execution related attributes.
 * If *canExec* is true then *jobWorkingDir* is required and *jobRuntimes* must have at least one entry.
 * If *canRunBatch* is true then *batchScheduler* must be specified.
 * If *canRunBatch* is true then *batchLogicalQueues* must have at least one item.
@@ -709,7 +706,7 @@ System Attributes Table
 |                     |                |                      | - Required if *systemType* is S3.                                                    |
 |                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or IRODS or *isDtn* = true.                      |
+| rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or IRODS.                                        |
 |                     |                |                      | - For LINUX or IRODS must begin with ``/``.                                          |
 |                     |                |                      | - Optional for S3 and GLOBUS. For S3 will typically not begin with ``/``.            |
 |                     |                |                      | - Variable references are resolved at create time.                                   |
@@ -725,16 +722,9 @@ System Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | proxyPort           | int            |                      | - Port number for *proxyHost*                                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| dtnSystemId         | String         | default.corral.dtn   | - An alternate system to use as a Data Transfer Node (DTN).                          |
-|                     |                |                      | - This system and *dtnSystemId* must have shared storage.                            |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| dtnMountPoint       | String         | /gpfs/corral3/repl   | - Mount point (aka target) used when running the mount command on this system.       |
-|                     |                |                      | - Base location on this system for files transferred to *rootDir* on *dtnSystemId.*  |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| dtnMountSourcePath  | String         | /gpfs/corral3/repl   | - Relative path defining DTN source directory relative to rootDir on *dtnSystemId.*  |
-+---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| isDtn               | boolean        | FALSE                | - Indicates if system will be used as a data transfer node (DTN).                    |
-|                     |                |                      | - By default this is *false*.                                                        |
+| dtnSystemId         | String         | default.corral.dtn   | - A system that can be used as a Data Transfer Node (DTN). Use is optional.          |
+|                     |                |                      | - This system and *dtnSystemId* must have the same *rootDir* and shared storage.     |
+|                     |                |                      | - Used if job submission or application specifiy a DTN input or output directory.    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | canExec             | boolean        |                      | - Indicates if system will be used to execute jobs.                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+

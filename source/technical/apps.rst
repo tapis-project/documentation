@@ -201,6 +201,8 @@ The response should look similar to the following::
             "execSystemExecDir": null,
             "execSystemInputDir": null,
             "execSystemOutputDir": null,
+            "dtnSystemInputDir": null,
+            "dtnSystemOutputDir": null,
             "execSystemLogicalQueue": null,
             "archiveSystemId": null,
             "archiveSystemDir": null,
@@ -556,6 +558,18 @@ JobAttributes Table
 |                     |                  |                    | - Files here are candidates for archiving.                                           |
 |                     |                  |                    | - Macro template variables such as ${JobWorkingDir} may be used.                     |
 |                     |                  |                    | - Default is ${JobWorkingDir}/jobs/${JobUUID}/output                                 |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| dtnSystemInputDir   | String           |                    | - Directory relative to DTN rootDir to which input files will be transferred.        |
+|                     |                  |                    | - Transfer happens prior to launching the application.                               |
+|                     |                  |                    | - Can be overriden by job submission request.                                        |
+|                     |                  |                    | - Optional. If set will trigger use of DTN.                                          |
+|                     |                  |                    | - Default is !tapis_not_set                                                          |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| dtnSystemOutputDir  | String           |                    | - Directory relative to DTN rootDir from which output files will be transferred.     |
+|                     |                  |                    | - Transfer happens during archiving phase of job execution.                          |
+|                     |                  |                    | - Can be overriden by job submission request.                                        |
+|                     |                  |                    | - Optional. If set will trigger use of DTN.                                          |
+|                     |                  |                    | - Default is !tapis_not_set                                                          |
 +---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
 | execSystem          | String           | normal             | - LogicalQueue to use when running the job.                                          |
 | LogicalQueue        |                  |                    |                                                                                      |
