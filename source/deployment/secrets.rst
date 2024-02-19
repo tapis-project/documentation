@@ -162,7 +162,7 @@ General Parameters
 These parameters are optional and have default values.
 
 - -o (-output) - output format can be one of text, json, or yaml.  The default is text.
-- -passwordlen - the length of generated passwords.  The default is 32.
+- -passwordlen - the length of generated passwords.  The default is 16.
 - -help (–help) - show the SkAdmin help message (no value necessary).
 
 SkAdmin Inputs

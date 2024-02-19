@@ -172,9 +172,21 @@ the pod we want to register through the function parameters. For example:
 
 .. code-block:: python
 
-    t.pods.create_pod(pod_id='docpod', pod_template='neo4j', description='My example pod!')
+    from tapipy.tapis import Tapis
 
-As you can see, we're using pod_template equal to `neo4j`, that is one of our templated pods.
+    t = Tapis(
+        base_url='https://tacc.tapis.io',
+        username='<userid>',
+        password='*********'
+    )
+
+    t.pods.create_pod(
+        pod_id='docpod',
+        pod_template='template/neo4j',
+        description='My example pod!'
+    )
+
+As you can see, we're using pod_template equal to `template/neo4j`, template being the namespace for our templated pods.
 You should see a response like this:
 
 .. code-block:: bash
@@ -186,7 +198,7 @@ You should see a response like this:
     environment_variables: 
 
     pod_id: test
-    pod_template: neo4j
+    pod_template: template/neo4j
     roles_inherited: []
     roles_required: []
     status: REQUESTED
@@ -203,9 +215,8 @@ Notes:
 - Pods returned a status of ``REQUESTED`` for the pod; behind the scenes, the Pods service has sent a message requesting
   the pod described to our backend `spawner` infrastructure. The pod's image must be pulled, a pod service must be created
   (for networking), and the networking changes must propagate to the Pod's proxy before the Pod is ready for use.
-- When the pod itself has began running, the status will change to ``RUNNING``. Networking must change before use though
-  (1-2 minutes). Additionally, a ``RUNNING`` pod only means the pod itself has started, check pod logs to see what your
-  container is actually doing (if it writes to stdout, else wait).
+- When the pod itself has began running, the status will change to ``AVAILABLE``. Networking takes time to propagate (expect <1 minute).
+- An ``AVAILABLE``` pod only means the pod itself has started, check pod logs to see what your container is writing to stdout.
 
 At any point we can check the details of our pods, including its status, with the following:
 
@@ -219,20 +230,15 @@ The response format is identical to that returned from the ``t.pods.create_pod()
 Accessing a Pod
 ---------------
 
-Once your pod is in the ``RUNNING`` state, and after the networking changes proliferate, you should have access to your
-pod via the internet. In the case of templated pods, networking might be through a TCP or HTTP connection. In the case
-of custom docker image pods, networking always works by exposing port 5000 through HTTP.
+Once your pod is in the ``AVAILABLE`` state your pod's specified networking ports should be routed to port 443 at specified urls.
+Read more at #`Pod Networking`_.
 
-To access your pod through the network though we can use the url provided in the pod's description when creating the pod
-or when getting the pod description as we did above. In the pod response object, the ``url`` attribute gives you the 
-url your service is being hosted on.
-
-**Place cool example here of something we can call**
+A pod's access urls specified in the pod's `networking` attribute. A pod can have multiple urls, each with different protocols and ports.
 
 Retrieving the Logs
 -------------------
 
-The Pods service collects the latest 10 MB of logs (subject to change) from the pod when running and makes them available
+The Pods service collects the latest 10 MB of logs from the pod when running and makes them available
 via the ``logs`` endpoint. Let's retrieve the logs from the pod we just made. We use the ``get_pod_logs()`` method,
 passing in ``pod_id``:
 
@@ -267,14 +273,116 @@ The response should be similar to the following:
     2022-06-16 00:36:31.751+0000 INFO  creationDate: 2022-06-16T00:36:19.073Z
     2022-06-16 00:36:31.751+0000 INFO  Started.
 
-As you can see, because this is a Neo4J database template, we have the logs from the Neo4J database initializes and 
-getting to it's ``Started`` state.
+We can see logs from our Neo4j image during the initialization process.
 
 Conclusion
 ----------
 
 Congratulations! You've now created, registered, and accessed your first pod. There is a lot more you can do with
 the Pods service though. To learn more about the additional capabilities, please continue on to the Technical Guide.
+
+----
+
+Neo4j
+=====
+
+Assuming the user has created a Neo4j pod and retrieved credentials (user/pass), the user can now connect to the DB with the Neo4j browser interface or Python Neo4j driver.
+
+.. tabs::
+
+    .. tab:: Python
+
+        .. code-block:: python
+
+            from neo4j import GraphDatabase
+
+            url = "bolt+s://podId.pods.tacc.tapis.io:443"
+            user = "podId"
+            passw = "autoRandomizedPassword"
+
+            neo = GraphDatabase.driver(url,
+                                        auth = (user, passw),
+                                        max_connection_lifetime=30)
+
+        Use the neo driver as follows to match and return number of nodes in DB.
+
+        .. code-block:: python
+
+            with neo.session() as session:
+                result = session.run("MATCH (n) RETURN n")
+                for record in result:
+                    print(f"Number of nodes in the database: {record}")
+    
+    .. tab:: Neo4j Browser
+
+        Neo4j has a browser based interface that can be used to interact with remote DBs.
+        With this users can use the browser interface here: https://browser.neo4j.io/ with the Pods service.
+
+        Simple provide the following url and credentials to connect to the DB in browser. 
+        
+        .. code-block:: python
+
+            url = "bolt+s://podId.pods.tacc.tapis.io:443"
+            user = "podId"
+            passw = "autoRandomizedPassword"
+
+        Users are able to runt he browser interface themselves, but that is not in scope for these docs.
+
+
+Postgres
+========
+
+Assuming the user has created a Postgres pod and retrieved credentials (user/pass), the user can now connect to the
+DB with the Postgres' PgAdmin interface or Python Postgres drivers.
+
+.. tabs::
+    
+    .. tab:: Python
+        To note, psycopg2 will be the Postgres driver used, there are more, use your preference.
+
+        .. code-block:: python
+
+            import psycopg2
+
+            db_login = {
+                "host": "podId.pods.tacc.tapis.io",
+                "port":  443,
+                "database": "postgres",
+                "user": "podId",
+                "password": "autoRandomizedPassword"
+            }
+
+            conn = psycopg2.connect(**db_login)
+            pg_cursor = conn.cursor()
+            
+        At this point the user will have a Python postgres driver with a pg_cursor tied to their DB. 
+
+        For example, to get all tables in the DB, the user can run the following with the pg_cursor.
+
+        .. code-block:: python
+
+            # get all tables
+            pg_cursor.execute("select relname from pg_class where relkind='r' and relname !~ '^(pg_|sql_)';")
+            print(pg_cursor.fetchall())
+    
+    .. tab:: PgAdmin
+            
+            PgAdmin is an installable interface that can be used to interact with remote DBs.
+            Simple provide the following url and credentials to connect to the DB in browser. 
+            
+            .. code-block:: python
+    
+                url = "podId.pods.tacc.tapis.io"
+                port = 443
+                user = "podId"
+                passw = "autoRandomizedPassword"
+
+            To note:
+                - PgAdmin can work through the browser.
+                - PgAdmin GUI can be hosted by the Pods service, it just hasn't been tried yet.
+
+
+
 
 
 ----

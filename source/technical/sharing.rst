@@ -24,36 +24,43 @@ Resource Sharing
 Introduction to Tapis Access Controls
 =====================================
 
-Tapis users define resources such as systems, applications, files, streams, functions and workflows.  These resources can be used to generate other resources, such as job, workflow and function outputs.  The ability to share resources greatly extends their utility and, in general, the usefulness of Tapis.  On the other hand, users need to safeguard their data by controlling access to resources.  To facilitate both sharing and access control, Tapis provides two built-in authorization mechanisms.
+Tapis users define resources such as systems, applications, files, streams, functions and workflows. These resources can
+be used to generate other resources, such as job, workflow and function outputs. The ability to share resources greatly
+extends their utility and, in general, the usefulness of Tapis. On the other hand, users need to safeguard their data by
+controlling access to resources. To facilitate both sharing and access control, Tapis provides two built-in authorization mechanisms.
 
-The first facility is implemented using *roles and permissions*.  These controls operate at a low level of abstraction and apply to the individual Tapis resources to which they are associated.  The second facility, *Tapis shared resources* (or simply *shared resources*), operate at a higher level of abstraction by authorizing complex actions in Tapis.  Such actions include running jobs, which authorizes access to an application, execution and archive system.  In this case, the granting of a single share affects multiple Tapis resources.  We explore both roles/permissions and shared resources in the following sections.
+The first facility is implemented using *roles and permissions*. These controls operate at a low level of abstraction and
+apply to the individual Tapis resources to which they are associated. The second facility, *Tapis shared resources* (or
+simply *shared resources*), operate at a higher level of abstraction by authorizing complex actions in Tapis. Such actions
+include running jobs, which authorizes access to an application, execution and archive system. In this case, the granting
+of a single share affects multiple Tapis resources. We explore both roles/permissions and shared resources in the following sections.
 
 Roles and Permissions
 =====================
 
-The Security Kernel (SK) implements a distributed, role-based access control (RBAC) facility_ in which users are assigned roles that limit or allow access to resources.  At its most basic, a role is simply a named entity with an owner.  Tenant administrators can manage roles in their tenant and Tapis services can manage roles in any tenant.  Typically, services only create roles in the administrative tenant at a site_ (each site defines a restricted administrative tenant).  
+The Security Kernel (SK) implements a distributed, role-based access control (RBAC) facility_ in which users are assigned roles that limit or allow access to resources. At its most basic, a role is simply a named entity with an owner. Tenant administrators can manage roles in their tenant and Tapis services can manage roles in any tenant. Typically, services only create roles in the administrative tenant at a site_ (each site defines a restricted administrative tenant).
 
-Access to specific resources is controlled by assigning roles to users.  Tapis supports user-based_ APIs that check if a user has a certain role.  Services and other software that perform these checks are free to determine what membership in a role means.  
+Access to specific resources is controlled by assigning roles to users. Tapis supports user-based_ APIs that check if a user has a certain role. Services and other software that perform these checks are free to determine what membership in a role means.
 
-To make managing user authorizations more flexible and convenient, a role can contain zero or more other roles.  A contained role is the *child* of the containing role.  A child role can have any number of *parents*, that is, be contained in any number of other roles.  Roles form a forest of directed acyclic graphs.  
+To make managing user authorizations more flexible and convenient, a role can contain zero or more other roles. A contained role is the *child* of the containing role. A child role can have any number of *parents*, that is, be contained in any number of other roles. Roles form a forest of directed acyclic graphs.
 
-When checking whether a user has been assigned a particular role, SK APIs check whether the user has been assigned that role or any of its parent roles.  When a user is assigned a role, the user is also implicitly assigned all the children of that role.
+When checking whether a user has been assigned a particular role, SK APIs check whether the user has been assigned that role or any of its parent roles. When a user is assigned a role, the user is also implicitly assigned all the children of that role.
 
-In addition, roles can contain *permissions*, which are case-sensitive strings that follow the format defined by Apache Shiro_.  The permission-creation_ API adds a permission to a role. The permission-checking_ API takes a required permission and determines if a user has a matching permission in any of its roles.  
+In addition, roles can contain *permissions*, which are case-sensitive strings that follow the format defined by Apache Shiro_. The permission-creation_ API adds a permission to a role. The permission-checking_ API takes a required permission and determines if a user has a matching permission in any of its roles.
 
-Below are examples of permissions enforced by the Tapis Systems service.  The first permission allows read/write access to *system1* in the *MyTenant* tenant.  A user assigned a role that contains this permission would have access to *system1*.  Similarly, the second permission allows its assignees to create, read, write and delete any system in the *MyTenant* tenant. 
+Below are examples of permissions enforced by the Tapis Systems service. The first permission allows read/write access to *system1* in the *MyTenant* tenant. A user assigned a role that contains this permission would have access to *system1*. Similarly, the second permission allows its assignees to create, read, write and delete any system in the *MyTenant* tenant.
 
 ::
 
     system:MyTenant:read,write:system1
     system:MyTenant:create,read,write,delete:*
 
-For convenience, each user is automatically assigned a default role that is implicitly created by Tapis.  Assigning a permission to a user really means adding the permission to the user's default role.
+For convenience, each user is automatically assigned a default role that is implicitly created by Tapis. Assigning a permission to a user really means adding the permission to the user's default role.
 
 Implementations of Roles and Permissions
 ----------------------------------------
 
-Below are links to the roles and permissions APIs for each service.  Also see the roles and permissions discussions in each service's documentation.
+Below are links to the roles and permissions APIs for each service. Also see the roles and permissions discussions in each service's documentation.
 
 - Systems-rbac_
 - Applications-rbac_
@@ -89,7 +96,7 @@ Below are links to the roles and permissions APIs for each service.  Also see th
 Tapis Shared Resources
 ======================
 
-The roles and permissions discussed in the last section allow fine-grained authorization to Tapis resources, such as to
+The roles and permissions discussed in the last section allow fine-grained authorization to Tapis resources, such as
 systems or applications. Although the semantics of a role or permission can authorize access to multiple resources of
 the same type, they cannot easily authorize access to all the resources encountered in a complex workflow, such as job
 execution. To get a deeper understanding of the challenge, consider the authorizations needed to run a job:

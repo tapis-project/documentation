@@ -1,4 +1,4 @@
-sphinx
+sphinx==4.5.0
 sphinx-autobuild
 sphinx_rtd_theme
 # sphinx_code_tabs

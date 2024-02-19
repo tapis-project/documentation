@@ -28,6 +28,9 @@ referred to as *effectiveUserId*. This access user can be a specific user (such 
 specified as ``${apiUserId}``. For the case of ``${apiUserId}``, the username is extracted from the identity
 associated with the request to the service.
 
+-----------------
+Model
+-----------------
 At a high level a system represents the following information:
 
 *id*
@@ -55,7 +58,9 @@ At a high level a system represents the following information:
 *rootDir* - Effective root directory
   Directory to be used when listing files or moving files to and from the system. For LINUX and IRODS this is required
   and must begin with ``/``.
-  For S3 this is optional and typically will not begin with ``/``.
+  For S3 and GLOBUS this is optional.
+  For S3, typically will not begin with ``/``. S3 keys are usually created and manipulated using URLs and do not
+  have a leading ``/``.
   May not be updated. Contact support to request a change.
 *dtnSystemId* - DTN system Id
   An alternate system to use as a Data Transfer Node (DTN) during job execution. The execution system and the DTN
@@ -77,6 +82,8 @@ At a high level a system represents the following information:
 *enableCmdPrefix*
   Indicates if system allows a job submission request to specify a *cmdPrefix*. Since *cmdPrefix* is a free form
   command it is a security concern. By default this is *false*.
+*allowChildren*
+  Indicates if system supports creating child systems using this system as the parent. By default this is *false*.
 Job related attributes
   Various attributes related to job execution such as *jobRuntimes*, *jobWorkingDir*,
   *batchScheduler*, *batchLogicalQueues*
@@ -139,6 +146,9 @@ Various authentication methods can be used to access a system, such as PASSWORD,
 TOKEN authentication method is for systems of type GLOBUS. Registering credentials for a GLOBUS type system is a special
 case that involves steps different from those described in this section. Please see the section below on
 `Registering Credentials for a Globus System`_ for more information.
+
+Please note that there is support for only one set of credentials per user per system. Updating credentials overwrites
+previously registered data.
 
 Here we will cover registering PKI_KEYS (i.e. ssh keys) as an example.
 
@@ -336,6 +346,7 @@ The response should look similar to the following::
         "canExec": false,
         "canRunBatch": false,
         "enableCmdPrefix": false,
+        "allowChildren": false,
         "jobRuntimes": [],
         "jobWorkingDir": null,
         "jobEnvVariables": [],
@@ -387,11 +398,14 @@ Child Systems
 Creating Child Systems
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The ability to create child systems provides a way to easily clone and manage systems based on existing systems.
-Child systems allow a user to set only a few fields, and use all other values from an existing system. This reduces the
-difficulty in creating a child system, but also allows the child system to be updated when the parent is updated.
+A system that has *allowChildren* set to *true* allows for creation of child systems based on it.
+This ability provides a way to easily clone and manage systems based on existing systems.
+Child systems allow a user to set only a few fields, and use all other values from an existing parent system.
+This can reduce the difficulty in managing systems. It allows for all child systems to be updated when the
+parent is updated.
 
-To create a child system, create a local file (for example child_system_example.json) with the following::
+To create a child system, first ensure that the system intended to serve as the parent as *allowChildren* set to *true*.
+Next, create a local file (for example child_system_example.json) similar to the following::
 
  {
     "id": "my-child-<userid>",
@@ -442,7 +456,7 @@ independently for child systems:
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or IRODS or *isDtn* = true.                      |
 |                     |                |                      | - For LINUX or IRODS must begin with ``/``.                                          |
-|                     |                |                      | - Optional for S3 and will typically not begin with ``/``.                           |
+|                     |                |                      | - Optional for S3 and GLOBUS. For S3 will typically not begin with ``/``.            |
 |                     |                |                      | - Variable references are resolved at create time.                                   |
 |                     |                |                      | - Serves as effective root directory when listing or moving files.                   |
 |                     |                |                      | - May not be updated. Contact support to request a change.                           |
@@ -586,7 +600,10 @@ Sharing
 -----------------
 In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
 This approach is known simply as *sharing*. The sharing API allows you to share a system with a set of users
-as well as share publicly with all users in a tenant. Sharing grants ``READ+EXECUTE`` access.
+as well as share publicly with all users in a tenant. Sharing provides ``READ+EXECUTE`` access.
+When the system has a dynamic *effectiveUserId*, sharing also allows for MODIFY access to all paths for calls
+made through the Files service.
+Note that Tapis permissions and sharing are independent of native permissions enforced by the underlying system host.
 
 The most common use case for sharing a system is to publicly share the system with all users in the tenant.
 This would allow any user to use the system for execution or storage when running an application.
@@ -609,13 +626,16 @@ when accessing the system.
 Note that the Systems service does not store credentials. Credentials are persisted by the Security Kernel service
 and only specific Tapis services are authorized to retrieve credentials.
 
+Also, note that there is support for only one set of credentials per user per system. Updating credentials
+overwrites previously registered data.
+
 By default any credentials provided for LINUX and S3 type systems are verified. The query parameter
 *skipCredentialCheck=true* may be used to bypass the initial verification of credentials.
 
 --------------------------
 Runtime
 --------------------------
-Runtime environment supported by the system that may be used to run applications, such as docker or singularity.
+Runtime environment supported by the system that may be used to run applications, such as docker, singularity or ZIP.
 Consists of the runtime type and version.
 
 --------------------------
@@ -700,7 +720,7 @@ System Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | rootDir             | String         | /home/${apiUserId}   | - Required if *systemType* is LINUX or IRODS or *isDtn* = true.                      |
 |                     |                |                      | - For LINUX or IRODS must begin with ``/``.                                          |
-|                     |                |                      | - Optional for S3 and will typically not begin with ``/``.                           |
+|                     |                |                      | - Optional for S3 and GLOBUS. For S3 will typically not begin with ``/``.            |
 |                     |                |                      | - Variable references are resolved at create time.                                   |
 |                     |                |                      | - Serves as effective root directory when listing or moving files.                   |
 |                     |                |                      | - May not be updated. Contact support to request a change.                           |
@@ -733,10 +753,13 @@ System Attributes Table
 | enableCmdPrefix     | boolean        |                      | - Indicates if system allows a job submission request to specify a cmdPrefix.        |
 |                     |                |                      | - By default this is *false*.                                                        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| allowChildren       | boolean        |                      | - Indicates if system supports creating child systems using this system as parent.   |
+|                     |                |                      | - By default this is *false*.                                                        |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobRuntimes         | [Runtime]      |                      | - List of runtime environments supported by the system.                              |
 |                     |                |                      | - At least one entry required if *canExec* is true.                                  |
 |                     |                |                      | - Each Runtime specifies the Runtime type and version                                |
-|                     |                |                      | - Runtime type is required and must be one of: DOCKER, SINGULARITY.                  |
+|                     |                |                      | - Runtime type is required and must be one of: DOCKER, SINGULARITY, ZIP.             |
 |                     |                |                      | - Runtime version is optional.                                                       |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | jobWorkingDir       | String         | HOST_EVAL($SCRATCH)  | - Parent directory from which a job is run.                                          |

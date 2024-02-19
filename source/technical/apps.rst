@@ -56,7 +56,7 @@ Versioned Attributes
 *description*
   An optional more verbose description for the application.
 *runtime*
-  Runtime to be used when executing the application. DOCKER, SINGULARITY. Default is DOCKER.
+  Runtime to be used when executing the application. DOCKER, SINGULARITY, ZIP. Default is DOCKER.
 *runtimeVersion*
   Runtime version to be used when executing the application.
 *runtimeOptions*
@@ -209,23 +209,118 @@ The response should look similar to the following::
             "mpiCmd": null,
             "cmdPrefix": null,
             "parameterSet": {
-                "appArgs": [],
+                "appArgs": [
+                  {
+                    "arg": "arg1",
+                    "name": "appArg1Name",
+                    "description": "description for app arg 1",
+                    "inputMode": "FIXED",
+                    "notes": {
+                      "arg1note": "my first arg"
+                    }
+                  }
+                ],
                 "containerArgs": [],
                 "schedulerOptions": [],
-                "envVariables": [],
+                "envVariables": [
+                  {
+                    "key": "ENV_1",
+                    "value": "env_1_value",
+                    "description": "my env var #1",
+                    "inputMode": "INCLUDE_BY_DEFAULT",
+                    "notes": {}
+                  },
+                  {
+                    "key": "APP_ONLY_FIXED_SET",
+                    "value": "app_only_fixed_set",
+                    "description": "FIXED env var only in app definition",
+                    "inputMode": "FIXED",
+                    "notes": {
+                      "app_only_fixed_notes": "testing_it"
+                    }
+                  },
+                  {
+                    "key": "APP_REQUIRED_SET",
+                    "value": "app_required_set",
+                    "description": "",
+                    "inputMode": "REQUIRED",
+                    "notes": {}
+                  }
+                ],
                 "archiveFilter": {
                     "includes": [],
                     "excludes": [],
                     "includeLaunchFiles": true
                 }
             },
-            "fileInputs": [],
-            "fileInputArrays": [],
+            "fileInputs": [
+              {
+                "name": "empty",
+                "description": "An empty file",
+                "inputMode": "OPTIONAL",
+                "autoMountLocal": true,
+                "notes": {},
+                "sourceUrl": "tapis://test-storage-linux/data_input/empty.txt",
+                "targetPath": "empty.txt"
+              },
+              {
+                "name": "file1",
+                "description": "A random text file",
+                "inputMode": "REQUIRED",
+                "autoMountLocal": true,
+                "notes": {},
+                "sourceUrl": "tapis://test-storage-linux/data_input/file1.txt",
+                "targetPath": "file1.txt"
+              },
+              {
+                "name": "s3_ceph_file",
+                "description": "A file from an s3 ceph storage system.",
+                "inputMode": "REQUIRED",
+                "autoMountLocal": true,
+                "notes": {},
+                "sourceUrl": "tapis://test-storage-s3-ceph/object1",
+                "targetPath": "s3_ceph_file.dat"
+              },
+              {
+                "name": "s3_aws_test1",
+                "description": "File from an s3 aws storage system.",
+                "inputMode": "REQUIRED",
+                "autoMountLocal": true,
+                "notes": {},
+                "sourceUrl": "tapis://test-s3-storage/object2",
+                "targetPath": "s3_aws/test1.dat"
+              }
+            ],
+            "fileInputArrays": [
+              {
+                "name": "fileInputArray1",
+                      "description": "A list of files in a single directory",
+                "sourceUrls": [
+                   "tapis://test-storage-linux/data_input/file1a.txt",
+                   "tapis://test-storage-linux/data_input/file2a.txt",
+                   "tapis://test-storage-linux/data_input/file3a.txt"
+                ],
+                "targetDir": "myFileInputArrayDir/subdir1"
+              }
+            ],
             "nodeCount": 1,
             "coresPerNode": 1,
             "memoryMB": 100,
             "maxMinutes": 10,
-            "subscriptions": [],
+            "subscriptions": [
+              {
+                "description": "Email on job new status",
+                "enabled": true,
+                "jobEventCategoryFilter": "JOB_NEW_STATUS",
+                "deliveryTargets": [
+                  {
+                    "deliveryMethod": "EMAIL",
+                    "deliveryAddress": "me@example.com"
+                  }
+                ],
+                "ttlMinutes": 10080
+              }
+            ],
             "tags": []
         },
         "tags": [],
@@ -331,7 +426,8 @@ Sharing
 -----------------
 In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
 This approach is known simply as *sharing*. The sharing API allows you to share an application with a set of users
-as well as share publicly with all users in a tenant. Sharing grants ``READ+EXECUTE`` access.
+as well as share publicly with all users in a tenant. Sharing grants ``READ+EXECUTE`` access and, more importantly,
+facilitates allowing others to run a job using the application.
 
 Sharing an application gives a user certain implicit access to resources in the context of running a job.
 When a properly designed application is shared it may be used by many users to run jobs without the need to explicitly
@@ -381,7 +477,7 @@ Application Attributes Table
 | enabled             | boolean        | FALSE                | - Indicates if application currently enabled for use. Default is TRUE.               |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | runtime             | enum           | SINGULARITY          | - Runtime to be used when executing the application.                                 |
-|                     |                |                      | - Runtimes: DOCKER, SINGULARITY                                                      |
+|                     |                |                      | - Runtimes: DOCKER, SINGULARITY, ZIP                                                 |
 |                     |                |                      | - Default is DOCKER                                                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | runtimeVersion      | String         | 2.5.2                | - Optional version or range of versions required.                                    |
