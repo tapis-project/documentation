@@ -724,7 +724,7 @@ System Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | dtnSystemId         | String         | default.corral.dtn   | - A system that can be used as a Data Transfer Node (DTN). Use is optional.          |
 |                     |                |                      | - This system and *dtnSystemId* must have the same *rootDir* and shared storage.     |
-|                     |                |                      | - Used if job submission or application specifiy a DTN input or output directory.    |
+|                     |                |                      | - Used if job submission or application specify a DTN input or output directory.     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | canExec             | boolean        |                      | - Indicates if system will be used to execute jobs.                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
