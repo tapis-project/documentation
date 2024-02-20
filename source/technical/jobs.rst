@@ -882,6 +882,7 @@ Dynamic Execution System Selection
 
 Not implemented yet.
 
+
 Data Transfer Nodes
 -------------------
 
@@ -906,7 +907,7 @@ In this situation, data transfers performed by Jobs benefit from the DTN's high 
 applications continue to have access to input files.
 
 
-TODO/TBD We include specific examples to illustrate the concept.
+We include specific examples to illustrate the concept.
 
 Configuring Tapis for DTN Usage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -962,7 +963,7 @@ make use of a DTN. These are listed here:
 * Requirement: The execution system and the DTN system must have shared storage.
 
   * For example, there could be an NFS mount on the execution system pointing to the DTN host, or the DTN may be a Globus endpoint running on the execution host.
-  * Note that for an hpc cluster it could be that the shared storage is set up on the login nodes and not the compute nodes. This case is supported since the Tapis Jobs service typically uses a login node when executing an application.
+  * Note that for an HPC cluster it could be that the shared storage is set up on the login nodes and not the compute nodes. This case is supported since the Tapis Jobs service typically uses a login node when executing an application.
 
 * Requirement: Restrictions on *rootDir*
 
@@ -981,59 +982,41 @@ make use of a DTN. These are listed here:
 
   * For the execution and DTN systems, the *effectiveUserId* must have READ/WRITE access for both *dtnSystemInputDir* and *dtnSystemOutputDir*.
 
-
-
-
-
-
-
-
-
-A Tapis system can be designated as a Data Transfer Node (DTN) so that it can be referenced by another system and
-used as an alternative for data transfers during job execution. When an application is being run on an execution
-system that specifies a DTN system, the Jobs service will use the DTN for the target system when transferring files
-during the staging inputs phase. Also, during the archive phase of job execution, if the target archive system
-specifies a DTN, the Jobs service will use the DTN for the target system when transferring files.
-
-The DTN usage pattern is effective when (1) the DTN has high performance network and storage capabilities, and (2) the
-target system for data transfers and the DTN system have shared storage. In this situation, data transfers performed by
-Jobs benefit from the DTN's high performance capabilities, while applications continue to have access to their files.
-From an application's point of view, its data are simply where they are expected to be, though they may have gotten
-there in a more expeditious manner.
-
-For proper job execution, DTN usage requires the coordinated configuration of a DTN, an execution system, an
-application, and possibly an archive system. In addition, outside of Tapis, a system administrator will need to mount
-the exported DTN file system at the expected mount point on an execution system if such a mount point has not yet
-been created.
-
 Modified Jobs Service Behavior
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When an application is run and the execution system or the archive system specifies a DTN, the Jobs service will modify
-it's behavior as follows:
+When an application is run and the execution system specifies a DTN, the Jobs service will behave as follows:
 
-**During staging of input files**
-  If the execution system specifies a DTN, the target system for the transfer request sent to the Files service will be
-  the DTN system from the execution system definition. The target path will be *${DtnMountSourcePath}/${ExecSystemInputDir}*.
-  On the execution host the inputs will reside at the absolute path /<exec-root-dir>/${DtnMountPoint}/${ExecSystemInputDir}*.
-  Application code running in the container can access input files using the standard Tapis volume mount */TapisInput*.
-  TODO/TBD????The application code can access the input files using the path *${DtnMountPoint}/${ExecSystemInputDir}*
 
-**During archiving of output**
-  If the archive system specifies a DTN, the target system for the transfer request sent to the Files service will be
-  the DTN system from the archive system definition. The target path will be *${DtnMountSourcePath}/${ArchiveSystemDir}*
+During staging of input files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If the execution system specifies a DTN and *dtnSystemInputDir* is set:
 
-  If the execution system specifies a DTN, the source system for the transfer request sent to the Files service will be
-  the DTN system from the execution system definition. The source path will be *${DtnMountSourcePath}/???????????????*
+* the source system and path as defined in the file input is unchanged.
+* the target system for the transfer request sent to the Files service will be the DTN system from the execution system deﬁnition.
+* the target path will be *${DtnSystemInputDir}*.
+* the execution system will be used to move the staged input files from *${DtnSystemInputDir}* to *${ExecSystemInputDir}*
+
+  * Note that the fully resolved absolute path to *${DtnSystemInputDir}* must be the same on both the execution system and the DTN system. If this is not true the operation may fail.
+
+
+During archiving of output files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If the execution system specifies a DTN and *dtnSystemOutputDir* is set:
+
+* the execution system will be used to move any generated output files from *${ExecSystemOutputDir}* to *${DtnSystemOutputDir}*
+
+  * Note that the fully resolved absolute path to *${DtnSystemOutputDir}* must be the same on both the execution system and the DTN system. If this is not true the operation may fail.
+
+* the source system for the transfer request sent to the Files service will be the DTN system from the execution system deﬁnition.
+* the source path will be ${DtnOutputDir}.
+* the target system and path as defined in the file input is unchanged.
+
 
 Example DTN Configuration and Usage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We provide the examples below to illustrate DTN configuration and usage.
-
-Example command run by system administrator on execution system host (external to Tapis)::
-
-     mount -t nfs dtn.host.example.com:/dtnRoot/main /execRoot/shared
 
 DTN system definition::
 
@@ -1043,9 +1026,8 @@ DTN system definition::
     "systemType":"LINUX",
     "effectiveUserId": "testuser1",
     "defaultAuthnMethod":"PKI_KEYS",
-    "rootDir":"/dtnRoot",
-    "canExec": false,
-    "isDtn": true
+    "rootDir":"/",
+    "canExec": false
   }
 
 Execution system definition::
@@ -1056,14 +1038,12 @@ Execution system definition::
     "systemType":"LINUX",
     "effectiveUserId": "testuser1",
     "defaultAuthnMethod":"PKI_KEYS",
-    "rootDir":"/execRoot",
+    "rootDir":"/",
     "canExec": true
     "canRunBatch": true,
     "jobRuntimes": [ { "runtimeType": "SINGULARITY" } ],
     "jobWorkingDir": "HOST_EVAL($SCRATCH)/dtn_test/jobs",
     "dtnSystemId": "example-dtn",
-    "dtnMountPoint": "/shared",
-    "dtnMountSourcePath": "/main",
     "batchScheduler": "SLURM",
     "batchLogicalQueues": [
     {
@@ -1101,6 +1081,10 @@ Application definition::
       "execSystemExecDir": "${JobWorkingDir}/${JobUUID}",
       "execSystemInputDir": "projects/example_project/shared/testuser1/input",
       "execSystemOutputDir": "${JobWorkingDir}/${JobUUID}/output",
+      "dtnSystemInputDir": "/shared/storage/stage_inputs/${JobUUID}",
+      "dtnSystemOutputDir": /shared/storage/stage_outputs/${JobUUID}",
+      "archiveSystemId": "archive-storage-system",
+      "archiveSystemDir": "/archive/storage/${JobUUID}",
       "fileInputs": [
         {
          "name": "file1",
@@ -1124,28 +1108,15 @@ Job submission request::
   }
 
 
-Note that the example execution system, **example-exec-with-dtn**, defines three DTN related values:
+Note that the execution system specifies the DTN system and the application specifies the DTN directories:
 
 **dtnSystemId**
   The Tapis system to use as a DTN.
-**dtnMountSourcePath**
-  The path on the DTN system relative to the system's rootDir where shared files are stored.
-  Input files will be staged to relative path *${DtnMountSourcePath}/${ExecSystemInputDir}*.
-  Full host and absolute path will be *dtn.host:/${rootDir}/${DtnMountSourcePath}/${ExecSystemInputDir}*
-**dtnMountPoint**
-  The path on the execution system relative to the system's *rootDir* where shared files are stored.
-  Once file inputs are staged they will be available to the application at relative path
-  *${DtnMountPoint}/${ExecSystemInputDir}*.
-  Full host and absolute path will be *exec.host:/${rootDir}/${DtnMountPoint}/${ExecSystemInputDir}*
+**dtnSystemInputDir**
+  Directory relative to *rootDir* to which input files will be transferred prior to launching the application.
+**dtnSystemOutputDir**
+  Directory relative to *rootDir* from which output files will be transferred during the archiving phase.
 
-Assuming $SCRATCH resolves to /scratch/testuser1, the resolved host and absolute path for all directories
-involved would be as follows:
-
-* **jobWorkingDir** exec.host.example.com:/scratch/testuser1/dtn_test/jobs
-* **execSystemExecDir** exec.host.example.com:/scratch/testuser1/dtn_test/jobs/<job_uuid>
-* **execSystemInputDir** (staging inputs) dtn.host.example.com:/dtnRoot/main/projects/example_project/shared/testuser1/input
-* **execSystemInputDir** (running application) exec.host.example.com:/execRoot/shared/projects/example_project/shared/testuser1/input
-* **execSystemOutputDir** exec.host.example.com:/scratch/testuser1/dtn_test/jobs/<job_uuid>/output
 
 ------------------------------------------------------------
 
