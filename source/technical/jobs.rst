@@ -1079,7 +1079,7 @@ Application definition::
       "description": "Transfer file and verify transfer",
       "execSystemId": "example-exec-with-dtn",
       "execSystemExecDir": "${JobWorkingDir}/${JobUUID}",
-      "execSystemInputDir": "projects/example_project/shared/testuser1/input",
+      "execSystemInputDir": "{JobWorkingDir}/${JobUUID}/inputs",
       "execSystemOutputDir": "${JobWorkingDir}/${JobUUID}/output",
       "dtnSystemInputDir": "/shared/storage/stage_inputs/${JobUUID}",
       "dtnSystemOutputDir": /shared/storage/stage_outputs/${JobUUID}",
