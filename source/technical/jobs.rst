@@ -497,7 +497,11 @@ The *cmdPrefix* parameter provides generalized support for launchers and is avai
 ExecSystemConstraints
 ---------------------
 
-Not implemented yet.
+Future feature.
+
+Specifying execution system constraints is not yet implemented. These will be part of the feature to allow an execution
+system to be selected dynamically.
+
 
 Subscriptions
 -------------
@@ -880,7 +884,9 @@ Job terminal statuses are FINISHED, CANCELLED and FAILED.
 Dynamic Execution System Selection
 ----------------------------------
 
-Not implemented yet.
+Future feature.
+
+Selecting an execution system dynamically is not yet implemented.
 
 
 Data Transfer Nodes
