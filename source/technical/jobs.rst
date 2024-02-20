@@ -226,20 +226,17 @@ The directories assigned when a system is defined:
 
   rootDir - the effective root of the file system when accessed through this Tapis system.
   jobWorkingDir - the default directory for files used or created during job execution.
-  dtnMountPoint - the path relative to the execution system's rootDir where the DTN file system is mounted.
-
-An execution system may define a *Data Transfer Node* (DTN). A DTN is a high throughput node used to stage job inputs and to archive job outputs.
-The goal is to improve transfer performance. The execution system mounts the DTN's file system at the *dtnMountPoint* so that executing jobs have
-access to its data, but Tapis will connect to the DTN rather than the execution system during transfers.  See `Data Transfer Nodes`_ for details.
 
 The directories assigned in application definitions and/or in a job submission requests:
 
 ::
 
-   execSystemExecDir
-   execSystemInputDir
-   execSystemOutputDir
-   archiveSystemDir
+  execSystemExecDir
+  execSystemInputDir
+  execSystemOutputDir
+  dtnSystemInputDir
+  dtnSystemOutputDir
+  archiveSystemDir
 
 
 Directory Assignments
@@ -255,13 +252,10 @@ When a job request is submitted, each of the job's four execution and archive sy
 
 ::
 
-   No DTNs defined:
-     execSystemExecDir:    ${JobWorkingDir}/jobs/${JobUUID}
-     execSystemInputDir:   ${JobWorkingDir}/jobs/${JobUUID}
-     execSystemOutputDir:  ${JobWorkingDir}/jobs/${JobUUID}/output
-     archiveSystemDir:     /jobs/${JobUUID}/archive                 (if archiveSystemId is set)
-   If DTN defined for execution system:
-     execSystemInputDir:   /jobs/${JobUUID}
+  execSystemExecDir:    ${JobWorkingDir}/jobs/${JobUUID}
+  execSystemInputDir:   ${JobWorkingDir}/jobs/${JobUUID}
+  execSystemOutputDir:  ${JobWorkingDir}/jobs/${JobUUID}/output
+  archiveSystemDir:     /jobs/${JobUUID}/archive                 (if archiveSystemId is set)
 
 FileInputs
 ----------
@@ -719,42 +713,42 @@ The following standard environment variables are passed into each application co
 
 ::
 
-    _tapisAppId - Tapis app ID
-    _tapisAppVersion - Tapis app version
-    _tapisArchiveOnAppError - true means archive even if the app returns a non-zero exit code
-    _tapisArchiveSystemDir - the archive system directory on which app output is archived
-    _tapisArchiveSystemId - Tapis system used for archiving app output
-    _tapisCoresPerNode - number of cores used per node by app
-    _tapisDtnMountPoint - the path on the execution system relative to the system's rootDir where shared files are stored.
-    _tapisDtnMountSourcePath - the path on the DTN system relative to the system's rootDir where shared files are stored
-    _tapisDtnSystemId - the Data Transfer Node system ID
-    _tapisDynamicExecSystem - true if dynamic system selection was used
-    _tapisEffeciveUserId - the user ID under which the app runs
-    _tapisExecSystemExecDir - the exec system directory where app artifacts are staged
-    _tapisExecSystemHPCQueue - the actual batch queue name on an HPC host
-    _tapisExecSystemId - the Tapis system where the app runs
-    _tapisExecSystemInputDir - the exec system directory where input files are staged
-    _tapisExecSystemLogicalQueue - the Tapis queue definition that specifies an HPC queue
-    _tapisExecSystemOutputDir - the exec system directory where the app writes its output
-    _tapisStdoutFilename - Name of file to use for stdout.
-    _tapisStderrFilename - Name of file to use for stderr.
-    _tapisJobCreateDate - ISO 8601 date, example: 2021-04-26Z
-    _tapisJobCreateTime - ISO 8601 time, example: 18:44:55.544145884Z
-    _tapisJobCreateTimestamp - ISO 8601 timestamp, example: 2021-04-26T18:44:55.544145884Z
-    _tapisJobName - the user-chosen name of the Tapis job
-    _tapisJobOwner - the Tapis job's owner
-    _tapisJobUUID - the UUID of the Tapis job
-    _tapisJobWorkingDir - exec system directory that the app should use for temporary files
-    _tapisMaxMinutes - the maximum number of minutes allowed for the job to run
-    _tapisMemoryMB - the memory required per node by the app
-    _tapisNodes - the number of nodes on which the app runs
-    _tapisStderrFilename - the file into which the application's stderr is piped
-    _tapisStdoutFilename - the file into which the application's stdout is piped
-    _tapisSysBatchScheduler - the HPC scheduler on the execution system
-    _tapisSysBucketName - an object store bucket name
-    _tapisSysHost - the IP address or DNS name of the exec system
-    _tapisSysRootDir - the root directory on the exec system
-    _tapisTenant - the tenant in which the job runs
+ _tapisAppId - Tapis app ID
+ _tapisAppVersion - Tapis app version
+ _tapisArchiveOnAppError - true means archive even if the app returns a non-zero exit code
+ _tapisArchiveSystemDir - the archive system directory on which app output is archived
+ _tapisArchiveSystemId - Tapis system used for archiving app output
+ _tapisCoresPerNode - number of cores used per node by app
+ _tapisDtnSystemId - the Data Transfer Node system ID
+ _tapisDtnSystemInputDir -  the directory on the DTN to which input files will be transferred during staging
+ _tapisDtnSystemOutputDir - the directory on the DTN from which output files will be transferred during archiving
+ _tapisDynamicExecSystem - true if dynamic system selection was used
+ _tapisEffeciveUserId - the user ID under which the app runs
+ _tapisExecSystemExecDir - the exec system directory where app artifacts are staged
+ _tapisExecSystemHPCQueue - the actual batch queue name on an HPC host
+ _tapisExecSystemId - the Tapis system where the app runs
+ _tapisExecSystemInputDir - the exec system directory where input files are staged
+ _tapisExecSystemLogicalQueue - the Tapis queue definition that specifies an HPC queue
+ _tapisExecSystemOutputDir - the exec system directory where the app writes its output
+ _tapisStdoutFilename - Name of file to use for stdout.
+ _tapisStderrFilename - Name of file to use for stderr.
+ _tapisJobCreateDate - ISO 8601 date, example: 2021-04-26Z
+ _tapisJobCreateTime - ISO 8601 time, example: 18:44:55.544145884Z
+ _tapisJobCreateTimestamp - ISO 8601 timestamp, example: 2021-04-26T18:44:55.544145884Z
+ _tapisJobName - the user-chosen name of the Tapis job
+ _tapisJobOwner - the Tapis job's owner
+ _tapisJobUUID - the UUID of the Tapis job
+ _tapisJobWorkingDir - exec system directory that the app should use for temporary files
+ _tapisMaxMinutes - the maximum number of minutes allowed for the job to run
+ _tapisMemoryMB - the memory required per node by the app
+ _tapisNodes - the number of nodes on which the app runs
+ _tapisStderrFilename - the file into which the application's stderr is piped
+ _tapisStdoutFilename - the file into which the application's stdout is piped
+ _tapisSysBatchScheduler - the HPC scheduler on the execution system
+ _tapisSysBucketName - an object store bucket name
+ _tapisSysHost - the IP address or DNS name of the exec system
+ _tapisSysRootDir - the root directory on the exec system
+ _tapisTenant - the tenant in which the job runs
 
 .. _macro-substitution:
 
@@ -890,6 +884,110 @@ Not implemented yet.
 
 Data Transfer Nodes
 -------------------
+
+Introduction
+^^^^^^^^^^^^
+
+The Jobs, Applications, Files and Systems services cooperate to allow convenient configuration and execution of jobs.
+Here we discuss the use of a high throughput **Data Transfer Node** (DTN) to stage job inputs or archive outputs.
+One motivation for having built-in DTN support in Tapis is to facilitate a common workflow pattern for users.
+This common workflow pattern involves users staging input data to a system such as *cloud.corral* at TACC, then logging
+in to an HPC head node to move the data to the scratch file system for use when running an application.
+Another motivation is to provide support for staging input files from a system in the case where Tapis does not support
+file transfers directly from the source system to the execution system. This is currently true for systems of type GLOBUS. 
+
+The DTN usage pattern is effective when:
+
+1. the DTN has high performance network and storage capabilities,
+2. the target system for data transfers and the DTN system have shared storage, and
+3. all file inputs or all file outputs are to be staged through the DTN.
+ 
+In this situation, data transfers performed by Jobs benefit from the DTN's high performance capabilities, while
+applications continue to have access to input files.
+
+
+TODO/TBD We include specific examples to illustrate the concept.
+
+Configuring Tapis for DTN Usage
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In order to run a job and use a DTN for file input staging or output archiving, the execution system and
+the application must be properly configured. There are also a few rules to follow and requirements that
+must be satisfied.
+
+Configuring the Execution and DTN Systems
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The execution system must have the attribute *dtnSystemId* set to the Tapis system that may be used as a DTN.
+Note that use of the DTN is optional. Use of a DTN is triggered by the setting of *dtnSystemInputDir* or
+*dtnSystemOutputDir* in either the job submission request or the application definition.
+
+As listed below under *Rules and Requirements*, the execution system and the DTN system must have the same
+*rootDir*, must have shared storage, and the *rootDir* must be part of the shared storage.
+
+Configuring the Application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are two relevant attributes in an Application definition, *dtnSystemInputDir* and *dtnSystemOutputDir*.
+By default, these are set to the special value *!tapis_not_set*. This value indicates that, by default,
+a DTN system will not be used for file inputs or archive outputs. In order to trigger, by default, the use
+of a DTN during either file input staging or archive output, these values must be set as follows:
+
+*dtnSystemInputDir*
+  Directory relative to *rootDir* to which input files will be transferred prior to launching the application.
+*dtnSystemOutputDir*
+  Directory relative to *rootDir* from which output files will be transferred during the archiving phase.
+
+Note that these attributes may be overriden by the job submission request. Please see the next section.
+
+
+Constructing the Job Submission Request
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In a job submission request, the values for *dtnSystemInputDir* or *dtnSystemOutputDir* may be set in order
+to override the values defined by the application. They may be set to *!tapis_not_set* to turn off use of
+the DTN or set to an alternate path.
+
+
+
+DTN Rules and Requirements
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is important to understand that there are certain rules and requirements involved in order to correctly
+make use of a DTN. These are listed here:
+
+* Rule: All file inputs or archive outputs will go through the DTN.
+* Rule: Any HOST_EVAL expressions or macro substitutions (such as *effectiveUserId*) used in *dtnSystemInputDir* or *dtnSystemOutputDir* will be evaluated in the context of the execution system.
+* Rule: Each job should use its own *dtnSystemInputDir* or *dtnSystemOutputDir* to avoid data from different jobs being mixed, overwritten or deleted before being used.
+* Requirement: The execution system and the DTN system must have shared storage.
+
+  * For example, there could be an NFS mount on the execution system pointing to the DTN host, or the DTN may be a Globus endpoint running on the execution host.
+  * Note that for an hpc cluster it could be that the shared storage is set up on the login nodes and not the compute nodes. This case is supported since the Tapis Jobs service typically uses a login node when executing an application.
+
+* Requirement: Restrictions on *rootDir*
+
+  * The **rootDir** for the execution system and the DTN system **must be same**. This will be validated by the Systems service when the execution system is created or updated.
+  * The **rootDir** must be part of the shared storage.
+  * The absolute path to the shared storage must be the same on both execution and DTN systems. This is because:
+
+    * Rule: when the Tapis Jobs service moves data to or from the DTN system, it assumes no path translation is needed.
+
+* Requirement: For any file inputs defined for the job, Tapis must support file transfers from the source system of the input to the DTN system.
+
+  * For example, if the source for the file input is a system of type GLOBUS, then the DTN must also be of type GLOBUS.
+
+* Requirement: Credentials must be registered for the *effectiveUserId* for each system involved.
+* Requirement: For each system involved, the *effectiveUserId* for the system must have appropriate Tapis and native file system access for the paths defined.
+
+  * For the execution and DTN systems, the *effectiveUserId* must have READ/WRITE access for both *dtnSystemInputDir* and *dtnSystemOutputDir*.
+
+
+
+
+
+
+
+
 
 A Tapis system can be designated as a Data Transfer Node (DTN) so that it can be referenced by another system and
 used as an alternative for data transfers during job execution. When an application is being run on an execution
@@ -1405,8 +1503,8 @@ The response will look something like the following:
         "archiveSystemId": "tapisv3-exec",
         "archiveSystemDir": "/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/archive",
         "dtnSystemId": null,
-        "dtnMountSourcePath": null,
-        "dtnMountPoint": null,
+        "dtnSystemInputDir": null,
+        "dtnSystemOutputDir": null,
         "nodeCount": 1,
         "coresPerNode": 1,
         "memoryMB": 100,
