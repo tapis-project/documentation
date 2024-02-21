@@ -900,7 +900,7 @@ When a job terminates, in addition to being assigned a terminal status, a job is
 	JOB_RECOVERY_FAILURE - Tapis unable to recover job
 	JOB_RECOVERY_TIMEOUT - Tapis recovery time expired
 	JOB_REMOTE_ACCESS_ERROR - Jobs could not access a resource on a remote system
-	JOB_REMOTE_OUTCOME_ERROR - Unable to confirm successful application execution
+	JOB_REMOTE_OUTCOME_ERROR - User application returned a non-zero exit code
 	JOB_UNABLE_TO_STAGE_INPUTS - Unable to stage application input files
 	JOB_UNABLE_TO_STAGE_JOB - Unable to stage application assets
 	JOB_TRANSFER_FAILED_OR_CANCELLED - A file transfer failed or was cancelled
@@ -1489,72 +1489,79 @@ The response will look something like the following:
 
      {
     "result": {
-        "id": 1711,
-        "name": "SyRunSleepSecondsNoIPFiles-2",
-        "owner": "testuser2",
-        "tenant": "dev",
-        "description": "Sleep for a specified amount of time",
-        "status": "FINISHED",
-        "lastMessage": "Setting job status to FINISHED.",
-        "created": "2021-07-12T23:56:01.790165Z",
-        "ended": "2021-07-12T23:56:55.962694Z",
-        "lastUpdated": "2021-07-12T23:56:55.962694Z",
-        "uuid": "ba34f946-8a18-44c4-9b25-19e21dfadf69-007",
-        "appId": "SyRunSleepSecondsNoIPFiles-2",
-        "appVersion": "0.0.1",
-        "archiveOnAppError": true,
-        "dynamicExecSystem": false,
-        "execSystemId": "tapisv3-exec2",
-        "execSystemExecDir": "/workdir/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007",
-        "execSystemInputDir": "/workdir/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007",
-        "execSystemOutputDir": "/workdir/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/output",
-        "execSystemLogicalQueue": null,
-        "archiveSystemId": "tapisv3-exec",
-        "archiveSystemDir": "/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/archive",
-        "dtnSystemId": null,
-        "dtnSystemInputDir": null,
-        "dtnSystemOutputDir": null,
-        "nodeCount": 1,
-        "coresPerNode": 1,
-        "memoryMB": 100,
-        "maxMinutes": 240,
-        "fileInputs": "[]",
-        "parameterSet": "{\"appArgs\": [], \"envVariables\": [{\"key\": \"_tapisAppId\", \"value\": \"SyRunSleepSecondsNoIPFiles-2\"}, {\"key\": \"_tapisAppVersion\", \"value\": \"0.0.1\"}, {\"key\": \"_tapisArchiveOnAppError\", \"value\": \"true\"}, {\"key\": \"_tapisArchiveSystemDir\", \"value\": \"/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/archive\"}, {\"key\": \"_tapisArchiveSystemId\", \"value\": \"tapisv3-exec\"}, {\"key\": \"_tapisCoresPerNode\", \"value\": \"1\"}, {\"key\": \"_tapisDynamicExecSystem\", \"value\": \"false\"}, {\"key\": \"_tapisEffeciveUserId\", \"value\": \"testuser2\"}, {\"key\": \"_tapisExecSystemExecDir\", \"value\": \"/workdir/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007\"}, {\"key\": \"_tapisExecSystemId\", \"value\": \"tapisv3-exec2\"}, {\"key\": \"_tapisExecSystemInputDir\", \"value\": \"/workdir/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007\"}, {\"key\": \"_tapisExecSystemOutputDir\", \"value\": \"/workdir/jobs/ba34f946-8a18-44c4-9b25-19e21dfadf69-007/output\"}, {\"key\": \"_tapisJobCreateDate\", \"value\": \"2021-07-12Z\"}, {\"key\": \"_tapisJobCreateTime\", \"value\": \"23:56:01.790165454Z\"}, {\"key\": \"_tapisJobCreateTimestamp\", \"value\": \"2021-07-12T23:56:01.790165454Z\"}, {\"key\": \"_tapisJobName\", \"value\": \"SyRunSleepSecondsNoIPFiles-2\"}, {\"key\": \"_tapisJobOwner\", \"value\": \"testuser2\"}, {\"key\": \"_tapisJobUUID\", \"value\": \"ba34f946-8a18-44c4-9b25-19e21dfadf69-007\"}, {\"key\": \"_tapisJobWorkingDir\", \"value\": \"workdir\"}, {\"key\": \"_tapisMaxMinutes\", \"value\": \"240\"}, {\"key\": \"_tapisMemoryMB\", \"value\": \"100\"}, {\"key\": \"_tapisNodes\", \"value\": \"1\"}, {\"key\": \"_tapisSysHost\", \"value\": \"129.114.17.113\"}, {\"key\": \"_tapisSysRootDir\", \"value\": \"/home/testuser2\"}, {\"key\": \"_tapisTenant\", \"value\": \"dev\"}, {\"key\": \"JOBS_PARMS\", \"value\": \"15\"}, {\"key\": \"MAIN_CLASS\", \"value\": \"edu.utexas.tacc.testapps.tapis.SleepSecondsSy\"}], \"archiveFilter\": {\"excludes\": [], \"includes\": [\"Sleep*\", \"tapisjob.*\"], \"includeLaunchFiles\": true}, \"containerArgs\": [], \"schedulerOptions\": []}",
-        "execSystemConstraints": null,
-        "subscriptions": "[]",
-        "blockedCount": 0,
-        "remoteJobId": "1466046",
-        "remoteJobId2": null,
-        "remoteOutcome": "FINISHED",
-        "remoteResultInfo": "0",
-        "remoteQueue": null,
-        "remoteSubmitted": null,
-        "remoteStarted": "2021-07-12T23:56:20.900039Z",
-        "remoteEnded": "2021-07-12T23:56:42.411522Z",
-        "remoteSubmitRetries": 0,
-        "remoteChecksSuccess": 3,
-        "remoteChecksFailed": 0,
-        "remoteLastStatusCheck": "2021-07-12T23:56:42.382661Z",
-        "inputTransactionId": null,
-        "inputCorrelationId": null,
-        "archiveTransactionId": "66bc6c9a-210b-4ee6-9da3-252922928e7b",
-        "archiveCorrelationId": "87f62e69-c180-4ad1-9aa7-ac5ada78e1b6",
-        "tapisQueue": "tapis.jobq.submit.DefaultQueue",
-        "visible": true,
-        "createdby": "testuser2",
-        "createdbyTenant": "dev",
-        "tags": [
-            "singularity",
-            "sleep",
-            "test"
-        ],
-        "_fileInputsSpec": null,
-        "_parameterSetModel": null
-    },
+       id: 9594
+       name: SleepSeconds
+       owner: testuser2
+       tenant: dev
+       description: Transfer files and sleep for a specified amount of time
+       status: FINISHED
+       condition: NORMAL_COMPLETION
+       lastMessage: Setting job status to FINISHED.
+       created: 2024-02-21T17:18:01.774368Z
+       ended: 2024-02-21T17:18:49.182976Z
+       lastUpdated: 2024-02-21T17:18:49.182976Z
+       uuid: aa83fce9-074c-47fb-a8a0-a9ad216093bb-007
+       appId: SleepSeconds
+       appVersion: 0.0.1
+       archiveOnAppError: true
+       dynamicExecSystem: false
+       execSystemId: tapisv3-exec2
+       execSystemExecDir: /workdir/jobs/aa83fce9-074c-47fb-a8a0-a9ad216093bb-007
+       execSystemInputDir: /workdir/jobs/aa83fce9-074c-47fb-a8a0-a9ad216093bb-007
+       execSystemOutputDir: /workdir/jobs/aa83fce9-074c-47fb-a8a0-a9ad216093bb-007/output
+       execSystemLogicalQueue: null
+       archiveSystemId: tapisv3-exec
+       archiveSystemDir: /jobs/aa83fce9-074c-47fb-a8a0-a9ad216093bb-007/archive
+       dtnSystemId: null
+       dtnSystemInputDir: null
+       dtnSystemOutputDir: null
+       nodeCount: 1
+       coresPerNode: 1
+       memoryMB: 100
+       maxMinutes: 240
+       fileInputs: [{"name": "empty", "notes": "{}", "envKey": null, "optional": true, "sourceUrl": "tapis://tapisv3-exec/jobs/input/empty.txt", "targetPath": "empty.txt", "description": "An empty file", "autoMountLocal": true, "srcSharedAppCtx": "", "destSharedAppCtx": ""}, {"name": "file1", "notes": "{}", "envKey": null, "optional": true, "sourceUrl": "tapis://tapisv3-exec/jobs/input/file1.txt", "targetPath": "file1.txt", "description": "A random text file", "autoMountLocal": true, "srcSharedAppCtx": "", "destSharedAppCtx": ""}, {"name": "file2", "notes": "{}", "envKey": null, "optional": true, "sourceUrl": "tapis://tapisv3-exec/jobs/input/file2.txt", "targetPath": "file2.txt", "description": "Another random text file", "autoMountLocal": true, "srcSharedAppCtx": "", "destSharedAppCtx": ""}]
+       parameterSet: {"appArgs": [], "logConfig": {"stderrFilename": "tapisjob.out", "stdoutFilename": "tapisjob.out"}, "envVariables": [{"key": "_tapisAppId", "notes": null, "value": "SleepSeconds", "include": null, "description": null}, {"key": "_tapisAppVersion", "notes": null, "value": "0.0.1", "include": null, "description": null}, {"key": "_tapisArchiveOnAppError", "notes": null, "value": "true", "include": null, "description": null}, {"key": "_tapisArchiveSystemDir", "notes": null, "value": "/jobs/aa83fce9-074c-47fb-a8a0-a9ad216093bb-007/archive", "include": null, "description": null}, {"key": "_tapisArchiveSystemId", "notes": null, "value": "tapisv3-exec", "include": null, "description": null}, {"key": "_tapisCoresPerNode", "notes": null, "value": "1", "include": null, "description": null}, {"key": "_tapisDynamicExecSystem", "notes": null, "value": "false", "include": null, "description": null}, {"key": "_tapisEffectiveUserId", "notes": null, "value": "testuser2", "include": null, "description": null}, {"key": "_tapisExecSystemExecDir", "notes": null, "value": "/workdir/jobs/aa83fce9-074c-47fb-a8a0-a9ad216093bb-007", "include": null, "description": null}, {"key": "_tapisExecSystemId", "notes": null, "value": "tapisv3-exec2", "include": null, "description": null}, {"key": "_tapisExecSystemInputDir", "notes": null, "value": "/workdir/jobs/aa83fce9-074c-47fb-a8a0-a9ad216093bb-007", "include": null, "description": null}, {"key": "_tapisExecSystemOutputDir", "notes": null, "value": "/workdir/jobs/aa83fce9-074c-47fb-a8a0-a9ad216093bb-007/output", "include": null, "description": null}, {"key": "_tapisJobCreateDate", "notes": null, "value": "2024-02-21Z", "include": null, "description": null}, {"key": "_tapisJobCreateTime", "notes": null, "value": "17:18:01.774367559Z", "include": null, "description": null}, {"key": "_tapisJobCreateTimestamp", "notes": null, "value": "2024-02-21T17:18:01.774367559Z", "include": null, "description": null}, {"key": "_tapisJobName", "notes": null, "value": "SleepSeconds", "include": null, "description": null}, {"key": "_tapisJobOwner", "notes": null, "value": "testuser2", "include": null, "description": null}, {"key": "_tapisJobUUID", "notes": null, "value": "aa83fce9-074c-47fb-a8a0-a9ad216093bb-007", "include": null, "description": null}, {"key": "_tapisJobWorkingDir", "notes": null, "value": "/workdir", "include": null, "description": null}, {"key": "_tapisMaxMinutes", "notes": null, "value": "240", "include": null, "description": null}, {"key": "_tapisMemoryMB", "notes": null, "value": "100", "include": null, "description": null}, {"key": "_tapisNodes", "notes": null, "value": "1", "include": null, "description": null}, {"key": "_tapisStderrFilename", "notes": null, "value": "tapisjob.out", "include": null, "description": null}, {"key": "_tapisStdoutFilename", "notes": null, "value": "tapisjob.out", "include": null, "description": null}, {"key": "_tapisSysHost", "notes": null, "value": "129.114.35.53", "include": null, "description": null}, {"key": "_tapisSysRootDir", "notes": null, "value": "/home/testuser2", "include": null, "description": null}, {"key": "_tapisTenant", "notes": null, "value": "dev", "include": null, "description": null}, {"key": "JOBS_PARMS", "notes": "{}", "value": "15", "include": true, "description": "nothing important"}, {"key": "MAIN_CLASS", "notes": "{}", "value": "edu.utexas.tacc.testapps.tapis.SleepSeconds", "include": null, "description": ""}], "archiveFilter": {"excludes": [], "includes": ["Sleep*"], "includeLaunchFiles": true}, "containerArgs": [], "schedulerOptions": []}
+       execSystemConstraints: null
+       subscriptions: []
+       blockedCount: 0
+       remoteJobId: 1e35edb11ee05bacf3da7cf0fedc55cfb6e616e15982df5b6d5ba69a44029351
+       remoteJobId2: null
+       remoteOutcome: FINISHED
+       remoteResultInfo: 0
+       remoteQueue: null
+       remoteSubmitted: null
+       remoteStarted: 2024-02-21T17:18:21.478768Z
+       remoteEnded: 2024-02-21T17:18:43.465360Z
+       remoteSubmitRetries: 0
+       remoteChecksSuccess: 3
+       remoteChecksFailed: 0
+       remoteLastStatusCheck: 2024-02-21T17:18:43.463098Z
+       inputTransactionId: 4e47d395-50c5-4715-808e-3317f555e85f
+       inputCorrelationId: c62e5e7f-1142-47d6-bd85-cabfb9c8dc6b
+       archiveTransactionId: d20479da-50da-4ebd-be28-2680722a87d1
+       archiveCorrelationId: 2a70d8b9-fa5a-4cfd-a425-d095f69d8dfd
+       stageAppTransactionId: null
+       stageAppCorrelationId: null
+       dtnInputTransactionId: null
+       dtnInputCorrelationId: null
+       dtnOutputTransactionId: null
+       dtnOutputCorrelationId: null
+       tapisQueue: tapis.jobq.submit.DefaultQueue
+       visible: true
+       createdby: testuser2
+       createdbyTenant: dev
+       tags: [sleep, test]
+       jobType: FORK
+       mpiCmd: null
+       cmdPrefix: null
+       sharedAppCtx: 
+       sharedAppCtxAttribs: []
+       notes: {"obj": {"f1": "v1", "f2": 44.0}, "array": ["x", "y", "z"], "count": 27.0, "fname": "bud", "happy": true, "lname": "jones"}
+       mpi: null
     "status": "success",
     "message": "JOBS_RETRIEVED Job ba34f946-8a18-44c4-9b25-19e21dfadf69-007 retrieved.",
     "version": "1.0.0-rc1",
-  "metadata": null
+    "metadata": null
   }
 
 Get Job Status
