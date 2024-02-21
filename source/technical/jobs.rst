@@ -884,7 +884,7 @@ Job terminal statuses are FINISHED, CANCELLED and FAILED.
 Job Condition Codes on Termination
 ----------------------------------
 
-When a job terminates, in addition to being assign a terminal status, a job is assigned one of the following condition codes. 
+When a job terminates, in addition to being assigned a terminal status, a job is assigned one of the following condition codes. 
 ::
 
 	CANCELLED_BY_USER - Job cancelled by user
@@ -913,7 +913,10 @@ When a job terminates, in addition to being assign a terminal status, a job is a
 	SCHEDULER_TIMEOUT - Batch scheduler timed out job
 	SCHEDULER_TERMINATED - Batch scheduler terminated job
 
-The codes that beging with "JOB" indicate Jobs service conditions; those that begin with "SCHEDULER" indicate a condition reported by a batch scheduler.  The CANCELLED_BY_USER condition results from direct user action and jobs that successfully execute are assigned NORMAL_COMPLETION.  
+Codes that begin with "JOB" indicate Jobs service conditions.
+Those that begin with "SCHEDULER" indicate a condition reported by a batch scheduler.
+The CANCELLED_BY_USER condition results from direct user action.
+Jobs that successfully execute are assigned the code NORMAL_COMPLETION.
 
 ..  _ConditionCodes: #Job Condition Codes on Termination
 
