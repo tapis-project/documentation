@@ -867,6 +867,7 @@ Additionally, when either of these conditions hold:
 then the following additional fields are included in the notification:
 
 - *blockedCount* - the number of times the job blocked (JSON number)
+- *condition* - a code that describes the job's final disposition (see ConditionCodes_)
 - *remoteJobId* - execution system job id (ex: pid, slurm id, docker hash, etc.)
 - *remoteJobId2* - execution system auxilliary id associated with a job
 - *remoteOutcome* - FINISHED, FAILED, FAILED_SKIP_ARCHIVE
@@ -880,6 +881,41 @@ Job terminal statuses are FINISHED, CANCELLED and FAILED.
 
 ..  _Subscriptions: #subscriptions
 
+Job Condition Codes on Termination
+----------------------------------
+
+When a job terminates, in addition to being assign a terminal status, a job is assigned one of the following condition codes. 
+::
+
+	CANCELLED_BY_USER - Job cancelled by user
+	JOB_ARCHIVING_FAILED - Job error while archiving outputs
+	JOB_DATABASE_ERROR - Jobs is unable to access its database
+	JOB_EXECUTION_MONITORING_ERROR - An error occurred during application monitoring
+	JOB_EXECUTION_MONITORING_TIMEOUT - Job time expired during execution monitoring
+	JOB_FILES_SERVICE_ERROR - An error involving the Files service occurred
+	JOB_INTERNAL_ERROR - Jobs service internal error
+	JOB_INVALID_DEFINITION - Invalid job record
+	JOB_LAUNCH_FAILURE - Tapis is unable to launch job
+	JOB_QUEUE_MONITORING_ERROR - An error occurred during application queue monitoring
+	JOB_RECOVERY_FAILURE - Tapis unable to recover job
+	JOB_RECOVERY_TIMEOUT - Tapis recovery time expired
+	JOB_REMOTE_ACCESS_ERROR - Jobs could not access a resource on a remote system
+	JOB_REMOTE_OUTCOME_ERROR - Unable to confirm successful application execution
+	JOB_UNABLE_TO_STAGE_INPUTS - Unable to stage application input files
+	JOB_UNABLE_TO_STAGE_JOB - Unable to stage application assets
+	JOB_TRANSFER_FAILED_OR_CANCELLED - A file transfer failed or was cancelled
+	JOB_TRANSFER_MONITORING_TIMEOUT - Jobs transfer monitoring expired
+	NORMAL_COMPLETION - Job completed normally
+	SCHEDULER_CANCELLED - Batch scheduler cancelled job
+	SCHEDULER_DEADLINE - Batch scheduler deadline exceeded
+	SCHEDULER_OUT_OF_MEMORY - Batch scheduler out of memory error
+	SCHEDULER_STOPPED - Batch scheduler stopped job
+	SCHEDULER_TIMEOUT - Batch scheduler timed out job
+	SCHEDULER_TERMINATED - Batch scheduler terminated job
+
+The codes that beging with "JOB" indicate Jobs service conditions; those that begin with "SCHEDULER" indicate a condition reported by a batch scheduler.  The CANCELLED_BY_USER condition results from direct user action and jobs that successfully execute are assigned NORMAL_COMPLETION.  
+
+..  _ConditionCodes: #Job Condition Codes on Termination
 
 Dynamic Execution System Selection
 ----------------------------------
@@ -895,25 +931,18 @@ Data Transfer Nodes
 Introduction
 ^^^^^^^^^^^^
 
-The Jobs, Applications, Files and Systems services cooperate to allow convenient configuration and execution of jobs.
-Here we discuss the use of a high throughput **Data Transfer Node** (DTN) to stage job inputs or archive outputs.
-One motivation for having built-in DTN support in Tapis is to facilitate a common workflow pattern for users.
-This common workflow pattern involves users staging input data to a system such as *cloud.corral* at TACC, then logging
-in to an HPC head node to move the data to the scratch file system for use when running an application.
-Another motivation is to provide support for staging input files from a system in the case where Tapis does not support
-file transfers directly from the source system to the execution system. This is currently true for systems of type GLOBUS. 
+The Jobs, Applications, Files and Systems services cooperate to allow the configuration and execution of jobs.
+In this section, we discuss the use of a high throughput **Data Transfer Node** (DTN) to stage job inputs and archive outputs. DTNs are used to optimize transfer speeds and to allow nodes to be separately optimized for either storage or job execution.  For example, users often stage input data to long-term storage (the DTN), such as *cloud.corral* at TACC, and then copy that data to a fast, a temporary file system, such as a "scratch" file system, when running jobs.  DTNs are also used when specialized transfer software, such as GLOBUS, is required on nodes to receive data, but those nodes are not appropriate to run jobs.  In this case, the DTN recieves the data from a remote location and then another transfer copies them from the DTN to an execution system.  
 
 The DTN usage pattern is effective when:
 
-1. the DTN has high performance network and storage capabilities,
+1. The DTN has high performance network and storage capabilities,
 2. the target system for data transfers and the DTN system have shared storage, and
 3. all file inputs or all file outputs are to be staged through the DTN.
  
-In this situation, data transfers performed by Jobs benefit from the DTN's high performance capabilities, while
-applications continue to have access to input files.
+In this situation, the data transfers performed by Jobs benefit from the DTN's high performance I/O capabilities, while
+applications can still access their input from systems optimized for execution.
 
-
-We include specific examples to illustrate the concept.
 
 Configuring Tapis for DTN Usage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -925,7 +954,7 @@ must be satisfied.
 Configuring the Execution and DTN Systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The execution system must have the attribute *dtnSystemId* set to the Tapis system that may be used as a DTN.
+The execution system must have the attribute *dtnSystemId* set to the Tapis system that can be used as a DTN.
 Note that use of the DTN is optional. Use of a DTN is triggered by the setting of *dtnSystemInputDir* or
 *dtnSystemOutputDir* in either the job submission request or the application definition.
 
@@ -937,8 +966,8 @@ Configuring the Application
 
 There are two relevant attributes in an Application definition, *dtnSystemInputDir* and *dtnSystemOutputDir*.
 By default, these are set to the special value *!tapis_not_set*. This value indicates that, by default,
-a DTN system will not be used for file inputs or archive outputs. In order to trigger, by default, the use
-of a DTN during either file input staging or archive output, these values must be set as follows:
+a DTN system will not be used for file inputs or archive outputs. In order to trigger the use
+of a DTN during either file input staging or archive output, these values must be set:
 
 *dtnSystemInputDir*
   Directory relative to *rootDir* to which input files will be transferred prior to launching the application.
@@ -951,72 +980,72 @@ Note that these attributes may be overriden by the job submission request. Pleas
 Constructing the Job Submission Request
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In a job submission request, the values for *dtnSystemInputDir* or *dtnSystemOutputDir* may be set in order
-to override the values defined by the application. They may be set to *!tapis_not_set* to turn off use of
-the DTN or set to an alternate path.
+In a job submission request, the values for *dtnSystemInputDir* or *dtnSystemOutputDir* can be set in order
+to override the values defined by the application. They can be set to *!tapis_not_set* to turn off DTN usage or set to an alternate path.
 
 
 
 DTN Rules and Requirements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-It is important to understand that there are certain rules and requirements involved in order to correctly
-make use of a DTN. These are listed here:
+Certain rules and requirements need to be observed to correctly use a DTN.
 
-* Rule: All file inputs or archive outputs will go through the DTN.
-* Rule: Any HOST_EVAL expressions or macro substitutions (such as *effectiveUserId*) used in *dtnSystemInputDir* or *dtnSystemOutputDir* will be evaluated in the context of the execution system.
-* Rule: Each job should use its own *dtnSystemInputDir* or *dtnSystemOutputDir* to avoid data from different jobs being mixed, overwritten or deleted before being used.
-* Requirement: The execution system and the DTN system must have shared storage.
+* **Rule:** All file inputs or archive outputs will go through the DTN.
+* **Rule:** Any HOST_EVAL expressions or macro substitutions (such as *effectiveUserId*) used in *dtnSystemInputDir* or *dtnSystemOutputDir* will be evaluated in the context of the execution system.
+* **Rule:** Each job should use its own *dtnSystemInputDir* or *dtnSystemOutputDir* to avoid data from different jobs being mixed, overwritten or deleted before being used.
+* **Requirement:** The execution system and the DTN system must have shared storage.
 
   * For example, there could be an NFS mount on the execution system pointing to the DTN host, or the DTN may be a Globus endpoint running on the execution host.
-  * Note that for an HPC cluster it could be that the shared storage is set up on the login nodes and not the compute nodes. This case is supported since the Tapis Jobs service typically uses a login node when executing an application.
+  * Note that for an HPC cluster it could be that the shared storage is set up on login nodes and not on compute nodes. This case is supported since the Tapis Jobs service typically uses a login node when executing an application.
 
-* Requirement: Restrictions on *rootDir*
+* **Requirement:** Restrictions on *rootDir*
 
-  * The **rootDir** for the execution system and the DTN system **must be same**. This will be validated by the Systems service when the execution system is created or updated.
+  * The **rootDir** for the execution system and the DTN system **must be same**. This is validated by the Systems service when the execution system is created or updated.
   * The **rootDir** must be part of the shared storage.
-  * The absolute path to the shared storage must be the same on both execution and DTN systems. This is because:
+  * The absolute path to the shared storage must be the same on both the execution and DTN systems. This is because:
 
-    * Rule: when the Tapis Jobs service moves data to or from the DTN system, it assumes no path translation is needed.
+    * **Rule:** When the Tapis Jobs service moves data to or from the DTN system, it assumes no path translation is needed.
 
-* Requirement: For any file inputs defined for the job, Tapis must support file transfers from the source system of the input to the DTN system.
+* **Requirement:** For any file inputs defined for the job, Tapis must support file transfers from the input source to the DTN system.
 
   * For example, if the source for the file input is a system of type GLOBUS, then the DTN must also be of type GLOBUS.
 
-* Requirement: Credentials must be registered for the *effectiveUserId* for each system involved.
-* Requirement: For each system involved, the *effectiveUserId* for the system must have appropriate Tapis and native file system access for the paths defined.
+* **Requirement:** Credentials must be registered for the *effectiveUserId* for each system involved.
+* **Requirement:** For each system involved, the *effectiveUserId* for the system must have appropriate Tapis and native file system access for the paths defined.
 
   * For the execution and DTN systems, the *effectiveUserId* must have READ/WRITE access for both *dtnSystemInputDir* and *dtnSystemOutputDir*.
 
 Modified Jobs Service Behavior
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When an application is run and the execution system specifies a DTN, the Jobs service will behave as follows:
+When an application runs and the execution system specifies a DTN, the Jobs service will behave as follows:
 
 
 During staging of input files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 If the execution system specifies a DTN and *dtnSystemInputDir* is set:
 
-* the source system and path as defined in the file input is unchanged.
-* the target system for the transfer request sent to the Files service will be the DTN system from the execution system deﬁnition.
-* the target path will be *${DtnSystemInputDir}*.
-* the execution system will be used to move the staged input files from *${DtnSystemInputDir}* to *${ExecSystemInputDir}*
+* The source systems and paths defined in FileInputs are unchanged.
+* The target system for the transfer request sent to the Files service will be the DTN as specified in the execution system deﬁnition.
+* The target path will be *${DtnSystemInputDir}*.
+* The staged input files will be *moved* from *${DtnSystemInputDir}* to *${ExecSystemInputDir}* on the execution system.
 
-  * Note that the fully resolved absolute path to *${DtnSystemInputDir}* must be the same on both the execution system and the DTN system. If this is not true the operation may fail.
+  * Note that the fully resolved absolute path to *${DtnSystemInputDir}* must be **the same** on both the execution system and the DTN system. If this is not true the operation may fail.
+  * The *move* operation deletes the files from *${DtnSystemInputDir}*. 
 
 
 During archiving of output files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 If the execution system specifies a DTN and *dtnSystemOutputDir* is set:
 
-* the execution system will be used to move any generated output files from *${ExecSystemOutputDir}* to *${DtnSystemOutputDir}*
+* The output files generated on the execution system are *moved* from *${ExecSystemOutputDir}* to *${DtnSystemOutputDir}*
 
-  * Note that the fully resolved absolute path to *${DtnSystemOutputDir}* must be the same on both the execution system and the DTN system. If this is not true the operation may fail.
+  * Note that the fully resolved absolute path to *${DtnSystemOutputDir}* must be **the same** on both the execution system and the DTN system. If this is not true the operation may fail.
+  * The *move* operation deletes the files from *${ExecSystemOutputDir}*.
 
-* the source system for the transfer request sent to the Files service will be the DTN system from the execution system deﬁnition.
-* the source path will be ${DtnOutputDir}.
-* the target system and path as defined in the file input is unchanged.
+* The source system for the transfer request sent to the Files service will be the DTN as specified in the execution system deﬁnition.
+* The source path will be *${DtnSystemOutputDir}*.
+* The target system and path as defined in the archive definition is unchanged.
 
 
 Example DTN Configuration and Usage
@@ -1547,7 +1576,8 @@ The response will look something like the following:
 
   {
     "result": {
-      "status": "FINISHED"
+      "status": "FINISHED",
+      "condition": "NORMAL_COMPLETION"
       },
       "status": "success",
       "message": "JOBS_STATUS_RETRIEVED Status of the Job ba34f946-8a18-44c4-9b25-19e21dfadf69-007 retrieved.",
