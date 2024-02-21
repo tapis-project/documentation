@@ -66,7 +66,7 @@ At a high level a system represents the following information:
   A system that can be used during job execution as a Data Transfer Node (DTN). Use is optional. The DTN is used
   if the job submission request or the application defintion specify *dtnSystemInputDir* or *dtnSystemOutputDir*.
   *canExec* must be true. This execution system and the DTN system must have the same *rootDir* and the file
-  system must be shared storage.
+  system must be shared storage.  Please see `DTN Configuration`_.
 *canExec*
   Indicates if system can be used to execute jobs.
 *canRunBatch*
@@ -79,6 +79,8 @@ At a high level a system represents the following information:
 Job related attributes
   Various attributes related to job execution such as *jobRuntimes*, *jobWorkingDir*,
   *batchScheduler*, *batchLogicalQueues*
+
+.. _DTN Configuration: https://tapis.readthedocs.io/en/latest/technical/jobs.html#data-transfer-nodes
 
 When creating a system the required attributes are: *id*, *systemType*, *host*, *defaultAuthnMethod* and *canExec*.
 Depending on the type of system and specific values for certain attributes there are other requirements.

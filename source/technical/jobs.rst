@@ -935,7 +935,13 @@ Introduction
 ^^^^^^^^^^^^
 
 The Jobs, Applications, Files and Systems services cooperate to allow the configuration and execution of jobs.
-In this section, we discuss the use of a high throughput **Data Transfer Node** (DTN) to stage job inputs and archive outputs. DTNs are used to optimize transfer speeds and to allow nodes to be separately optimized for either storage or job execution.  For example, users often stage input data to long-term storage (the DTN), such as *cloud.corral* at TACC, and then copy that data to a fast, a temporary file system, such as a "scratch" file system, when running jobs.  DTNs are also used when specialized transfer software, such as GLOBUS, is required on nodes to receive data, but those nodes are not appropriate to run jobs.  In this case, the DTN recieves the data from a remote location and then another transfer copies them from the DTN to an execution system.  
+In this section, we discuss the use of a high throughput **Data Transfer Node** (DTN) to stage job inputs and
+archive outputs. DTNs are used to optimize transfer speeds and to allow nodes to be separately optimized for
+either storage or job execution.  For example, users often stage input data to long-term storage (the DTN), such
+as *cloud.corral* at TACC, and then copy that data to a fast, temporary file system, such as a "scratch" file
+system, when running jobs.  DTNs are also used when specialized transfer software, such as GLOBUS, is required
+on nodes to receive data, but those nodes are not appropriate to run jobs.  In this case, the DTN receives the
+data from a remote location and then another transfer copies them from the DTN to an execution system.  
 
 The DTN usage pattern is effective when:
 

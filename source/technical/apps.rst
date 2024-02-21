@@ -413,6 +413,24 @@ Here are some examples of variables that may be used when specifying directories
   can have a path string appended to it, such as in *HOST_EVAL($SCRATCH)/tmp/${JobUUID}*, and macro substitution will be
   applied to the path string.
 
+--------------------------------
+Data Transfer Node (DTN) Support
+--------------------------------
+Tapis supports the use of a Data Transfer Node (DTN) when running an application. 
+There are two fields in *jobAttributes* related to DTN support:
+
+*dtnSystemInputDir*
+  Directory relative to *rootDir* to which input files will be transferred prior to launching the application.
+*dtnSystemOutputDir*
+  Directory relative to *rootDir* from which output files will be transferred during the archiving phase.
+
+By default, these are set to the special value *!tapis_not_set*. This value indicates that, by default,
+a DTN system will not be used for file inputs or archive outputs. In order to trigger the use
+of a DTN during either file input staging or archive output, these values must be set.
+For more information on using a DTN, please see `DTN Configuration`_.
+
+.. _DTN Configuration: https://tapis.readthedocs.io/en/latest/technical/jobs.html#data-transfer-nodes
+
 -----------------
 Permissions
 -----------------
@@ -574,13 +592,13 @@ JobAttributes Table
 |                     |                  |                    | - Transfer happens prior to launching the application.                               |
 |                     |                  |                    | - Can be overriden by job submission request.                                        |
 |                     |                  |                    | - Optional. If set will trigger use of DTN.                                          |
-|                     |                  |                    | - Default is !tapis_not_set                                                          |
+|                     |                  |                    | - Default is *!tapis_not_set*                                                        |
 +---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
 | dtnSystemOutputDir  | String           |                    | - Directory relative to DTN rootDir from which output files will be transferred.     |
 |                     |                  |                    | - Transfer happens during archiving phase of job execution.                          |
 |                     |                  |                    | - Can be overriden by job submission request.                                        |
 |                     |                  |                    | - Optional. If set will trigger use of DTN.                                          |
-|                     |                  |                    | - Default is !tapis_not_set                                                          |
+|                     |                  |                    | - Default is *!tapis_not_set*                                                        |
 +---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
 | execSystem          | String           | normal             | - LogicalQueue to use when running the job.                                          |
 | LogicalQueue        |                  |                    |                                                                                      |
