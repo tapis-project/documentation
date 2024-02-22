@@ -7,9 +7,9 @@ Notifications
 The Notifications service supports the publish-subscribe model for delivering information to intereseted parties.
 Currently only a Tapis service may directly create subscriptions and post events through this service. Users may
 subscribe to job related events by creating subscriptions through the Jobs service. 
-For more information on creating subscriptions through the Jobs service please see JobsSubscriptions_
+For more information on creating subscriptions through the Jobs service, please see `Job Subscriptions`_
 
-.. _JobsSubscriptions: https://tapis.readthedocs.io/en/latest/technical/jobs.html#subscriptions
+.. _Job Subscriptions: https://tapis.readthedocs.io/en/latest/technical/jobs.html#subscriptions
 
 --------
 Overview
@@ -19,7 +19,7 @@ events are delivered asynchronously using a publish-subscribe model. Once an int
 *subscription*, matching *events* are delivered to the interested party as part of a *notification* object.
 Deliveries are made via webhook or email. 
 
-Currently only services may directly create subscriptions and post events.
+Currently only services may directly create subscriptions and publish events.
 
 The model for a notification event is based on the CloudEvent specification version 1.0.
 For more information about CloudEvents and the specification, please see https://cloudevents.io and
@@ -33,25 +33,44 @@ information for future planned development.
 -----------
 Event Model
 -----------
-An event contains the following information:
+An event contains the attributes listed below. The attributes *source*, *type* and *timestamp* are required.
+Note that some attributes are maintained by Tapis, they are present when the event is part of a delivered
+notification. The attributes maintained by Tapis may be present when publishing an event, but they will
+be ignored.
+
+Event attributes:
 
 *source*
   Context in which the event happened. For example, for a job related event originating from Tapis at the
-  primary TACC site, the source would be https://tapis.io/v3/jobs.
+  primary TACC site, the source would be ``https://tapis.io/jobs``.
 *type*
   Type of event. Used for routing notifications. A series of 3 fields separated by the dot character.
   The first field is the service name, the second field is the category and the third field is the detail.
-  For example, when a job transistions to the FINISHED state the type is ``jobs.JOB_NEW_STATUS.FINISHED``.
+  For example, when a job transistions to the FINISHED state, the type is ``jobs.JOB_NEW_STATUS.FINISHED``.
 *subject*
   Subject of event in context of service. Examples: job Id, system Id, file path, role name, etc.
-*seriesId*
-  Optional Id that groups events from the same source in a series, thereby preserving event order during
-  notification delivery.
 *timestamp*
   When the event happened.
 *data*
-  Optional additional information associated with the event. For example, data specific to the service associated
+  Optional. Additional information associated with the event. For example, data specific to the service associated
   with the event.
+*seriesId*
+  Optional. Id to be used for grouping events from the same tenant, source and subject. In a series,
+  event order is preserved when sending out notifications. For example, the Jobs service (the source) sends out
+  events with the job UUID as the subject and sets the seriesId to the job UUID. That way, a subscription can be
+  created to follow (in order) all events of various types related to the job.
+*deleteSubscriptionsMatchingSubject*
+  Boolean indicating that all subscriptions whose *subjectFilter* matches the *subject* of the event should
+  be deleted once all notifications are delivered.
+*tenant*
+  Tapis tenant associated with the event.
+*uuid*
+  Tapis generated unique identifier for the event.
+*user*
+  Tapis user associated with the event.
+*seriesSeqCount*
+  Tapis generated counter for seriesId. Can be used by event receivers to track expected order.
+  Events will be sent in order but may not be received in order.
 
 Note that events are not persisted by the front end api service process. When events are received they are sent
 to a message broker for asynchronous processing. The back end process will persist events temporarily in order
@@ -155,12 +174,13 @@ Example of a notification sent to a webhook::
      "type": "notifications.test.begin",
      "subject": "4d0abbce-5cec-4d6e-8065-cdc5b2777389",
      "data": null,
-     "seriesId": null,
+     "seriesId": "4d0abbce-5cec-4d6e-8065-cdc5b2777389",
      "timestamp": "2023-09-15T14:47:50.287792699Z",
      "deleteSubscriptionsMatchingSubject": false,
      "tenant": "admin",
      "user": "notifications",
-     "uuid": "50cfb971-c4b3-4d33-89c3-2b0f56f16e19"
+     "uuid": "50cfb971-c4b3-4d33-89c3-2b0f56f16e19",
+     "seriesSeqCount": 4
    },
    "deliveryTarget": {
      "deliveryMethod": "WEBHOOK",
@@ -186,7 +206,8 @@ Example of a notification sent to an email address::
      "deleteSubscriptionsMatchingSubject": true,
      "tenant": "dev",
      "user": "jobs",
-     "uuid": "1d16202d-2248-4690-bcc9-a0134a4089cd"
+     "uuid": "1d16202d-2248-4690-bcc9-a0134a4089cd",
+     "seriesSeqCount": -1
    },
    "deliveryTarget": {
      "deliveryMethod": "EMAIL",
@@ -209,8 +230,10 @@ Currently RabbitMQ is used as the message broker.
 
 The dispatch service reads events from the queue and assigns them to workers known as *delivery bucket managers*.
 Delivery bucket managers are threads that receive their assigned events from in-memory queues.
-The dispatch service assigns events to a bucket manager by taking a hash of the event *source*,
-*subject* and *seriesId*.
+The dispatch service assigns events to a bucket manager by taking a hash of the event *tenant*, *source*,
+*subject* and *seriesId*. The hash allows for distributing work among the bucket managers while ensuring that
+for a given *seriesId* the same bucket manager will process that series of events. This is how the service
+ensures that notifications for events in a series are sent out in order.
 
 When a bucket manager worker receives an event to process, it first finds all matching subscriptions by
 querying a database. As discussed above, the matching is based on the *typeFilter* and *subjectFilter*
@@ -326,7 +349,7 @@ Subscription Attributes
 |                 |                |                    | - Matches against event subject.                                        |
 |                 |                |                    | - Can be specific for an exact match or the wildcard character \*.      |
 +-----------------+----------------+--------------------+-------------------------------------------------------------------------+
-| deliveryTargets |                |                    | - List of delivery targets to be used when delivering a matching event. |
+| deliveryTargets | Object[]       |                    | - List of delivery targets to be used when delivering a matching event. |
 |                 |                |                    | - Must have at least one.                                               |
 |                 |                |                    | - Each target includes delivery method and delivery address.            |
 |                 |                |                    | - Delivery methods supported: WEBHOOK, EMAIL                            |
@@ -351,25 +374,37 @@ Subscription Attributes
 Event Attributes
 ~~~~~~~~~~~~~~~~
 
-+-----------+--------+------------------------+--------------------------------------------------------------------+
-| Attribute | Type   | Example                | Notes                                                              |
-+===========+========+========================+====================================================================+
-| source    | String |https://tapis.io/v3/jobs| - Context in which event happened.                                 |
-+-----------+--------+------------------------+--------------------------------------------------------------------+
-| type      | String | apps.APP.DELETE        | - Type of event. Used for routing notifications.                   |
-|           |        |                        | - Pattern is `<service>.<category>.<detail>`                       |
-+-----------+--------+------------------------+--------------------------------------------------------------------+
-| subject   | String |  <job-id>              | - Subject of event in the context of the service.                  |
-|           |        |                        | - Examples: job Id, app Id, file path, role name, etc.             |
-+-----------+--------+------------------------+--------------------------------------------------------------------+
-| data      | String |                        | - Optional additional information associated with the event.       |
-|           |        |                        | - Data specific to the service associated with the event.          |
-+-----------+--------+------------------------+--------------------------------------------------------------------+
-| seriesId  | String |                        | - Optional Id that groups events from the same source in a series. |
-|           |        |                        | - Preserves event order during notification delivery.              |
-+-----------+--------+------------------------+--------------------------------------------------------------------+
-| timestamp | String | 2020-06-19T15:10:43Z   | - When the event happened.                                         |
-+-----------+--------+------------------------+--------------------------------------------------------------------+
++----------------+--------+--------------------------+-----------------------------------------------------------+
+| Attribute      | Type   | Example                  | Notes                                                     |
++================+========+==========================+===========================================================+
+| source         | String | https://tapis.io/jobs    | - Context in which event happened.                        |
++----------------+--------+--------------------------+-----------------------------------------------------------+
+| type           | String |jobs.JOB_NEW_STATUS.QUEUED| - Type of event. Used for routing notifications.          |
+|                |        |                          | - Pattern is `<service>.<category>.<detail>`              |
++----------------+--------+--------------------------+-----------------------------------------------------------+
+| subject        | String |  <job-id>                | - Subject of event in the context of the service.         |
+|                |        |                          | - Examples: job Id, app Id, file path, role name, etc.    |
++----------------+--------+--------------------------+-----------------------------------------------------------+
+| timestamp      | String | 2020-06-19T15:10:43Z     | - When the event happened.                                |
++----------------+--------+--------------------------+-----------------------------------------------------------+
+| data           | String |                          | - Optional.  Other data associated with the event.        |
+|                |        |                          | - For example, service specific information.              |
++----------------+--------+--------------------------+-----------------------------------------------------------+
+|delete          |boolean |                          | - Delete subscriptions where subjectFilter matches subject|
+|Subscriptions   |        |                          |                                                           |
+|MatchingSubject |        |                          |                                                           |
++----------------+--------+--------------------------+-----------------------------------------------------------+
+| seriesId       | String |  <job-id>                | - Optional. Group events based on tenant,source,subject.  |
+|                |        |                          | - Preserves event order during notification delivery.     |
++----------------+--------+--------------------------+-----------------------------------------------------------+
+| tenant         | String |   tacc                   | - Tapis tenant associated with the event.                 |
++----------------+--------+--------------------------+-----------------------------------------------------------+
+| uuid           | String |                          | - Tapis generated unique identifier.                      |
++----------------+--------+--------------------------+-----------------------------------------------------------+
+| user           | String |                          | - Tapis user associated with the event.                   |
++----------------+--------+--------------------------+-----------------------------------------------------------+
+| seriesSeqCount | String |                          | - Tapis generated counter for seriesId.                   |
++----------------+--------+--------------------------+-----------------------------------------------------------+
 
 Notification Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -385,9 +420,20 @@ Notification Attributes
 +----------------+--------+----------------------------------------------------------------+
 | eventUuid      | String | Unique identifier for the event contained in the notification. |
 +----------------+--------+----------------------------------------------------------------+
-| event          | Event  | Event that triggered the notification.                         |
+| event          | Object | Event that triggered the notification.                         |
 +----------------+--------+----------------------------------------------------------------+
-| deliveryTarget | String | The delivery target for the notification.                      |
+| deliveryTarget | Object | The delivery target for the notification.                      |
 +----------------+--------+----------------------------------------------------------------+
 | created        | String | When the notification was created.                             |
++----------------+--------+----------------------------------------------------------------+
+
+Delivery Target Attributes
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++----------------+--------+----------------------------------------------------------------+
+| Attribute      | Type   | Notes                                                          |
++================+========+================================================================+
+| deliveryMethod | enum   | WEBHOOK or EMAIL                                               |
++----------------+--------+----------------------------------------------------------------+
+| deliveryAddress| String | URL for WEBHOOK or email address for EMAIL                     |
 +----------------+--------+----------------------------------------------------------------+
