@@ -300,8 +300,8 @@ The authenticator for your tenant may include additional claims not listed here.
 OAuth Clients
 ^^^^^^^^^^^^^
 
-In order to use the more advanced OAuth2 flows, including any use of the authorization code grant type and to generate
-refresh tokens with the password grant type, you must generate an OAuth2 *client*. Clients in OAuth2 represent
+In order to use the more advanced OAuth2 flows, including any use of the authorization code grant type, the implicit grant type,
+and to generate refresh tokens with the password grant type, you must generate an OAuth2 *client*. Clients in OAuth2 represent
 applications (for example, a web or mobile application) that will interact with the OAuth2 server to generate tokens
 on behalf of one or more users. Clients are created and managed using the ``/v3/oauth2/clients`` endpoints.
 
@@ -311,7 +311,7 @@ Creating Clients
 
 To create a client, make a POST request the the Clients API. All fields are optional; if you do not pass a
 ``client_id`` or ``client_key`` in the request, the clients API will generate random ones for you. In order to
-use the ``authorize_code`` grant type you will need to set the ``callback_url`` when registering your client (see :ref:`auth_code`).
+use the ``authorize_code`` and ``implicit`` grant types you will need to set the ``callback_url`` when registering your client (see :ref:`auth_code`).
 For a complete list of available parameters, see the API live-docs for Clients_.
 
 With PySDK:
@@ -449,6 +449,99 @@ Note that many popular web frameworks support OAuth2 flows with minimal custom c
 The final step to using the authorization code grant type is to register a client (see above) with a ``callback_url``
 parameter equal to the URL within your web application where it will handle converting authorization codes into access
 tokens (i.e., controller 2 above).
+
+Implicit Grant - Directly Returning Tokens For Users
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As mentioned in the authorization code grant section, OAuth2 provides an extra wall of security where the application does not
+encounter credentials of the user (i.e., passwords). In this section, we discuss using the OAuth2 *implicit* grant type.
+
+Just like the authorization code grant type, the implicit grant type retrieves an access token on behalf of the user to login.
+In addition, the implicit grant type requires a redirect to the authorization server.
+
+The differences of the two grant types is that the access token is directly delivered through the browser, rather than a code that
+is later exchanged for the access token. This allows the implicit grant type to be easier to set up, but much less secure as it
+cannot authenticate the client. The typical use case for the implicit grant type would be for applications where the client secrets
+cannot be securely stored.
+
+This is how to start the implicit flow:
+
+* Redirect the user to the OAuth2 server's authorization URL. In the default Tapis authenticator, the
+  authorization URL path is ``/v3/oauth2/authorize``; for example, ``https://tacc.tapis.io/v3/oauth2/authorize`` in the
+  ``tacc`` tenant.
+
+* The redirect request should include the following query parameters:
+
+  * ``client_id``: the id of your client.
+  * ``redirect_uri``: the URI to redirect back to with the access token. This must match the
+    ``callback_url`` parameter associated with your client.
+  * ``response_type``: should always have the value ``token``.
+
+Once the user completes the login process through the authorization server, the server redirects the user to the redirect uri
+along with the access token in the browser.
+
+The final step is to collect the access token in the url and store it in the cookies.
+
+The implicit grant type also requires a client (see above) with a ``callback_url`` parameter equal to the URL within your
+web application where it will handle storing the access tokens in the cookies.
+
+Implicit Grant Tutorial
+~~~~~~~~~~~~~~~~~~~~~~~
+
+
+This section serves as a small tutorial to further understand how the implicit grant works and how to set it up.
+
+The first step is to create an OAuth2 client as shown in the `OAuth Clients`_ section. While setting up the client,
+make sure to set the ``callback_url`` to the website that the user will be redirected to (``redirect_uri``) after successfully
+authenticating on the authorization server. The whole flow will not work if these two values are not identical. 
+Additionally, make sure to remember the ``client_id`` as it will be needed later.
+
+.. Note::
+  The ``callback_url`` of the client created can be changed later on if needed, but the ``client_id`` cannot.
+
+The next step is to redirect the user to the authorization server's website. The most common way is to create
+a button on the website that takes the user to the authorization server's website. Make sure to follow this specific formatting
+for the website url in order to prevent any errors from occuring:
+
+.. code-block:: text
+ 
+ https://{tenant}.tapis.io/v3/oauth2/login?client_id={client_id}&redirect_uri={redirect_uri}&response_type={response_type}
+
+This is the formatting that will be used for all OAuth2 authentication. Everything in curly brackets needs to be replace with the
+correct values to successfully set up the implicit flow. Make sure to drop the curly brackets when replacing them with their respective values.
+
+* ``{tenant}``: This is the tenant value. Examples are ``tacc``, ``scoped``, ``dev``, etc.
+* ``{client_id}``: This is the client id for the client that was created in the first step.
+* ``{redirect_uri}``: This is the value that needs to be the same as the ``callback_url``.
+
+.. Important::
+  The value that replaces this ``{redirect_uri}`` needs to be *URL Encoded*!! Use an online url encoder to help format the value if needed.
+
+Example of a properly url encoded value:
+
+.. code-block:: text
+
+  From: https://tacc.tapis.io/v3/oauth2/login?
+  To:   https%3A%2F%2Ftacc.tapis.io%2Fv3%2Foauth2%2Flogin%3F
+
+* ``{response_type}``: This is the value that will be delivered through the browser and is dependent on the authorization type that is being used.
+ * For ``implicit``, use ``token``.
+ * For ``authorization code``, use ``code``.
+
+Once the user has authenticated through the server, the user will automatically be redirected to the ``redirect_uri`` or ``callback_url``.
+When redirected, the ``access_token`` (``code`` for authorization code) will be returned in the url. Use a method to capture this value and store it
+in the cookies.
+
+.. Important::
+  Note that for both ``access_token`` and ``code``, there are more parameters that are returned alongside these values through the url like ``state``. Therefore, make sure to capture
+  the value that is between the "*access_token=*" (or "*code=*") and "*&state*".
+
+Finally, since the user does not need to physically see the redirect page, store the token in the cookies and redirect the user one last time to the main page.
+
+.. Note::
+  For the ``authorization code`` grant type, everything in this tutorial is pretty much identical. However, there is one more final step of exchanging the ``code``
+  returned through the url with the token to complete the flow.
+
 
 
 The Tapis Token Web Application
