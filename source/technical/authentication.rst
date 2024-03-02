@@ -459,7 +459,7 @@ encounter credentials of the user (i.e., passwords). In this section, we discuss
 Just like the authorization code grant type, the implicit grant type retrieves an access token on behalf of the user to login.
 In addition, the implicit grant type requires a redirect to the authorization server.
 
-The differences of the two grant types is that the access token is directly delivered through the browser, rather than a code that
+The difference between the two grant types is that the access token is directly delivered through the browser, rather than a code that
 is later exchanged for the access token. This allows the implicit grant type to be easier to set up, but much less secure as it
 cannot authenticate the client. The typical use case for the implicit grant type would be for applications where the client secrets
 cannot be securely stored.
