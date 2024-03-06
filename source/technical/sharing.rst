@@ -176,6 +176,9 @@ designate can be granted to jobs running in a SAC.
 #. execSystemOutputDir
 #. archiveSystemId
 #. archiveSystemDir
+#. dtnSystemId
+#. dtnSystemInputDir
+#. dtnSystemOutputDir
 #. fileInputs sourceUrl
 #. fileInputs targetPath
 
@@ -183,6 +186,10 @@ If an execution system, for instance, is specified in a shared application defin
 overridden in the job submission request*, then jobs running in a SAC will be granted implicit access to the system's
 definition. The same is true for the other SAC-eligible attributes: If their values are specified in the application and
 those values are not overridden when a job is submitted, Tapis implicitly grants access to the designated Tapis resource.
+
+In particular, Data Transfer Nodes (DTNs_) provide a staging area for job input and output files.  These nodes usually support high I/O bandwidth or specialized software stacks.  When a DTN is specified by a system, that DTN and its input and output directories are shared using the same SAC rules described above for execution systems. 
+
+.. _DTNs: https://tapis.readthedocs.io/en/latest/technical/jobs.html#data-transfer-nodes
 
 Implementations of Tapis Sharing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
