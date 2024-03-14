@@ -1,3 +1,5 @@
+.. _groups:
+
 ------
 Groups
 ------
@@ -44,27 +46,7 @@ GroupUser Attributes Table
 | group     | String(UUIDv4) | e48ada7a-56b4-4d48-974c-7574d51a8789 | - Automatically set at create-time                       |
 +-----------+----------------+--------------------------------------+----------------------------------------------------------+
 
-Retrieval
-~~~~~~~~~
-
-Retrieve details for a specific group
-
-.. tabs::
-
-  .. code-tab:: bash
-
-    curl -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/workflows/groups/<group_id>
-
-  .. code-tab:: python
-
-    import json
-    from tapipy.tapis import Tapis
-
-
-    t = Tapis(base_url='https://tacc.tapis.io', username='<userid>', password='************'
-    t.workflows.getGroup(group_id="<group_id>")
-
-The response should look similar to the following
+.. include:: /technical/workflows/operations/getGroup.rst
 
 .. code:: json
   

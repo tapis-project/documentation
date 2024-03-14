@@ -2,6 +2,11 @@
 Quick start
 -----------
 
+.. warning::
+  This Quick Start is deprecated.
+  There is a new one comming soon!
+
+
 We will be creating a pipeline that
   * pulls code from a private Github repository
   * builds an image from a Dockerfile located in that source code
@@ -14,9 +19,8 @@ or perhaps both.
 Summary of Steps
 ~~~~~~~~~~~~~~~~
 1. Create a *Group*
-2. Create the *Identities* that the workflow executor will use to access both Github and Dockerhub on your behalf
-3. Create an *Archive* to which the results of the pipeline run will be persisted
-4. Create the *Pipeline* and its *Tasks* which act as instructions to the workflow executor
+2. Create an *Archive* to which the results of the pipeline run will be persisted
+3. Create the *Pipeline* and its *Tasks* which act as instructions to the workflow executor
 
 Creating a Group
 ~~~~~~~~~~~~~~~~~~~
@@ -246,25 +250,9 @@ Go through the definition above and replace all of the placeholders with the cor
 
 ----
 
-Triggering the Workflow
-~~~~~~~~~~~~~~~~~~~~~~~
-
 Now it's time to run the pipeline.
 
-.. tabs::
-
-  .. code-tab:: bash
-
-    curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/workflows/groups/<group_id>/pipelines/<pipeline_id>/events -d "{}"
-
-  .. code-tab:: python
-
-    import json
-    from tapipy.tapis import Tapis
-
-
-    t = Tapis(base_url='https://tacc.tapis.io', username='<userid>', password='************'
-    t.workflows.runPipeline(group_id="<group_id>")
+.. include:: /technical/workflows/operations/runPipeline.rst
 
 After the pipeline has finished running, take a look in your Dockerhub image repository
 and you will find your newly pushed image.

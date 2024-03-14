@@ -10,8 +10,6 @@
 ##########################################################################
 FROM rackspacedot/python37:latest
 
-MAINTAINER CIC Support <cicsupport@tacc.utexas.edu>
-
 RUN mkdir /workspace
 RUN pip install --upgrade pip
 
