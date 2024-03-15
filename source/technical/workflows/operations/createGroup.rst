@@ -1,5 +1,4 @@
-Creating a Group (createGroup)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Creating a Group (createGroup)**
 
 Create a file in your current working directory called ``group.json`` with the following json schema:
 
@@ -10,7 +9,7 @@ Create a file in your current working directory called ``group.json`` with the f
     "users": [
         {
           "username":"<user_id>",
-          "is_admin": true
+          "is_admin": false
         }
     ]
   }
@@ -18,7 +17,12 @@ Create a file in your current working directory called ``group.json`` with the f
 .. note:: You do not need to add your own Tapis id to the users list. The owner of the Group is added by default. 
 
 Replace *<group_id>* with your desired group id and *<user_id>* in the user objects with
-the tapis user ids of the other users that you want to grant access to this group's workflow resources.
+the ids of any other Tapis users that you want to have access to your workflows resources.
+
+.. warning::
+  
+  Users with ``is_admin`` flag set to ``true`` can perform every action on all Workflow resources in a Group except for 
+  deleting the Group itself (only the Group owner has those permissions)
 
 Submit the definition.
 

@@ -1,4 +1,4 @@
-.. _etl_quickstart_interactive:
+.. _etl_quickstart:
 
 Quick Start
 ===========
