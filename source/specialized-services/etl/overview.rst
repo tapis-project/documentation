@@ -32,12 +32,12 @@ Here we introduce the Tapis ETL standard terminology for ETL pipelines
 * :ref:`Remote Inbox <etl_remote_inbox>` - The destination system where output data will be archived
 * **ETL Systems** - General term for any or all remote and local inboxes and outboxes.
 * **Data/Manifest Configuration** - Configurations that govern how the ETL Pipeline handles data and manifests for a given ETL System.
-* **Phase** - A distinct stage of a single Tapis ETL Pipeline: ``ingress``, ``transform``, ``egress``
+* **Phase** - A distinct stage of a single Tapis ETL Pipeline run: ``ingress``, ``transform``, ``egress``
 * **Resubmission** - Rerunning a specific phase or phases of an ETL pipeline for a given manifest.
 * **Pipeline Run** - A single run of an ETL pipeline
 
-Pipeline Run Walkthrough
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+How it works
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. image:: ./images/tapis-pipelines.webp
   :alt: Tapis ETL Systems diagram

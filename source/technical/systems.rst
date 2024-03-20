@@ -8,6 +8,8 @@ Once you are authorized to make calls to the various services, one of first thin
 storage and execution resources available to you or create your own. In Tapis a storage or execution resource
 is referred to as a **system**.
 
+.. _systems_overview:
+
 -----------------
 Overview
 -----------------
@@ -132,6 +134,8 @@ Using CURL::
 
    $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems -d @system_example.json
 
+.. _registering_credentials:
+
 Registering Credentials for a System
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -219,6 +223,8 @@ If problems persist you can also attempt to manually validate the keypair using 
 
 where /tmp/my_private_key contains the original multi-line private key. If everything is set up correctly and the
 keypair is valid you should be logged into the host without being prompted for a password.
+
+.. _registering_globus_credentials:
 
 Registering Credentials for a Globus System
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

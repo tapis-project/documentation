@@ -39,7 +39,9 @@ Submit the definition.
 
 
     t = Tapis(base_url='https://tacc.tapis.io', username='<userid>', password='************')
-    with open('group.json', 'r') as openfile:
-      group = json.load(openfile)
+    t.get_tokens()
+
+    with open('group.json', 'r') as file:
+      group = json.load(file)
 
     t.workflows.createGroup(**group)

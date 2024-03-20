@@ -1,46 +1,31 @@
 .. code-block:: json
 
     {
-        "id": "<pipeline_id>",
+        "id": "etl-userguide-pipeline-<user_id>",
         "before": null,
         "remote_outbox": {
             "data": {
-                "system_id": "test.etl.ls6.xfer",
+                "system_id": "etl.userguide.systema.<user_id>",
                 "path": "/ETL/REMOTE-OUTBOX/DATA",
-                "integrity_profile": {
-                    "type": "done_file",
-                    "done_files_path": "/ETL/REMOTE-OUTBOX/DATA",
-                    "include_pattern": "*.md5",
-                    "exclude_pattern": null
-                },
-                "include_pattern": "*.txt",
-                "exclude_pattern": null
             },
             "manifests": {
-                "system_id": "test.etl.ls6.writable",
+                "system_id": "etl.userguide.systemb.<user_id>",
                 "generation_policy": "auto_one_per_file",
-                "priority": "oldest",
-                "path": "/ETL/REMOTE-OUTBOX/MANIFESTS",
-                "include_pattern": null,
-                "exclude_pattern": null
+                "path": "/ETL/REMOTE-OUTBOX/MANIFESTS"
             }
         },
         "local_inbox": {
             "control": {
-                "system_id": "test.etl.ls6.writable",
+                "system_id": "etl.userguide.systemb.<user_id>",
                 "path": "/ETL/LOCAL-INBOX/CONTROL"
             },
             "data": {
-                "system_id": "test.etl.ls6.xfer",
-                "path": "/ETL/LOCAL-INBOX/DATA",
-                "include_pattern": null,
-                "exclude_pattern": null
+                "system_id": "etl.userguide.systema.<user_id>",
+                "path": "/ETL/LOCAL-INBOX/DATA"
             },
             "manifests": {
-                "system_id": "test.etl.ls6.writable",
-                "path": "/ETL/LOCAL-INBOX/MANIFESTS",
-                "include_pattern": null,
-                "exclude_pattern": null
+                "system_id": "etl.userguide.systemb.<user_id>",
+                "path": "/ETL/LOCAL-INBOX/MANIFESTS"
             }
         },
         "jobs": [
@@ -82,21 +67,21 @@
         ],
         "local_outbox": {
             "data": {
-                "system_id": "test.etl.ls6.xfer",
+                "system_id": "etl.userguide.systema.<user_id>",
                 "path": "/ETL/LOCAL-OUTBOX/DATA"
             },
             "manifests": {
-                "system_id": "test.etl.ls6.writable",
+                "system_id": "etl.userguide.systemb.<user_id>",
                 "path": "/ETL/LOCAL-OUTBOX/MANIFESTS"
             }
         },
         "remote_inbox": {
             "data": {
-                "system_id": "test.etl.ls6.xfer",
+                "system_id": "etl.userguide.systema.<user_id>",
                 "path": "/ETL/REMOTE-INBOX/DATA"
             },
             "manifests": {
-                "system_id": "test.etl.ls6.writable",
+                "system_id": "etl.userguide.systemb.<user_id>",
                 "path": "/ETL/REMOTE-INBOX/MANIFESTS"
             }
         },

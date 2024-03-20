@@ -1,16 +1,32 @@
-:orphan:
+**Create an ETL Pipeline (createETLPipeline)**
 
-Creating an ETL Pipeline (createETLPipeline)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Save the following ETL pipeline definiton to a file named ``etl-pipeline.json`` in your current working directory.
 
-Save one of the following ETL pipeline definitons to a file in your current working directory called ``pipeline.json``
+.. include:: /specialized-services/etl/includes/schemas/etl-pipeline.json.rst
+
+Then submit the definition.
 
 .. tabs::
 
-  .. tab:: Simplified
+    .. code-tab:: python
 
-    .. include:: /specialized-services/etl/schemas/etl-simplified.json.rst
+        with open('etl-pipeline.json', 'r') as file:
+            pipeline = json.load(file)
 
-  .. tab:: Detailed
+            t.workflows.createETLPipeline(group_id=<group_id>, **pipeline)
+    
+    .. code-tab:: bash
 
-    .. include:: /specialized-services/etl/schemas/etl-detailed.json.rst
+        curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/workflows/beta/groups/<group_id>/etl -d @etl-pipeline.json
+
+Once created, you can now fetch and run the pipeline
+
+.. tabs::
+
+    .. code-tab:: python
+
+        t.workflows.getPipeline(group_id=<group_id>, pipeline_id=<pipeline_id>)
+    
+    .. code-tab:: bash
+
+        curl -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/workflows/groups/<group_id>/pipeline/<pipeline_id>
