@@ -35,6 +35,12 @@ Welcome to Tapis's Documentation!
    technical/sharing
    technical/pythondev
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Specialized Services:
+
+   specialized-services/index
+   specialized-services/etl
 
 .. toctree::
    :maxdepth: 2

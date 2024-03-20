@@ -1,11 +1,8 @@
-.. _workflows:
-
-=======================================
+##############
 Workflows
-=======================================
+##############
 
-The Workflows Service is an API and workflow exectuor that enables users to automate and execute their research computing 
-tasks in the Tapis Ecosystem.
+The Workflows Service is an API and Workflow Engine with which Tapis users can create and execute their research computing workflows.
 
 ----
 
@@ -30,12 +27,3 @@ tasks in the Tapis Ecosystem.
 ----
 
 .. include:: ./workflows/archives.rst
-
-----
-
-.. include:: ./workflows/identities.rst
-
-----
-
-.. include:: ./workflows/directives.rst
-

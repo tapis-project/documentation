@@ -1,3 +1,5 @@
+.. _tasks:
+
 -----
 Tasks
 -----
@@ -45,10 +47,10 @@ below.
 | uuid              | String(UUIDv4)        | 5bd771ab-8df5-43cd-a059-fbaa2323841b                                  | - A globally unique identifier for this task                                                                            |
 +-------------------+-----------------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------+
 
-Task Input
-~~~~~~~~~~
+Input Object
+~~~~~~~~~~~~
 
-Task input is an object in which the keys are the id of the input(String) and the value is an
+Input is an object in which the keys are the id of the input(String) and the value is an
 object that defines the type of data, and either the literal value of the data via the *data* property
 or a reference to where that data can be found via the *data_from*. 
 
@@ -168,6 +170,73 @@ along with all other attributes specific to the task type.
 
 .. tabs:: 
 
+  .. tab:: Function
+
+    **Function**
+
+    Functions enable users to execute arbitrary code in select languages and runtimes as a part of their
+    workflow. Functions have access to the Execution Context(**see section below on Execution Context**)
+    which enables programmatic access to the state of the current Task Execution and the results of previous
+    tasks.
+
+    **Function Task Attributes Table**
+
+    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
+    | Attribute | Type          | Example                                       | Notes                                                                 |
+    +===========+===============+===============================================+=======================================================================+
+    | code      | Base64 String |                                               | - The user-defined code to be run during this task                    |
+    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
+    | runtime   | Enum          | python3.9                                     | - The runtime environment in which the user-defined code will be run  |
+    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
+    | packages  | Array<String> | ["tapipy", "numpy"]                           | - The packages to be installed prior to running the user-defined code |
+    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
+    | installer | Enum          | pip                                           | - The installer to install the packages                               |
+    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
+    | command   | String        | mkdir -p /some/dir && apt-get install package | - Bash command to be run before package installation                  |
+    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
+
+    **Accessing Workflow Execution Context within a Funtion Task**
+
+    The Execution Context is a set of functions to query and mutate the state of the Task Execution.
+    The Execution Context is available for use in user-defined code via the Open Workflow Engine SDK.
+    This can be imported into all functions and used to get task input values,
+    fetch outputs of previously run tasks, set task outputs, and control the termination of the task(stdout, stderr).
+
+    Here is an example of user-defined python code that imports the Execution Context, performs work upon it, then
+    terminates the task.
+
+    .. code-block:: python
+
+      import json
+
+      from tapipy.tapis import Tapis
+      from owe_python_sdk.runtime import execution_context as ctx
+
+
+      system_id = ctx.get_input("TAPIS_SYSTEM_ID")
+      username = ctx.get_input("TAPIS_USERNAME")
+      password = ctx.get_input("TAPIS_PASSWORD")
+      manifest_files_path = ctx.get_input("MANIFEST_FILES_PATH")
+      base_url = ctx.get_input("tapis_base_url")
+
+      try:
+        t = Tapis(
+            base_url=base_url,
+            username=username,
+            password=password
+        )
+
+        t.get_tokens()
+
+        files = t.systems.listFiles(systemId=system_id, path=manifest_files_path)
+      except Exception as e:
+        ctx.stderr(1, "There was an error listing files")
+
+      for file, i in enumerate(files):
+        ctx.set_output(f"fileObject{i}", json.dumps(file))
+
+      ctx.stdout("Hello stdout")
+      
   .. tab:: Image Build
 
     **Image Build**
@@ -391,74 +460,6 @@ along with all other attributes specific to the task type.
     +-----------+--------+-------------------------+------------------------------------------------------+
     | command   | String | sleep 100               | Overwrites both ENTRYPOINT and CMD(s) in Dockerfiles |
     +-----------+--------+-------------------------+------------------------------------------------------+
-
-  .. tab:: Function
-
-    **Function**
-
-    Functions enable users to execute arbitrary code in select languages and runtimes as a part of their
-    workflow. Functions have access to the Execution Context(**see section below on Execution Context**)
-    which enables programmatic access to the state of the current Task Execution and the results of previous
-    tasks.
-
-    **Function Task Attributes Table**
-
-    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
-    | Attribute | Type          | Example                                       | Notes                                                                 |
-    +===========+===============+===============================================+=======================================================================+
-    | code      | Base64 String |                                               | - The user-defined code to be run during this task                    |
-    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
-    | runtime   | Enum          | python3.9                                     | - The runtime environment in which the user-defined code will be run  |
-    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
-    | packages  | Array<String> | ["tapipy", "numpy"]                           | - The packages to be installed prior to running the user-defined code |
-    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
-    | installer | Enum          | pip                                           | - The installer to install the packages                               |
-    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
-    | command   | String        | mkdir -p /some/dir && apt-get install package | - Bash command to be run before package installation                  |
-    +-----------+---------------+-----------------------------------------------+-----------------------------------------------------------------------+
-
-    **Accessing Workflow Execution Context within a Funtion Task**
-
-    The Execution Context is a set of functions to query and mutate the state of the Task Execution.
-    The Execution Context is available for use in user-defined code via the Open Workflow Engine SDK.
-    This can be imported into all functions and used to get task input values,
-    fetch outputs of previously run tasks, set task outputs, and control the termination of the task(stdout, stderr).
-
-    Here is an example of user-defined python code that imports the Execution Context, performs work upon it, then
-    terminates the task.
-
-    .. code-block:: python
-
-      import json
-
-      from tapipy.tapis import Tapis
-      from owe_python_sdk.runtime import execution_context as ctx
-
-
-      system_id = ctx.get_input("TAPIS_SYSTEM_ID")
-      username = ctx.get_input("TAPIS_USERNAME")
-      password = ctx.get_input("TAPIS_PASSWORD")
-      manifest_files_path = ctx.get_input("MANIFEST_FILES_PATH")
-      base_url = ctx.get_input("tapis_base_url")
-
-      try:
-        t = Tapis(
-            base_url=base_url,
-            username=username,
-            password=password
-        )
-
-        t.get_tokens()
-
-        files = t.systems.listFiles(systemId=system_id, path=manifest_files_path)
-      except Exception as e:
-        ctx.stderr(1, "There was an error listing files")
-
-      for file, i in enumerate(files):
-        ctx.set_output(f"fileObject{i}", json.dumps(file))
-
-      ctx.stdout("Hello stdout")
-
 
 ----
 
