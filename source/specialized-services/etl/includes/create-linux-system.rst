@@ -4,7 +4,7 @@ Create a file named ``onsite-linux-system.json`` in your current working directo
 
 .. include:: /specialized-services/etl/includes/schemas/onsite-linux-system.json.rst
 
-Use on of the following methods to submit a request to the Systems API to create the Tapis System.
+Use one of the following methods to submit a request to the Systems API to create the Tapis System.
 
 .. tabs::
 

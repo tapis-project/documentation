@@ -20,7 +20,7 @@ schema in detail.
 2.2 Remote Outbox
 ~~~~~~~~~~~~~~~~~~
 
-The Remote Outbox is the ETL System that tells Tapis ETL where data files to be processed are staged. Any data files placed
+The Remote Outbox is the ETL System Configuration that tells Tapis ETL where data files to be processed are staged. Any data files placed
 on the data system in the data directory (after applying the include and exclude pattern filters) are the files that will be processed
 during runs of an ETL Job.
 
@@ -57,7 +57,7 @@ Tapis ETL will transfer all of the data files from the Remote Outbox to the Loca
     When configuring your Local Inbox, consider that your ETL Jobs should run on a system that has a shared file system with the Local Inbox.
     The data path in the Local Inboxes Data Configuration should be accessible to the first ETL Job.
 
-Notice that this ETL System definition has an addition configuration property, ``control``. This is simply a place that
+Notice that this ETL System Configuration has an addition property, ``control``. This is simply a place that
 Tapis ETL will write accounting files to ensure the pipeline runs as expected. It is recommended that you use the same
 system as in Local Inbox's Manifest Configuration, however any system to which Tapis ETL can write files to would work.
 

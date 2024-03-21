@@ -3,45 +3,53 @@
 1. ETL Systems Configurations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In this section, we discuss ETL System composition. At the end of this section, we will explain 
-how to create and configure all Remote and Local ETL Systems for an ETL Pipeline.
+In this section, we discuss ETL System Configurations. At the end of this section, we will explain 
+how to create and configure all Remote and Local ETL System Configruations for an ETL Pipeline.
 
 .. note::
 
-  ETL System configurations are by far the most complex part of creating an ETL Pipeline. Do not be discouraged!
+  ETL System Configurations are by far the most complex part of creating an ETL Pipeline. Do not be discouraged!
   The initial complexity is a small price to pay for the ease with which ETL Pipelines are operated with Tapis ETL.
 
-We consistently refer the each ETL System (Remote Outbox, Remote Inbox, Local Outbox, and Local Inbox)
-as singular, real systems when they are in fact conceptual systems that may be composed of one or more real underlying systems.
-In practice, all ETL Systems in an ETL Pipeline have one or more corresponding :ref:`Tapis Systems <systems_overview>`.
-One ETL Pipeline may have two Tapis Systems per ETL System, whereas another ETL Pipeline may have a single
-Tapis System representing **all** ETL Systems. Both setups are valid. When and how to use multiple or single system
-setups depends entirely upon where the data is and how you want to process it.
+An **ETL System Configuration** is a collection of systems that are responsible for the storage of data files (Data System) and the storage of manifest files (Manifest System).
 
-**Common ETL Systems Setup**
+There are 4 ETL System Configurations for every ETL Pipeline:
+  * **The Remote Outbox** - Where input data files to be processed are staged
+  * **The Local Inbox** - Where input data files are processed
+  * **The Local Outbox** - Where output data files are staged
+  * **The Remote Inbox** - Where output data files are transferred
+
+Every ETL System Configuration is composed of 2 systems: A Data System and a Manifests System. These systems generally have a one-to-one
+correspondence with a :ref:`Tapis Systems <systems_overview>`.
+
+.. note::
+
+  There are many different possible ETL System Confguration setups for an ETL Pipeline. It is entirely
+  possible to have a single Tapis System representing **all** systems in an ETL Pipeline.
+  How you set up your ETL System Configurations depends entirely upon where the data is and how you want to process it.
+
+**Common ETL System Configurations Setup**
 
 .. image:: /specialized-services/images/commonetlsetup.png
-  :alt: Tapis ETL Systems diagram
+  :alt: Tapis ETL System Configurations diagram
 
-Above is an illustration of the most common ETL Systems configuration. You will notice that there are four
+Above is an illustration of the most common ETL System Configuration setup. You will notice that there are four
 distinct Tapis Systems; System(A) System(C) are Globus endpoints, System(B) is a Linux system, and System(D) is 
-the ETL Job execution system (also Linux) that shares a file system with Systems(C). It is also worth noting that some of the
-:ref:`Data and Manifests configurations <etl_data_and_manifests_configurations>` for the ETL Systems (Remote Inbox, Remote Outbox, etc.) share the same
-underlying Tapis System. This is because Tapis ETL needs to write manifest files to some system somewhere keep track
-of data files on System(A) and System(C) and manifests files on System(B), but because the Remote Inbox and Outbox are offsite, Tapis ETL cannot perform the necessary
-file operations to maintain the pipeline.
+the ETL Job execution system (also Linux) that shares a file system with Systems(C). It is worth noting that some of the
+:ref:`Data and Manifests Systems <etl_data_and_manifests_systems>` for some ETL System Configurations (Remote Inbox, Remote Outbox, etc.) have
+corresponding Tapis System that are located at entirely different data centers.
 
-1.1 Create Tapis Systems for ETL Systems Configurations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1.1 Create Tapis Systems for the ETL System Configurations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Before we discuss ETL Systems configurations in depth, we will first create all of the Tapis Systems that will be used by Tapis ETL
+Before we discuss ETL System Configurations in depth, we will first create all of the Tapis Systems that will be used by Tapis ETL
 to run our ETL Pipeline. We will be using a simplified single-data center model for this pipeline. In this setup, the Local Inbox, Local Outbox,
 and compute system will use LoneStar6 (LS6) as the host and the Remote Inbox and Remote Outbox will use the LS6 Globus Endpoint as the host.
 
-**Simplified ETL Systems Setup**
+**Simplified ETL System Configurations Setup**
 
 .. image:: /specialized-services/images/simplifiedetlsetup.png
-  :alt: Simplified Tapis ETL Systems diagram
+  :alt: Simplified Tapis ETL System Configurations diagram
 
 Follow the instructions below to create the necessary Tapis Systems for your ETL Pipeline.
 
@@ -49,33 +57,33 @@ Follow the instructions below to create the necessary Tapis Systems for your ETL
 
   .. tab:: System (A)
 
-    This ``globus`` Tapis System will be used in the Data Configuration for both of the Remote ETL Systems (Remote Inbox, Remote Outbox) in our pipeline.
+    This ``globus`` Tapis System will be used as the Data System for both of the Remote ETL System Configurations (Remote Inbox, Remote Outbox) in our pipeline.
     
     .. include:: /specialized-services/etl/includes/create-globus-system.rst
         
 
   .. tab:: System (B)
 
-    This ``linux`` Tapis System will be used in the Manifest Configuration of all ETL Systems in our pipeline. It will also serve as the exec system on which we will run our pipelines ETL Jobs.
+    This ``linux`` Tapis System will be used as the Manifests System for all ETL System Configurations in our pipeline. It will also serve as the exec system on which we will run our pipelines ETL Jobs.
 
     .. include:: /specialized-services/etl/includes/create-linux-system.rst
 
-.. _etl_data_and_manifests_configurations:
+.. _etl_data_and_manifests_systems:
 
-1.2 ETL System Components
-~~~~~~~~~~~~~~~~~~~~~~~~~
+1.2 ETL System Confguration Components
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Every ETL System is composed of two parts. The Data Configuration and the Manifests Configuration.
+Every ETL System Configuration is composed of two parts. The Data System and the Manifests System.
 
 .. _etl_data_configuation:
 
-1.2.1 Data Configuration
+1.2.1 Data System
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Data Configuration is a set of properties for a given ETL System that informs Tapis ETL on
+The Data System is a collection of properties that define where
 where data files are located (or where data files are supposed to be transferred)
-as well as how to perform integrity checks on that data. Below is an example of the Data Configuration
-of a Remote Inbox ETL System (Manifest Configuration ignored to simplify the schema)
+as well as how to perform integrity checks on that data. Below is an example of the Data System
+of a Remote Inbox ETL System Configuration (Manifests System ignored to simplify the schema)
 
 .. include:: /specialized-services/etl/includes/schemas/data-config.json.rst
 
@@ -89,7 +97,7 @@ of a Remote Inbox ETL System (Manifest Configuration ignored to simplify the sch
 
 **1.2.1.1 Data Integrity Profile**
 
-Every Data Configuration has a Data Integrity Profile. The Data Integrity Profile is a set of instructions
+Every Data System has a Data Integrity Profile. The Data Integrity Profile is a set of instructions
 that informs Tapis ETL on how it should check the validity of all data files in the data path.
 There are 3 ways in which Tapis ETL can perform data integrity checks:
 
@@ -100,7 +108,7 @@ There are 3 ways in which Tapis ETL can perform data integrity checks:
   * the done file matches a set of glob patterns
   * the done file's filename contains the corresponding data file's filename as a substring
 
-Below are some example schemas of ETL Systems with different Data Integrity Profiles
+Below are some example schemas of Data Systems with different Data Integrity Profiles
 
 .. tabs::
 
@@ -118,12 +126,12 @@ Below are some example schemas of ETL Systems with different Data Integrity Prof
 
 .. _etl_manifests_configuration:
 
-1.2.2 Manifests Configuration
+1.2.2 Manifests System
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Manfests Configuration is a set of properties of an ETL System definition that informs Tapis ETL where
-manifests for a given system are located as well as how to generate manifests on the user's behalf for a given ETL System
-Below is an example of the Manifests Configuration of a Remote Inbox ETL System (Data Configuration ignored to simplify the schema)
+The Manfests System is a is a collection of properties that define where
+manifests for a given system are located as well as how to generate manifests.
+Below is an example of the Manifests System of a Remote Inbox ETL System Configuration (Data System ignored to simplify the schema)
 
 .. include:: /specialized-services/etl/includes/schemas/manifests-config.json.rst
 
@@ -131,7 +139,7 @@ Below is an example of the Manifests Configuration of a Remote Inbox ETL System 
 * ``path`` - The path to the directory on the Tapis System where the manifest files are stored or created
 * ``include_patterns`` - An array of glob patterns that are used to filter filenames. All files matching the glob patterns are considered by Tapis ETL to be manifest files.
 * ``exclude_patterns`` - An array of glob patterns that are used to filter filenames. All files matching the glob patterns are considered by Tapis ETL to be **non**-manifest files.
-* ``generation_policy`` - Indicates how manifests will be generated for data files on the corresponding ETL System. Must be one of the following values:
+* ``generation_policy`` - Indicates how manifests will be generated for data files on the Manifests System. Must be one of the following values:
   
   * ``manual`` - A user must manually generate the manifests for the data files that they want their ETL Pipeline to process
   * ``auto_one_per_file`` - Generates one manifest per data file found in the data directory
