@@ -6,7 +6,8 @@
         "logs": [],
         "started_at": null,
         "last_modified": null,
-        "metadata": {},
+        "transfers": [],
+        "jobs": [],
         "files": [
             {
                 "mimeType": null,
@@ -32,5 +33,6 @@
                 "path": "ETL/LOCAL-INBOX/DATA/data2.txt",
                 "size": 47
             }
-        ]    
+        ],
+        "metadata": {}
     }

@@ -21,7 +21,7 @@ schema in detail.
 ~~~~~~~~~~~~~~~~~~
 
 The Remote Outbox is the ETL System Configuration that tells Tapis ETL where data files to be processed are staged. Any data files placed
-on the data system in the data directory (after applying the include and exclude pattern filters) are the files that will be processed
+on the Data System in the data directory (after applying the include and exclude pattern filters) are the files that will be processed
 during runs of an ETL Job.
 
 How many get processed and in what order is determined by the manifests generated for those data files.
@@ -30,7 +30,7 @@ Consider the schema below, specifically the Manifest Configuration.
 .. include:: /specialized-services/etl/includes/schemas/etl-pipeline-remote-outbox.json.rst
 
 This Manifest Configuration tells Tapis ETL that the user wants Tapis ETL to handle manifests generation.
-According to the manifest ``generation policy`` of ``auto_one_per_file``, Tapis ETL should generate one manifest
+According to the manifest ``generation policy`` of ``auto_one_per_file``, Tapis ETL will generate one manifest
 for each data file that is not currently being tracked in another manifest.
 
 .. warning:: 
@@ -50,7 +50,7 @@ and submitting it for processing.
 2.3 Local Inbox
 ~~~~~~~~~~~~~~~~
 
-Tapis ETL will transfer all of the data files from the Remote Outbox to the Local Inbox for processing.
+Tapis ETL will transfer all of the data files from the Remote Outbox to the data directory of the Local Inbox for processing.
 
 .. note::
 
@@ -59,7 +59,7 @@ Tapis ETL will transfer all of the data files from the Remote Outbox to the Loca
 
 Notice that this ETL System Configuration has an addition property, ``control``. This is simply a place that
 Tapis ETL will write accounting files to ensure the pipeline runs as expected. It is recommended that you use the same
-system as in Local Inbox's Manifest Configuration, however any system to which Tapis ETL can write files to would work.
+system as in Local Inbox's Manifest System, however any system to which Tapis ETL can write files to would work.
 
 .. include:: /specialized-services/etl/includes/schemas/etl-pipeline-local-inbox.json.rst
 
@@ -78,7 +78,7 @@ dispatches these Tapis Jobs and uses the data files in a manifest as the inputs 
 2.5 Local Outbox
 ~~~~~~~~~~~~~~~~~~~
 
-Once the Transform Phase ends, all of the output data files should be in the data directory of the Local Inbox per its Data Configuration.
+Once the Transform Phase ends, all of the output data files should be in the data directory of the Local Inbox.
 These files are then tracked in manifests to be transferred in the Egress Phase of the pipeline.
 
 .. include:: /specialized-services/etl/includes/schemas/etl-pipeline-local-outbox.json.rst

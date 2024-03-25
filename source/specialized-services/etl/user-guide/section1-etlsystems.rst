@@ -60,6 +60,8 @@ Follow the instructions below to create the necessary Tapis Systems for your ETL
     This ``globus`` Tapis System will be used as the Data System for both of the Remote ETL System Configurations (Remote Inbox, Remote Outbox) in our pipeline.
     
     .. include:: /specialized-services/etl/includes/create-globus-system.rst
+
+    Once you have succesfully listed files for this system, move onto the instructions for System (B)
         
 
   .. tab:: System (B)

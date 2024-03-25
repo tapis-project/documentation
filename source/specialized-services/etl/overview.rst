@@ -31,8 +31,8 @@ Here we introduce the Tapis ETL standard terminology for ETL pipelines
 * :ref:`Local Outbox <etl_local_outbox>` - The system where the output will be staged for transfer to the destination system
 * :ref:`Remote Inbox <etl_remote_inbox>` - The destination system where output data will be archived
 * **ETL System Configuration** - A collection of systems responsible for storage of data and manifest files. It is the general term for remote and local inboxes and outboxes.
-* **Data System** - Component system of an ETL System Configuration responsible for the storage data.
-* **Manifests System** - Component system of an ETL System Configuration responsible for the storage manifests.
+* **Data System** - Component system of an ETL System Configuration responsible for the storage of data.
+* **Manifests System** - Component system of an ETL System Configuration responsible for the storage of manifests.
 * **Phase** - A distinct stage of a single Tapis ETL Pipeline run: ``ingress``, ``transform``, ``egress``
 * **Resubmission** - Rerunning a specific phase or phases of an ETL pipeline for a given manifest.
 * **Pipeline Run** - A single run of an ETL pipeline
@@ -48,6 +48,16 @@ Step 0 must be completed by a user or other external workflow asynchronous Tapis
 
 Steps 1-4 are managed by Tapis ETL:
   1. Tapis ETL then checks the Remote Outbox manifests directory for new manifests and transfers them to the manifests directory of the Local Inbox. The files enumerated in the new manifests on the Local Inbox are then transferred over to the data directory of the Local Inbox
-  2. A single unprocessed manifest is chosen by the ETL Pipeline (according to the :ref:`manifest priority<manifest_priority>`) and the files therein are then staged as inputs to the first batch computing jobs. Each batch computing job definied in the ETL Pipeline definition will then be submitted to the Tapis Jobs API; the first of which processes the data files in the manifest.
+  2. A single unprocessed manifest is chosen by the ETL Pipeline (according to the manifest priority) and the files therein are then staged as inputs to the first batch computing jobs. Each batch computing job definied in the ETL Pipeline definition will then be submitted to the Tapis Jobs API; the first of which processes the data files in the manifest.
   3. After all jobs run to completion, a manifest is generated for each of the output files found in the data directory of the Local Outbox.
   4. All data files enumerated in that manifest are then transferred to the data directory of the Remote Inbox.
+
+.. _etl_phases:
+
+Phases
+^^^^^^^^
+
+Tapis ETL Pipelines run in 3 seperate phases. The Ingress, Transform, and Egress Phases.
+  1. **Ingress Phase** - Tapis ETL inspects the Remote Outbox for new data files and transfers them over to the Local Inbox. 
+  2. **Transform Phase** - A single data file or batch of data files is processed by a series of user-defined ETL Jobs
+  3. **Egress Phase** - The output data files from the ETL Jobs are tracked and transferred from the Local Outbox to the Remote Inbox

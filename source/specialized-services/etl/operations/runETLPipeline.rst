@@ -6,6 +6,8 @@ To run a pipeline, you must:
     #. Belong to the group that owns the pipeline
 
 
+**Pipeline Arguments**
+
 When running an ETL Pipeline with Tapis ETL, you must provide the following arguments:
     * ``TAPIS_USERNAME`` - Username of the Tapis user running the pipeline
     * ``TAPIS_PASSWORD`` - Password of the user

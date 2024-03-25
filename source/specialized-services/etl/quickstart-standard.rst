@@ -24,6 +24,12 @@ Step 2: Running an ETL Pipeline
 
 .. include:: /specialized-services/etl/operations/runETLPipeline.rst
 
+Step 3: Checking the Pipeline Run status
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: /specialized-services/etl/operations/getPipelineRun.rst
+
+
 
 
 

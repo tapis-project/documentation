@@ -19,3 +19,7 @@ for the seting up, creating, and managing ETL Pipelines with Tapis ETL.
 ----
 
 .. include:: /specialized-services/etl/user-guide/section3-runetlpipeline.rst
+
+----
+
+.. include:: /specialized-services/etl/user-guide/section4-resubmittingphase.rst
