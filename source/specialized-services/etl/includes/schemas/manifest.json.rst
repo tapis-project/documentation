@@ -1,14 +1,10 @@
 .. code-block:: json
-
     {
         "status": "pending",
-        "phase": "transform",
-        "logs": [],
-        "started_at": null,
-        "last_modified": null,
+        "phase": "ingress",
+        "local_files": [],
         "transfers": [],
-        "jobs": [],
-        "files": [
+        "remote_files": [
             {
                 "mimeType": null,
                 "type": "file",
@@ -34,5 +30,11 @@
                 "size": 47
             }
         ],
+        "jobs": [],
+        "logs": [
+            "2024-04-01 19:16:49.378611 Created"
+        ],
+        "created_at": 1711999009.378607,
+        "last_modified": 1711999009.378607,
         "metadata": {}
     }
