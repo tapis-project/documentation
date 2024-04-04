@@ -146,7 +146,7 @@ Effective Root Directory
 
 Correctly defining the system attribute *rootDir* is critical because it serves as an effective root directory
 when referencing file paths through the Tapis Files or Jobs services. All paths are relative to this directory
-when using Files to list, copy, move, mkdir, etc. When creating a system there are certain restrictions For
+when using Files to list, copy, move, mkdir, etc. When creating a system there are certain restrictions for
 this attribute that should be kept in mind:
 
 * Once a system is created, *rootDir* may not be updated. Contact support to request a change.
@@ -175,7 +175,7 @@ The following conditions must be met in order to use the macro
 * Macro ``HOST_EVAL()`` must only appear once and must be the first element of the path. Including a leading slash is optional.
 * The *effectiveUserId* for the system must be static. Note that *effectiveUserId* may be set to ``${owner}``.
 
-The macro must only appear once and be the first element of the path. Here are some examples
+Here are some examples
 
 * HOST_EVAL($SCRATCH)
 * HOST_EVAL($HOME)
