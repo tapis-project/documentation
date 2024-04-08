@@ -83,6 +83,13 @@ Every ETL Job is furnished with the following envrionment variables which can be
     * ``TAPIS_ETL_MANIFEST_PATH`` - The full path (including the filename) to the manifest file
     * ``TAPIS_ETL_MANIFEST_MIME_TYPE`` - The MIME type of the manifest file (always ``application/json``)
 
+In addition to the envrionment variables, a `fileInput` for the manfiest file is added to the job definition to ensure that is available to the ETL Jobs runtime.
+In your application code, you can use the envrionment variables above to locate the manifest file and inspect its contents.
+This is useful if your application code does not know where to find its input data. The ``local_files`` array property of the manifest
+contains the list of input data files. The files are represented as objects in the ``local_files`` array and take the following form.
+
+.. include:: /specialized-services/etl/includes/schemas/file.json.rst
+
 .. _etl_local_outbox:
 
 2.5 Local Outbox
