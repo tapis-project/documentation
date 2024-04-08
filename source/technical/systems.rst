@@ -1,3 +1,10 @@
+..
+    Comment: Hierarchy of headers:
+    1: === over and under
+    2: --- over and under
+    3: ~~~ under
+    4: ^^^ under
+
 .. _systems:
 
 =======================================
@@ -58,11 +65,9 @@ At a high level a system represents the following information:
 *bucketName* - Bucket name
   For an S3 system this is the name of the bucket.
 *rootDir* - Effective root directory
-  Directory to be used when listing files or moving files to and from the system. For LINUX and IRODS this is required
-  and must begin with ``/``.
-  For S3 and GLOBUS this is optional.
-  For S3, typically will not begin with ``/``. S3 keys are usually created and manipulated using URLs and do not
-  have a leading ``/``.
+  Directory to be used when listing files or moving files to and from the system.
+  All paths are relative to this directory when using Files to list, copy, move, mkdir, etc.
+  For more information please see `Effective Root Directory`_.
   May not be updated. Contact support to request a change.
 *dtnSystemId* - DTN system Id
   A system that can be used during job execution as a Data Transfer Node (DTN). Use is optional. The DTN is used
@@ -133,6 +138,50 @@ Using PySDK:
 Using CURL::
 
    $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems -d @system_example.json
+
+.. _effective_root_dir:
+
+Effective Root Directory
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Correctly defining the system attribute *rootDir* is critical because it serves as an effective root directory
+when referencing file paths through the Tapis Files or Jobs services. All paths are relative to this directory
+when using Files to list, copy, move, mkdir, etc. When creating a system there are certain restrictions for
+this attribute that should be kept in mind:
+
+* Once a system is created, *rootDir* may not be updated. Contact support to request a change.
+* Required for systems of type LINUX or IRODS. Must begin with ``/``.
+* Optional for systems of type S3 or GLOBUS.
+* For S3 type systems, typically will not begin with ``/``.
+
+  * S3 keys are usually created and manipulated using URLs and do not have a leading ``/``.
+
+* Support is provided for resolving the following variables at create time: *${apiUserId}*, *${tenant}* and *${owner}*.
+
+Use of HOST_EVAL at System Creation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There is also a special macro available for *rootDir* that may be used under certain conditions when a system
+is first created. The macro name is ``HOST_EVAL``.
+The syntax for the macro is ``HOST_EVAL($var)``, where ``var`` is the environment variable to be evaluated
+on the system host when the create request is made.
+Note that the ``$`` character preceding the environment variable name is optional.
+If after resolution the final path does not have the required leading slash (``/``) to make it an absolute path,
+then one will be prepended.
+The following conditions must be met in order to use the macro
+
+* System must be of type LINUX
+* Credentials must be provided when system is created.
+* Macro ``HOST_EVAL()`` must only appear once and must be the first element of the path. Including a leading slash is optional.
+* The *effectiveUserId* for the system must be static. Note that *effectiveUserId* may be set to ``${owner}``.
+
+Here are some examples
+
+* HOST_EVAL($SCRATCH)
+* HOST_EVAL($HOME)
+* /HOST_EVAL(MY_ROOT_DIR)/scratch
+* /HOST_EVAL($PROJECT_HOME)/projects/${tenant}/${owner}
+
 
 .. _registering_credentials:
 
@@ -246,7 +295,7 @@ to obtain a Globus authorization code.
 
 Using CURL, the request would look something like this::
 
- $curl -H "X-Tapis-Token: $JWT" https://dev.tapis.io/v3/systems/credential/globus/authUrl
+ $curl -H "X-Tapis-Token: $JWT" https://dev.tapis.io/v3/systems/credential/<system>/globus/authUrl
 
 The response should look similar to the following. Note that for brevity and readability, only the result portion of the
 response is shown, the response has been split into multiple lines and various IDs are not filled in::

@@ -46,7 +46,7 @@ Event attributes:
 *type*
   Type of event. Used for routing notifications. A series of 3 fields separated by the dot character.
   The first field is the service name, the second field is the category and the third field is the detail.
-  For example, when a job transistions to the FINISHED state, the type is ``jobs.JOB_NEW_STATUS.FINISHED``.
+  For example, when a job transitions to the FINISHED state, the type is ``jobs.JOB_NEW_STATUS.FINISHED``.
 *subject*
   Subject of event in context of service. Examples: job Id, system Id, file path, role name, etc.
 *timestamp*
@@ -68,9 +68,11 @@ Event attributes:
   Tapis generated unique identifier for the event.
 *user*
   Tapis user associated with the event.
+*received*
+  Tapis generated timestamp for when the event was received by the Notifications service.
 *seriesSeqCount*
-  Tapis generated counter for seriesId. Can be used by event receivers to track expected order.
-  Events will be sent in order but may not be received in order.
+  Tapis generated counter for seriesId. Can be used by notification receivers to track expected order.
+  Notifications for events will be sent in order but may not be received in order.
 
 Note that events are not persisted by the front end api service process. When events are received they are sent
 to a message broker for asynchronous processing. The back end process will persist events temporarily in order
@@ -179,6 +181,7 @@ Example of a notification sent to a webhook::
      "deleteSubscriptionsMatchingSubject": false,
      "tenant": "admin",
      "user": "notifications",
+     "received": "2023-09-15T14:47:51.000",
      "uuid": "50cfb971-c4b3-4d33-89c3-2b0f56f16e19",
      "seriesSeqCount": 4
    },
@@ -206,6 +209,7 @@ Example of a notification sent to an email address::
      "deleteSubscriptionsMatchingSubject": true,
      "tenant": "dev",
      "user": "jobs",
+     "received": "2023-09-15T14:47:51.000",
      "uuid": "1d16202d-2248-4690-bcc9-a0134a4089cd",
      "seriesSeqCount": -1
    },
@@ -394,6 +398,8 @@ Event Attributes
 |Subscriptions   |        |                          |                                                           |
 |MatchingSubject |        |                          |                                                           |
 +----------------+--------+--------------------------+-----------------------------------------------------------+
+| endSeries      |boolean |                          | - Delete tracking data for the series.                    |
++----------------+--------+--------------------------+-----------------------------------------------------------+
 | seriesId       | String |  <job-id>                | - Optional. Group events based on tenant,source,subject.  |
 |                |        |                          | - Preserves event order during notification delivery.     |
 +----------------+--------+--------------------------+-----------------------------------------------------------+
@@ -402,6 +408,8 @@ Event Attributes
 | uuid           | String |                          | - Tapis generated unique identifier.                      |
 +----------------+--------+--------------------------+-----------------------------------------------------------+
 | user           | String |                          | - Tapis user associated with the event.                   |
++----------------+--------+--------------------------+-----------------------------------------------------------+
+| received       | String | 2020-06-19T15:10:43Z     | - When the event was received by Tapis.                   |
 +----------------+--------+--------------------------+-----------------------------------------------------------+
 | seriesSeqCount | String |                          | - Tapis generated counter for seriesId.                   |
 +----------------+--------+--------------------------+-----------------------------------------------------------+
