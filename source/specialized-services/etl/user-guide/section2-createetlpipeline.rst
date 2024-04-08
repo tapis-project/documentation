@@ -73,6 +73,16 @@ dispatches these Tapis Jobs and uses the data files in a manifest as the inputs 
 
 .. include:: /specialized-services/etl/includes/schemas/etl-pipeline-etl-jobs.json.rst
 
+Every ETL Job is furnished with the following envrionment variables which can be accessed at runtime by your Tapis Job.
+    * ``TAPIS_WORKFLOWS_TASK_ID`` - The ID of the Tapis Workflows task in the pipeline that is currently being executed
+    * ``TAPIS_WORKFLOWS_PIPELINE_ID`` - The ID of the Tapis Workflows Pipeline that is currently running
+    * ``TAPIS_WORKFLOWS_PIPELINE_RUN_UUID`` - A UUID given to this specific run of the pipeline
+    * ``TAPIS_ETL_HOST_DATA_INPUT_DIR`` - The directory that contains the data files for inital ETL Jobs
+    * ``TAPIS_ETL_HOST_DATA_OUTPUT_DIR`` - The directory to which output data files should be persisted
+    * ``TAPIS_ETL_MANIFEST_FILENAME`` - The name of the file that contains the manifest
+    * ``TAPIS_ETL_MANIFEST_PATH`` - The full path (including the filename) to the manifest file
+    * ``TAPIS_ETL_MANIFEST_MIME_TYPE`` - The MIME type of the manifest file (always ``application/json``)
+
 .. _etl_local_outbox:
 
 2.5 Local Outbox
