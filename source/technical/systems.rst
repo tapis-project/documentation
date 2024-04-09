@@ -648,10 +648,26 @@ This approach is known simply as *sharing*. The sharing API allows you to share 
 as well as share publicly with all users in a tenant. Sharing provides ``READ+EXECUTE`` access.
 When the system has a dynamic *effectiveUserId*, sharing also allows for MODIFY access to all paths for calls
 made through the Files service.
-Note that Tapis permissions and sharing are independent of native permissions enforced by the underlying system host.
+
+.. note::
+  Tapis permissions and sharing are independent of native permissions enforced by the underlying system host.
 
 The most common use case for sharing a system is to publicly share the system with all users in the tenant.
 This would allow any user to use the system for execution or storage when running an application.
+
+
+.. note::
+  If a system has a dynamic *effectiveUserId* and has been shared publicly or with specific users,
+  then those users will have Tapis permissions to operate on on any files without explicitly sharing any paths
+  through the Files service. This includes file listing, upload, download and delete.
+
+  If a system has a static *effectiveUserId*, then file paths will need to be explicitly shared using the
+  Files service in order to allow users READ access. Having READ access allows users to list and download files.
+
+  These restrictions are in place in order to reduce the risks associated with sharing a system. With a dynamic
+  *effectiveUserId* users are always logging in to the host as themselves. With a static *effectiveUserId*
+  there is a privilege escalation security risk. 
+
 
 For more information on sharing please see :doc:`sharing`
 
