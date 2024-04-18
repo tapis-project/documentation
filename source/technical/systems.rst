@@ -85,7 +85,7 @@ At a high level a system represents the following information:
   Indicates if system supports creating child systems using this system as the parent. By default this is *false*.
 Job related attributes
   Various attributes related to job execution such as *jobRuntimes*, *jobWorkingDir*,
-  *batchScheduler*, *batchLogicalQueues*
+  *batchScheduler*, *batchSchedulerProfile*, *batchLogicalQueues*
 
 .. _DTN Configuration: https://tapis.readthedocs.io/en/latest/technical/jobs.html#data-transfer-nodes
 
@@ -399,6 +399,7 @@ The response should look similar to the following::
         "jobMaxJobs": 2147483647,
         "jobMaxJobsPerUser": 2147483647,
         "batchScheduler": null,
+        "batchSchedulerProfile": null,
         "batchLogicalQueues": [],
         "batchDefaultLogicalQueue": null,
         "jobCapabilities": [],
@@ -707,6 +708,43 @@ They also provide more features and flexibility than is typically provided by an
 may be defined for each HPC queue. If an HPC queue does not have a corresponding logical queue defined then a user will
 not be able use the Tapis system to directly submit a job via Tapis to that HPC queue.
 
+-----------------------
+Batch Scheduler Profile
+-----------------------
+The Systems service supports managing Tapis scheduler profiles. An HPC center often has certain conventions
+and restrictions around the use of batch schedulers. A scheduler profile resource can be defined to provide the
+Tapis Jobs service with additional site specific information to be used when executing applications using a
+scheduler. A scheduler profile contains information on options that should be hidden from the scheduler,
+the module load command to use and which modules should be loaded by default when running a job. Anyone in a
+tenant may create a scheduler profile for use by all users in the tenant. The owner of a profile or a
+tenant administrator may modify or delete a profile. A profile may be referenced in a system definition using the
+attribute *batchSchedulerProfile*. The profile to be used may also be set in the job submit request using the
+special scheduler option *\-\-tapis-profile*. The value in the job submit request takes precedence over a value
+defined for the execution system.
+
+For example, at TACC there is a certain module that must be loaded when running Slurm jobs via singularity. Also, use of
+the Slurm option *\-\-mem* is prohibited. In support of this, most of the tenants at TACC make use of a profile similar
+to the following::
+
+    {
+        "name": "tacc",
+        "owner": "testuser1",
+        "description": "Profile for TACC Slurm",
+        "moduleLoads": [
+            {
+                "moduleLoadCommand": "module load",
+                "modulesToLoad": ["tacc-singularity"]
+            }
+        ],
+        "hiddenOptions": ["MEM"]
+    }
+
+The *moduleLoads* array contains one or more entries. Each entry contains a *moduleLoadCommand*, which specifies the
+local command used to load each of the modules (in order) in its *modulesToLoad* list.
+The *hiddenOptions* attribute identifies scheduler options that the local implementation prohibits. 
+In this case, "MEM" indicates that the *\-\-mem* option should never be passed to Slurm.
+
+
 ..
     -----------------
     Capabilities
@@ -835,6 +873,8 @@ System Attributes Table
 | batchScheduler      | String         | SLURM                | - Type of scheduler used when running batch jobs.                                    |
 |                     |                |                      | - Schedulers: SLURM                                                                  |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+|batchSchedulerProfile| String         |                      | - Default Tapis scheduler profile for batch jobs.                                    |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | batchLogicalQueues  | [LogicalQueue] |                      | - List of logical queues available on the system.                                    |
 |                     |                |                      | - Each logical queue maps to a single HPC queue.                                     |
 |                     |                |                      | - Multiple logical queues may be defined for each HPC queue.                         |
@@ -954,6 +994,24 @@ LogicalQueue Attributes Table
 | maxMinutes          | int            |                      | - Maximum run time in minutes that can be requested when submitting a job.           |
 |                     |                |                      | - Default is unlimited                                                               |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+
+----------------------------------
+Scheduler Profile Attributes Table
+----------------------------------
+
++---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute           | Type     | Example              | Notes                                                                                |
++=====================+==========+======================+======================================================================================+
+| name                | String   |   tacc               | - Name. Required. *tenant* + *name* uniquely identifies the profile.                 |
++---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
+| owner               | String   |   jdoe               | - Tapis user that created the profile.                                               |
++---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
+| description         | String   |                      | - Description                                                                        |
++---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
+| moduleLoads         | Array    |                      | - Each entry contains a module command a list of modules to load.                    |
++---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
+| hiddenOptions       | String[] |  ["MEM"]             | - List of locally prohibited scheduler options that should be filtered out.          |
++---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
 
 ..
     ---------------------------
