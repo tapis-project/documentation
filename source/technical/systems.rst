@@ -1008,7 +1008,7 @@ Scheduler Profile Attributes Table
 +---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
 | description         | String   |                      | - Description                                                                        |
 +---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
-| moduleLoads         | Array    |                      | - Each entry contains a module command a list of modules to load.                    |
+| moduleLoads         | Array    |                      | - Each entry contains a module command and a list of modules to load.                |
 +---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
 | hiddenOptions       | String[] |  ["MEM"]             | - List of locally prohibited scheduler options that should be filtered out.          |
 +---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
