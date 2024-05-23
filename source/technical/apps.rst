@@ -61,6 +61,7 @@ Versioned Attributes
   Indicates if version is currently locked. When locked a version may not be modified. Default is *false*.
 *runtime*
   Runtime to be used when executing the application. DOCKER, SINGULARITY, ZIP. Default is DOCKER.
+  For more information on how Tapis supports the various runtime types, please see JobsRuntimeSupport_.
 *runtimeVersion*
   Runtime version to be used when executing the application.
 *runtimeOptions*
@@ -90,6 +91,8 @@ Versioned Attributes
 .. note::
   Currently dynamic selection of an execution system is not supported. For this reason the job related attribute
   *dynamicExecSystem* should be set to *false* (the default) and *execSystemConstraints* should not be set.
+
+.. _JobsRuntimeSupport: https://tapis.readthedocs.io/en/latest/technical/jobs.html#container-runtimes
 
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
