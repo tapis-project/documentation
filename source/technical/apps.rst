@@ -660,21 +660,26 @@ ParameterSet Attributes Table
 | Attribute           | Type           | Example              | Notes                                                                                |
 +=====================+================+======================+======================================================================================+
 | appArgs             | [Arg]          |                      | - Command line arguments passed to the application.                                  |
-|                     |                |                      | - See table below.                                                                   |
+|                     |                |                      | - See table below for more information on *Arg* type entries.                        |
+|                     |                |                      | - For more information on *appArgs* please see the chapter on *Jobs*                 |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | containerArgs       | [Arg]          |                      | - Command line arguments passed to the container runtime.                            |
-|                     |                |                      | - See table below.                                                                   |
+|                     |                |                      | - See table below for more information on *Arg* type entries.                        |
+|                     |                |                      | - For more information on *containerArgs* please see the chapter on *Jobs*           |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | schedulerOptions    | [Arg]          |                      | - Scheduler options passed to the HPC batch scheduler.                               |
-|                     |                |                      | - See table below.                                                                   |
+|                     |                |                      | - See table below for more information on *Arg* type entries.                        |
+|                     |                |                      | - For more information on *schedulerOptions* please see the chapter on *Jobs*        |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | envVariables        | [KeyValuePair] |                      | - Environment variables placed into the runtime environment.                         |
 |                     |                |                      | - Each entry has *key* (required) and *value* (optional) as well as other attributes.|
 |                     |                |                      | - See table *KeyValuePair Attributes* below for more information.                    |
+|                     |                |                      | - For more information on *envVariables* please see the chapter on *Jobs*            |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | archiveFilter       | ArchiveFilter  |                      | - Sets of files to include or exclude when archiving.                                |
 |                     |                |                      | - Default is to include all files in *execSystemOutputDir*.                          |
-|                     |                |                      | - See table below.                                                                   |
+|                     |                |                      | - See table below for details of *ArchiveFilter* structure.                          |
+|                     |                |                      | - For more information on *archiveFilter* support please see the chapter on *Jobs*   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 
 ------------------------------
