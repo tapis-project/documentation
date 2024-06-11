@@ -1570,6 +1570,21 @@ The response will look something like the following:
     "metadata": null
   }
 
+Understanding Job Timestamps
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Timestamps are assigned as a job progresses, so they won't always have a value.  All job timestamps are in Coordinated Universal Time (UTC) and have the following meanings:  
+
+1. *created*:  When the job request has been accepted by the Jobs front-end.
+2. *ended*:  When the job reached a terminal state (FINISHED, FAILED or CANCELLED).
+3. *lastUpdated*:  The last time any part of the job record was updated.
+4. *remoteSubmitted*:  When the job was submitted to a scheduler on the execution system.
+5. *remoteStarted*:  When Jobs detected that the job began running on the execution system.
+6. *remoteEnded*:  When Job detected that the job stopped running on the executions system.
+
+The *remoteSubmitted* timestamp indicates when batch jobs are submitted to the batch scheduler.  Forked jobs, however, are not submitted to a scheduler, so in these cases *remoteSubmitted* indicates when application invocation began.  Job monitoring typically involves polling an execution system to determine a job's state.  The precision of the *remoteStarted* and *remoteEnded* timestamps is a function of the polling frequency, which changes based on Job service configuration and policies.  
+
+
 Get Job Status
 ----------------
 
