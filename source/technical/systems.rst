@@ -20,6 +20,7 @@ is referred to as a **system**.
 -----------------
 Overview
 -----------------
+
 A Tapis system represents a server or collection of servers exposed through a single host name or IP address.
 Each system is associated with a specific tenant. A system can be used for the following purposes:
 
@@ -33,13 +34,15 @@ Each system is associated with a specific tenant. A system can be used for the f
 
 Each system is of a specific type (such as LINUX or S3) and owned by a specific user who has special
 privileges for the system. The system definition also includes the user that is used to access the system,
-referred to as *effectiveUserId*. This access user can be a specific user (such as a service account) or dynamically
-specified as ``${apiUserId}``. For the case of ``${apiUserId}``, the username is extracted from the identity
-associated with the request to the service.
+referred to as *effectiveUserId*. This access user can be a static specific user (such as a service account)
+or dynamically specified as ``${apiUserId}``. For the case of ``${apiUserId}``, the username is extracted
+from the identity associated with the request to the service. For more information related to
+*effectiveUserId* please see the section below on `Effective User Id and Host Login`_ .
 
 -----------------
 Model
 -----------------
+
 At a high level a system represents the following information:
 
 *id*
@@ -57,7 +60,8 @@ At a high level a system represents the following information:
   Indicates if system is currently considered active and available for use. By default this is *true*.
 *effectiveUserId* - Effective User
   The username to use when accessing the system. A specific user (such as a service account) or the dynamic
-  user ``${apiUserId}``.  By default this is ``${apiUserId}``.
+  user ``${apiUserId}``. By default this is ``${apiUserId}``. For more information please see the section below
+  on `Effective User Id and Host Login`_ .
 *defaultAuthnMethod* - Default authentication method
   How access authentication is handled by default. Authentication method can also be
   specified as part of a request.
@@ -73,7 +77,7 @@ At a high level a system represents the following information:
   A system that can be used during job execution as a Data Transfer Node (DTN). Use is optional. The DTN is used
   if the job submission request or the application defintion specify *dtnSystemInputDir* or *dtnSystemOutputDir*.
   *canExec* must be true. This execution system and the DTN system must have the same *rootDir* and the file
-  system must be shared storage.  Please see `DTN Configuration`_.
+  system must be shared storage. Please see `DTN Configuration`_.
 *canExec*
   Indicates if system can be used to execute jobs.
 *canRunBatch*
@@ -94,6 +98,24 @@ Depending on the type of system and specific values for certain attributes there
 
 Note that a system may be created as a storage-only resource (*canExec=false*) or as a system that can be used for both
 execution and storage (*canExec=true*).
+
+Dynamically Determined System Attributes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When fetching a system or list of systems, some attributes are computed dynamically and shown in the results.
+The dynamically determined attributes are:
+
+*effectiveUserId*
+  The resolved username to use when accessing the host or service. If system is defined with a dynamic
+  user, i.e. ``effectiveUserId = ${apiUserId}``, this is filled in based on the identity of the user
+  making a request. For more information please see the section below on `Effective User Id and Host Login`_ .
+*isDynamicEffectiveUser*
+  Indicates if *effectiveUserId* was resolved using ``${apiUserId}``.
+*isPublic*
+  Indicates if the system has been shared publicly. For more information please see the section below
+  on `Sharing`_ .
+*sharedWithUsers*
+  The list of users with whom the system has been shared.
 
 --------------------------------
 Getting Started
@@ -182,8 +204,30 @@ Here are some examples
 * /HOST_EVAL(MY_ROOT_DIR)/scratch
 * /HOST_EVAL($PROJECT_HOME)/projects/${tenant}/${owner}
 
-
 .. _registering_credentials:
+
+Effective User Id and Host Login
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The attribute *effectiveUserId* determines the host login user, the user used to access the underlying host or service.
+The attribute can be set to a static string indicating a specific user (such as a service account) or dynamically
+specified as *${apiUserId}*. For the case of *${apiUserId}*, the service resolves the variable by extracting the
+identity from the request to the service (i.e. the JWT) and applying a mapping to a host login user if such a mapping
+has been provided. If no mapping is provided, then the extracted identity is taken to be the host login user.
+
+Host Login User Mapping
+^^^^^^^^^^^^^^^^^^^^^^^
+A mapping between a Tapis user and a host login user is created when the system has a dynamic *effectiveUserId*
+and the attribute *loginUser* is included when registering credentials. Please see the section below on
+`Registering Credentials for a System`_.
+
+For example, if my user id when logging into Tapis is ``jdoe`` and my host login user id is ``jdoe3``, then a
+login user mapping would be required if the system is defined using a dynamic *effectiveUserId*.
+Note that if my Tapis user id happened to also be ``jdoe3`` then no mapping would be required.
+
+Please note that if the system is defined using a static *effectiveUserId*, then there is no need for a mapping.
+In this case the *effectiveUserId* is logically independent of the Tapis identity and may be set to any valid
+host username value.
 
 Registering Credentials for a System
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -828,10 +872,16 @@ System Attributes Table
 | port                | int            | 22                   | - Port number used to access the system                                              |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | useProxy            | boolean        | TRUE                 | - Indicates if system should be accessed through a proxy.                            |
+|                     |                |                      | - Currently only supported for IRODS type systems.                                   |
+|                     |                |                      | - Indicates if an IRODS proxy administrative user should be used.                    |
+|                     |                |                      | - *effectiveUserId* is the IRODS proxy admin user.                                   |
+|                     |                |                      | - Tapis user making the request is the IRODS user who will be impersonated.          |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | proxyHost           | String         |                      | - Name of proxy host.                                                                |
+|                     |                |                      | - Not currently supported. Please contact support if needed.                         |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | proxyPort           | int            |                      | - Port number for *proxyHost*                                                        |
+|                     |                |                      | - Not currently supported. Please contact support if needed.                         |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | dtnSystemId         | String         | default.corral.dtn   | - A system that can be used as a Data Transfer Node (DTN). Use is optional.          |
 |                     |                |                      | - This system and *dtnSystemId* must have the same *rootDir* and shared storage.     |
