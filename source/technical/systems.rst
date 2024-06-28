@@ -904,7 +904,7 @@ System Attributes Table
 |                     |                |                      | - Runtime type is required and must be one of: DOCKER, SINGULARITY, ZIP.             |
 |                     |                |                      | - Runtime version is optional.                                                       |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| jobWorkingDir       | String         | HOST_EVAL($SCRATCH)  | - Parent directory from which a job is run.                                          |
+| jobWorkingDir       | String         | workdir              | - Parent directory from which a job is run.                                          |
 |                     |                |                      | - Relative to the effective root directory *rootDir*.                                |
 |                     |                |                      | - Required if *canExec* is true.                                                     |
 |                     |                |                      | - Variable references: *${apiUserId}*, *${owner}*, *${tenant}*                       |
