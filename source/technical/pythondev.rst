@@ -285,7 +285,7 @@ can jump to the ``Fourth`` step. Feel free to run just the code you need.
     '''
 
     # Fourth - Grab the client_id and client_key, add it to your new Tapis client initialization
-    t2 = Tapis(base_url='https://tapis.io',
+    t2 = Tapis(base_url='https://tacc.tapis.io',
             username='cgarcia',
             password='pass',
             client_id='client_id',
