@@ -65,7 +65,7 @@ If you are unaware of the base_url for the tenant you will be using, you can fin
 
 .. code-block:: text
 
-    cURL https://admin.tacc.io/v3/tenants
+    curl https://admin.tacc.io/v3/tenants
 
 From here, you will use the ``ctrl-F`` function in your terminal window to search for your base_url. 
 A note of caution, be sure to verify if you are using the DEV or PROD tenants; DEV tenants will be labeled with a delineation of -dev and noted in the description as such.
