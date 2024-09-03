@@ -60,6 +60,18 @@ to interact with Tapis. You will note that your token is returned with an expira
 you want to continue to use Tapis after your token expires, you will need to get a new one following the same
 steps.
 
+For the purpose of this tutorial, we will be using the base_url of ``https://tacc.tapis.io``. 
+If you are unaware of the base_url for the tenant you will be using, you can find it by entering the following cURL command in your terminal window.
+
+.. code-block:: text
+
+    cURL https://admin.tacc.io/v3/tenants
+
+From here, you will use the ``ctrl-F`` function in your terminal window to search for your base_url. 
+A note of caution, be sure to verify if you are using the DEV or PROD tenants; DEV tenants will be labeled with a delineation of -dev and noted in the description as such.
+
+For more information about tenant listing and search techniques please see the `Tenancy, Sites and Authentication <https://tapis.readthedocs.io/en/latest/technical/authentication.html>`_.
+
 In Python code below you will replace *your_tacc_username* and *your_tacc_password* with your TACC username and password, preserving the quotation marks shown in the command below.
 
 .. include:: /includes/tapipy-init.rst
