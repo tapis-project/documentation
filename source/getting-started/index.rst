@@ -61,11 +61,11 @@ you want to continue to use Tapis after your token expires, you will need to get
 steps.
 
 For the purpose of this tutorial, we will be using the base_url of ``https://tacc.tapis.io``. 
-If you are unaware of the base_url for the tenant you will be using, you can find it by entering the following cURL command in your terminal window.
+To discover other tenants, and find the details specific to that tenant, such as owner, base_url, tenant_id, etc. you can use following curl command in your terminal window. 
 
 .. code-block:: text
 
-    curl https://admin.tacc.io/v3/tenants
+    curl https://admin.tacc.io/v3/tenants | jq
 
 From here, you will use the ``ctrl-F`` function in your terminal window to search for your base_url. 
 A note of caution, be sure to verify if you are using the DEV or PROD tenants; DEV tenants will be labeled with a delineation of -dev and noted in the description as such.
