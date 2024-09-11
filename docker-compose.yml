@@ -8,13 +8,11 @@ version: '2'
 
 services:
   tapis-documentation:
-    #image: tapis/tapis-documentation:latest
-    build:
-        context: ./
+    image: tapis/tapis-documentation:latest
     container_name: tapis-documentation
     command: './docker-startup.sh'
 
     ports:
-      - "0.0.0.0:7898:7898"
+      - "7898:7898"
     volumes:
       - './:/workspace'
