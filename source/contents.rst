@@ -41,6 +41,7 @@ Welcome to Tapis's Documentation!
 
    specialized-services/index
    specialized-services/etl
+   specialized-services/globus-proxy
 
 .. toctree::
    :maxdepth: 2

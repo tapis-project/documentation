@@ -8,7 +8,9 @@ version: '2'
 
 services:
   tapis-documentation:
-    image: tapis/tapis-documentation:latest
+    #image: tapis/tapis-documentation:latest
+    build:
+        context: ./
     container_name: tapis-documentation
     command: './docker-startup.sh'
 
