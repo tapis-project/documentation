@@ -15,6 +15,6 @@ services:
     command: './docker-startup.sh'
 
     ports:
-      - "7898:7898"
+      - "0.0.0.0:7898:7898"
     volumes:
       - './:/workspace'
