@@ -119,6 +119,8 @@ Now that we have an access token, we are ready to create a Tapis ``system`` obje
     # create the system in Tapis
     t.systems.createSystem(**s3_bucket)
 
+You can also try adding ``https://`` in the front of the address for ``"host"`` if the following command does not work.
+
 The output of the command will show the URL to the system you just created in the Tapis tenant.
 
 Create an Access Credential
