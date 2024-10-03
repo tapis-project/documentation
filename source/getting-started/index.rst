@@ -119,8 +119,6 @@ Now that we have an access token, we are ready to create a Tapis ``system`` obje
     # create the system in Tapis
     t.systems.createSystem(**s3_bucket)
 
-You can also try adding ``https://`` in the front of the address for ``"host"`` if the code does not work.
-
 The output of the command will show the URL to the system you just created in the Tapis tenant.
 
 Create an Access Credential
@@ -229,8 +227,6 @@ To keep the cURL command (relatively) readable, you first need to create a file 
     "bucketName":"tapisbucket",
     "canExec": False
   }
-
-You can also try adding ``https://`` in the front of the address for ``"host"`` if the following command does not work.
 
 Then you'll execute the following cURL command, being sure to specify the name of the file you created if you chose a different name:
 
