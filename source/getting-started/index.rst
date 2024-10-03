@@ -65,14 +65,16 @@ To discover other tenants, and find the details specific to that tenant, such as
 
 .. code-block:: text
 
-    curl https://admin.tacc.io/v3/tenants | jq
+    curl https://admin.tapis.io/v3/tenants | jq
+
+Note that ``jq`` is a command-line JSON formatter. Checking out their `download instructions <https://jqlang.github.io/jq/download/>`_.
 
 From here, you will use the ``ctrl-F`` function in your terminal window to search for your base_url. 
 A note of caution, be sure to verify if you are using the DEV or PROD tenants; DEV tenants will be labeled with a delineation of -dev and noted in the description as such.
 
 For more information about tenant listing and search techniques please see the `Tenancy, Sites and Authentication <https://tapis.readthedocs.io/en/latest/technical/authentication.html>`_.
 
-In Python code below you will replace *your_tacc_username* and *your_tacc_password* with your TACC username and password, preserving the quotation marks shown in the command below.
+In Python code below you will replace *your_tacc_username* and *your_tacc_password* with your TACC username and password, preserving the quotation marks shown in the command below. See more about the Tapis Python SDK, ``tapipy``, including how to install it, from `here <https://tapis.readthedocs.io/en/latest/technical/pythondev.html>`_.
 
 .. include:: /includes/tapipy-init.rst
 
@@ -230,7 +232,7 @@ Then you'll execute the following cURL command, being sure to specify the name o
 
 .. code-block:: text
 
-  $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://your_tapis_system_id/v3/systems -d @system_s3.json
+  $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems -d @system_s3.json
 
 The output of the command will show the URL to the system you just created in the Tapis tenant.
 
