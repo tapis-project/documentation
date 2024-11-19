@@ -673,15 +673,23 @@ The JSON schema for defining key/value pairs of strings in various `ParameterSet
        "$comment": "A simple key/value pair",
        "type": "object",
            "properties": {
-               "key":   {"type": "string", "minLength": 1},
-               "value": {"type": "string", "minLength": 0},
-               "description": {"type": "string", "minLength": 1, "maxLength": 2048}
+              "key":   {"type": "string", "minLength": 1},
+              "value": {"type": "string", "minLength": 0},
+              "description": {"type": "string", "minLength": 1, "maxLength": 8096},
+              "include": { "type": "boolean" },
+              "notes": { "type": "object" }
            },
         "required": ["key", "value"],
         "additionalProperties": false
    }
 
-Both the *key* and *value* are required, though the *value* can be an empty string.  Descriptions are optional.
+Both the *key* and *value* are required, though the *value* can be an empty string. Descriptions are optional
+but if present must contain 1 or more characters.
+
+The *include* field applies only to attributes that are defined in application and system definitions
+with an *inputMode* of INCLUDE_ON_DEMAND or INCLUDE_BY_DEFAULT; this parameter is ignored for all other inputModes.
+May be used in a job submit request to exclude attributes that have *inputMode=INCLUDE_BY_DEFAULT*.
+The *notes* field can be any JSON object, i.e., JSON that begins with a brace ("{").
 
 LogConfig
 ^^^^^^^^^

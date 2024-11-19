@@ -11,6 +11,10 @@ For more information on creating subscriptions through the Jobs service, please 
 
 .. _Job Subscriptions: https://tapis.readthedocs.io/en/latest/technical/jobs.html#subscriptions
 
+.. warning::
+  Currently subscriptions for notifications may only be managed through the Tapis Jobs service.
+
+
 --------
 Overview
 --------
