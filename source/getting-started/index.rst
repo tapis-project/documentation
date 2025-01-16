@@ -314,3 +314,96 @@ The output of the command will show will look similar to that below, where the p
     ],
     "version":"1.2.2","metadata":{}
   }
+
+
+Hello World
+^^^^^^^^^^^
+
+For those of you that want to dive straight into Tapis and begin to explore it's possibilites, this is our tutorial. 
+In this tutorial you will create a system, sentiment-analysis application, and run a job with it. For the sake of brevity and speed, we will complete this tutorial utilizing the Python SDK, TapiPy.
+
+Pre-requisites: Active TACC account, TapiPy installed. 
+
+.. include:: /includes/tapipy-init.rst
+
+Next you will need to gather your access token. 
+
+.. code-block:: python
+
+    t.access_token
+
+The output should look similar to the following; it describes the access token that was just created.
+
+.. code-block:: text
+
+    access_token: *very long string of alphanumeric characters*
+    claims: {'jti': '007fa9e6-f044-4817-a812-12292b2bdbe3', 'iss': 'https://tacc.tapis.io/v3/tokens', 'sub': 'your_tacc_username', 'tapis/tenant_id': 'tacc', 'tapis/token_type': 'access', 'tapis/delegation': False, 'tapis/delegation_sub': None, 'tapis/username': 'your_tacc_username', 'tapis/account_type': 'user', 'exp': 1657686889, 'tapis/client_id': None, 'tapis/grant_type': 'password'}
+    expires_at: 2022-07-13 04:34:49+00:00
+    expires_in: <function Tapis.add_claims_to_token.<locals>._expires_in at 0x10a070280>
+    jti: 007fa9e6-f044-4817-a812-12292b2bdbe3
+    original_ttl: 14400
+
+Where you will have your own access token and the placeholder *your_tacc_username* will be replaced with the username you used.
+
+Next you will need to create a system. 
+
+.. code-block:: text
+
+    system_def = {
+    “id": “<YOUR_SYSTEM_ID>”,
+    "description": "test system",
+    "systemType": "LINUX",
+    "host”:”<HOST>,
+    "defaultAuthnMethod": "PASSWORD",
+    "rootDir": "/",
+    "canExec": True,
+    "jobRuntimes": [ { "runtimeType": "SINGULARITY" } ],
+    "jobWorkingDir": "workdir",
+  }
+
+  t.systems.createSystem(**system_def)
+
+This will yield: 
+
+.. code-block:: text
+
+  url: http://tacc.tapis.io/v3/systems/<YOUR_SYSTEM_ID>
+
+
+Now that you have a system to run your jobs, you must create an application. Here is an example of an application definition:
+
+.. code-block:: text
+
+    app_def = {
+      "id": app_id,
+      "version": "0.2",
+      "description": "Application utilizing the sentiment analysis model from Hugging Face.",
+      "jobType": "FORK",
+      "runtime": "DOCKER",
+      "containerImage": "tapis/sentiment-analysis:1.0.0",
+      "jobAttributes": {
+          "parameterSet": {
+              "archiveFilter": {
+                  "includeLaunchFiles": False
+              }
+          },
+          "memoryMB": 1,
+          "nodeCount": 1,
+          "coresPerNode": 1,
+          "maxMinutes": 10
+      }
+  }
+
+With a system now created, we need to register this application to make it accessible on this tenant. 
+
+.. code-block:: text
+
+    import json
+    from tapipy.tapis import Tapis
+    t = Tapis(base_url='https://training.tapis.io', username='<userid>', password='************')
+    t.apps.createAppVersion(**app_def)
+
+
+Submitting a job
+
+Running a job only requires 3 items: a name (Job name), an app_id, and the app_id version. 
