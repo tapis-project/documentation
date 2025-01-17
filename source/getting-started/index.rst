@@ -317,12 +317,15 @@ The output of the command will show will look similar to that below, where the p
 
 
 Hello World
-^^^^^^^^^^^
+----------------------
 
 For those of you that want to dive straight into Tapis and begin to explore it's possibilites, this is our tutorial. 
 In this tutorial you will create a system, sentiment-analysis application, and run a job with it. For the sake of brevity and speed, we will complete this tutorial utilizing the Python SDK, TapiPy.
 
 Pre-requisites: Active TACC account, TapiPy installed. 
+
+Create A Tapis Token
+^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: /includes/tapipy-init.rst
 
@@ -345,7 +348,11 @@ The output should look similar to the following; it describes the access token t
 
 Where you will have your own access token and the placeholder *your_tacc_username* will be replaced with the username you used.
 
-Next you will need to create a system. 
+Create a system
+^^^^^^^^^^^^^^^^^^^^^
+
+Next you will need to create a system. Your system must be hosted on a machine that you can SSH to. There are a variety of authentication methods such as PASSWORD, PKI_KEYS (SSH Keys: Private, Public pair), ACCESS_KEYS (S3), and TOKENS (GLOBUS).
+If you are using PKI_KEYS please be aware that they will only work if MFA is NOT enabled on that system. Also, you must place the public key on that system. They Public and Private key on your system and the Public key on the host system must be formatted for one line. 
 
 .. code-block:: text
 
@@ -363,12 +370,17 @@ Next you will need to create a system.
 
   t.systems.createSystem(**system_def)
 
+When defining a HOST, it's important to remember that it should be defined by the URL wihtout the https://
+
 This will yield: 
 
 .. code-block:: text
 
   url: http://tacc.tapis.io/v3/systems/<YOUR_SYSTEM_ID>
 
+
+Create An Application
+^^^^^^^^^^^^^^^^^^^^^
 
 Now that you have a system to run your jobs, you must create an application. Here is an example of an application definition:
 
@@ -403,8 +415,72 @@ With a system now created, we need to register this application to make it acces
     t = Tapis(base_url='https://training.tapis.io', username='<userid>', password='************')
     t.apps.createAppVersion(**app_def)
 
+Application Arguments
+^^^^^^^^^^^^^^^^^^^^^
+
+With appArgs parameter you can specify one or more command line arguments for the user application.
+Arguments specified in the application definition are appended to those in the submission request. Metadata can be attached to any argument.
+
+Submitting a Job
+
+.. code-block:: text
+
+  #Submit job to run the sentiment analysis application
+    pa= {
+        "parameterSet": {
+        "appArgs": [
+                {"arg": "--sentences"},
+                {"arg": "\"This is great\" \"This is not fun\""}
+                
+            ]
+        }}
+
+    # Submit a job
 
 Submitting a job
+^^^^^^^^^^^^^^^^^^^^^
 
-Running a job only requires 3 items: a name (Job name), an app_id, and the app_id version. 
+Running a job only requires 3 items: a name (Job name), an app_id, and the app_id version. If you have not specified the Execution System in your application, you will need to specify it when submitting a job. 
+
+A simple submission would look like this:
+
+.. code-block:: text
+
+  job_response_vm=client.jobs.submitJob(name='sentiment analysis',description='sentiment analysis with hugging face transformer pipelines',appId=app_id,appVersion='0.2',execSystemId=system_id_vm, **pa)
+
+All of the Job Submission Parameteres can be found here `Job Submission Parameteres <https://tapis.readthedocs.io/en/latest/technical/jobs.html#the-job-submission-request>`_.
+
+Everytime a job is submitted, a unique job id (uuid) is generated. We will use this job id with tapipy to get the job status, and download the job output.
+
+.. code-block:: text
+
+    # Get job uuid from the job submission response
+  print("****************************************************")
+  job_uuid_vm=job_response_vm.uuid
+  print("Job UUID: " + job_uuid_vm)
+  print("****************************************************")
+
+Jobs List
+
+Now, when you do a jobs-list now, you can see your jobUuid.
+
+.. code-block:: text
+
+  client.jobs.getJobList()
+
+Jobs Output
+^^^^^^^^^^^^^^^^^^^^^
+
+To download the output of job you need to give it jobUuid and output path. You can download a directory in the jobs’ outputPath in zip format. The outputPath is relative to archive system specified.
+
+.. code-block:: text
+
+    # Download output of the job
+  print("Job Output file:")
+
+  print("****************************************************")
+  jobs_output_vm= client.jobs.getJobOutputDownload(jobUuid=job_uuid_vm,outputPath='stdout')
+  print(jobs_output_vm)
+  print("****************************************************")
+
 
