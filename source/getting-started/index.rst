@@ -314,3 +314,183 @@ The output of the command will show will look similar to that below, where the p
     ],
     "version":"1.2.2","metadata":{}
   }
+
+
+Sentiment-Analysis Application Tutorial
+--------------------------------------------
+
+For those of you that want to dive straight into Tapis and begin to explore it's possibilites, this is our tutorial. 
+In this tutorial you will create a system, sentiment-analysis application, and run a job with it. For the sake of brevity and speed, we will complete this tutorial utilizing the Python SDK, Tapipy.
+
+Pre-requisites: Active TACC account, Tapipy installed, Access to Stampede3, Frontera, or non-MFA system.                         
+
+Create A Tapis Token
+^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: /includes/tapipy-init.rst
+
+Next you will need to gather your access token. 
+
+.. code-block:: python
+
+    t.access_token
+
+The output should look similar to the following; it describes the access token that was just created.
+
+.. code-block:: text
+
+    access_token: *very long string of alphanumeric characters*
+    claims: {'jti': '007fa9e6-f044-4817-a812-12292b2bdbe3', 'iss': 'https://tacc.tapis.io/v3/tokens', 'sub': 'your_tacc_username', 'tapis/tenant_id': 'tacc', 'tapis/token_type': 'access', 'tapis/delegation': False, 'tapis/delegation_sub': None, 'tapis/username': 'your_tacc_username', 'tapis/account_type': 'user', 'exp': 1657686889, 'tapis/client_id': None, 'tapis/grant_type': 'password'}
+    expires_at: 2022-07-13 04:34:49+00:00
+    expires_in: <function Tapis.add_claims_to_token.<locals>._expires_in at 0x10a070280>
+    jti: 007fa9e6-f044-4817-a812-12292b2bdbe3
+    original_ttl: 14400
+
+Where you will have your own access token and the placeholder *your_tacc_username* will be replaced with the username you used.
+
+Create a system
+^^^^^^^^^^^^^^^^^^^^^
+
+Next you will need to create a system. Your system must be hosted on a machine that you can SSH to. There are a variety of authentication methods such as PASSWORD, PKI_KEYS (SSH Keys: Private, Public pair), ACCESS_KEYS (S3), and TOKENS (GLOBUS).
+If you are using PKI_KEYS please be aware that they will only work if MFA is NOT enabled on that system. Also, you must place the public key on that system. The Public and Private key on your system and the Public key on the host system must be formatted for one line. 
+
+.. code-block:: text
+
+    system_def = {
+    “id": “<YOUR_SYSTEM_ID>”,
+    "description": "test system",
+    "systemType": "LINUX",
+    "host”:”<HOST>,
+    "defaultAuthnMethod": "PASSWORD",
+    "rootDir": "/",
+    "canExec": True,
+    "jobRuntimes": [ { "runtimeType": "SINGULARITY" } ],
+    "jobWorkingDir": "workdir",
+  }
+
+  t.systems.createSystem(**system_def)
+
+When defining a HOST, it's important to remember that it should be defined by the URL without the "https://"
+
+This will return: 
+
+.. code-block:: text
+
+  url: http://tacc.tapis.io/v3/systems/<YOUR_SYSTEM_ID>
+
+
+Create An Application
+^^^^^^^^^^^^^^^^^^^^^
+
+Now that you have a system to run your jobs, you must create an application. Here is an example of an application definition:
+
+.. code-block:: text
+
+    app_def = {
+      "id": <app_id>,
+      "version": "0.2",
+      "description": "Application utilizing the sentiment analysis model from Hugging Face.",
+      "jobType": "FORK",
+      "runtime": "DOCKER",
+      "containerImage": "tapis/sentiment-analysis:1.0.0",
+      "jobAttributes": {
+          "parameterSet": {
+              "archiveFilter": {
+                  "includeLaunchFiles": False
+              }
+          },
+          "memoryMB": 1,
+          "nodeCount": 1,
+          "coresPerNode": 1,
+          "maxMinutes": 10
+      }
+  }
+
+With a system now created, we need to register this application to make it accessible on this tenant. 
+
+.. code-block:: text
+
+    t.apps.createAppVersion(**app_def)
+
+Application Arguments
+^^^^^^^^^^^^^^^^^^^^^
+
+With appArgs parameter you can specify one or more command line arguments for the user application.
+Arguments specified in the application definition are appended to those in the submission request. Metadata can be attached to any argument:
+
+
+
+.. code-block:: text
+
+  # Modify Job submission arguments 
+    pa = {
+        "parameterSet": {
+        "appArgs": [
+                {"arg": "--sentences"},
+                {"arg": "\"This is great\" \"This is not fun\""}
+            ]
+        }}
+
+Submitting a job
+^^^^^^^^^^^^^^^^^^^^^
+
+Running a job only requires 3 items: a Job name (name), an app_id, and the app_id version. If you have not specified the Execution System in your application, you will need to specify it when submitting a job. 
+
+A simple submission would look like this:
+
+.. code-block:: text
+
+  job_response = t.jobs.submitJob(
+      name='sentiment analysis', 
+      appId=app_id,appVersion='0.2',
+      execSystemId=system_def, 
+      **pa #reintroducing modified job submission arguments
+    )
+
+All of the Job Submission Parameters can be found here `Job Submission Parameters <https://tapis.readthedocs.io/en/latest/technical/jobs.html#the-job-submission-request>`_.
+
+Everytime a job is submitted, a unique job_id (uuid) is generated. We will use this job_id with tapipy to get the job status and download the job output.
+
+.. code-block:: text
+
+    # Get job uuid from the job submission response
+  print("****************************************************")
+  job_uuid = job_response.uuid
+  print("Job UUID: " + job_uuid)
+  print("****************************************************")
+
+Jobs List
+^^^^^^^^^^^^^^^^^^^^^
+
+When you do a jobs list now, you can see your jobUuid.
+
+.. code-block:: text
+
+  t.jobs.getJobList()
+
+Jobs Output
+^^^^^^^^^^^^^^^^^^^^^
+
+To download the output of a job you need to give it the jobUuid and output path. You can download a directory in the jobs’ outputPath in zip format. The outputPath is relative to archive system specified.
+
+.. code-block:: text
+
+    # Download output of the job
+  print("Job Output file:")
+
+  print("****************************************************")
+  jobs_output = t.jobs.getJobOutputDownload(jobUuid=job_uuid,outputPath='stdout')
+  print(jobs_output)
+  print("****************************************************")
+
+
+
+
+
+
+Next Steps
+^^^^^^^^^^^^^^^^^^^^^
+
+
+This concludes the Sentiment-Analysis tutorial. This tutorial was presented at `PEARC'24 <https://tapis-project.github.io/pearc24-tapis-tutorial/>`_. Please feel free to explore and read more of the Tapis documentation.
+If you would like to see more recent Tapis tutorials, please see `Tapis Tutorials <https://tapis-project.github.io/tutorials/>`_.
