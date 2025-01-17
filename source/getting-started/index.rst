@@ -316,13 +316,13 @@ The output of the command will show will look similar to that below, where the p
   }
 
 
-Hello World
-----------------------
+Sentiment-Analysis Application Tutorial
+--------------------------------------------
 
 For those of you that want to dive straight into Tapis and begin to explore it's possibilites, this is our tutorial. 
-In this tutorial you will create a system, sentiment-analysis application, and run a job with it. For the sake of brevity and speed, we will complete this tutorial utilizing the Python SDK, TapiPy.
+In this tutorial you will create a system, sentiment-analysis application, and run a job with it. For the sake of brevity and speed, we will complete this tutorial utilizing the Python SDK, Tapipy.
 
-Pre-requisites: Active TACC account, TapiPy installed. 
+Pre-requisites: Active TACC account, Tapipy installed, Access to Stampede3, Frontera, or non-MFA system.                         
 
 Create A Tapis Token
 ^^^^^^^^^^^^^^^^^^^^^
@@ -352,7 +352,7 @@ Create a system
 ^^^^^^^^^^^^^^^^^^^^^
 
 Next you will need to create a system. Your system must be hosted on a machine that you can SSH to. There are a variety of authentication methods such as PASSWORD, PKI_KEYS (SSH Keys: Private, Public pair), ACCESS_KEYS (S3), and TOKENS (GLOBUS).
-If you are using PKI_KEYS please be aware that they will only work if MFA is NOT enabled on that system. Also, you must place the public key on that system. They Public and Private key on your system and the Public key on the host system must be formatted for one line. 
+If you are using PKI_KEYS please be aware that they will only work if MFA is NOT enabled on that system. Also, you must place the public key on that system. The Public and Private key on your system and the Public key on the host system must be formatted for one line. 
 
 .. code-block:: text
 
@@ -370,9 +370,9 @@ If you are using PKI_KEYS please be aware that they will only work if MFA is NOT
 
   t.systems.createSystem(**system_def)
 
-When defining a HOST, it's important to remember that it should be defined by the URL wihtout the https://
+When defining a HOST, it's important to remember that it should be defined by the URL without the "https://"
 
-This will yield: 
+This will return: 
 
 .. code-block:: text
 
@@ -387,7 +387,7 @@ Now that you have a system to run your jobs, you must create an application. Her
 .. code-block:: text
 
     app_def = {
-      "id": app_id,
+      "id": <app_id>,
       "version": "0.2",
       "description": "Application utilizing the sentiment analysis model from Hugging Face.",
       "jobType": "FORK",
@@ -410,68 +410,68 @@ With a system now created, we need to register this application to make it acces
 
 .. code-block:: text
 
-    import json
-    from tapipy.tapis import Tapis
-    t = Tapis(base_url='https://training.tapis.io', username='<userid>', password='************')
     t.apps.createAppVersion(**app_def)
 
 Application Arguments
 ^^^^^^^^^^^^^^^^^^^^^
 
 With appArgs parameter you can specify one or more command line arguments for the user application.
-Arguments specified in the application definition are appended to those in the submission request. Metadata can be attached to any argument.
+Arguments specified in the application definition are appended to those in the submission request. Metadata can be attached to any argument:
 
-Submitting a Job
+
 
 .. code-block:: text
 
-  #Submit job to run the sentiment analysis application
-    pa= {
+  # Modify Job submission arguments 
+    pa = {
         "parameterSet": {
         "appArgs": [
                 {"arg": "--sentences"},
                 {"arg": "\"This is great\" \"This is not fun\""}
-                
             ]
         }}
-
-    # Submit a job
 
 Submitting a job
 ^^^^^^^^^^^^^^^^^^^^^
 
-Running a job only requires 3 items: a name (Job name), an app_id, and the app_id version. If you have not specified the Execution System in your application, you will need to specify it when submitting a job. 
+Running a job only requires 3 items: a Job name (name), an app_id, and the app_id version. If you have not specified the Execution System in your application, you will need to specify it when submitting a job. 
 
 A simple submission would look like this:
 
 .. code-block:: text
 
-  job_response_vm=client.jobs.submitJob(name='sentiment analysis',description='sentiment analysis with hugging face transformer pipelines',appId=app_id,appVersion='0.2',execSystemId=system_id_vm, **pa)
+  job_response = t.jobs.submitJob(
+      name='sentiment analysis', 
+      appId=app_id,appVersion='0.2',
+      execSystemId=system_def, 
+      **pa #reintroducing modified job submission arguments
+    )
 
-All of the Job Submission Parameteres can be found here `Job Submission Parameteres <https://tapis.readthedocs.io/en/latest/technical/jobs.html#the-job-submission-request>`_.
+All of the Job Submission Parameters can be found here `Job Submission Parameters <https://tapis.readthedocs.io/en/latest/technical/jobs.html#the-job-submission-request>`_.
 
-Everytime a job is submitted, a unique job id (uuid) is generated. We will use this job id with tapipy to get the job status, and download the job output.
+Everytime a job is submitted, a unique job_id (uuid) is generated. We will use this job_id with tapipy to get the job status and download the job output.
 
 .. code-block:: text
 
     # Get job uuid from the job submission response
   print("****************************************************")
-  job_uuid_vm=job_response_vm.uuid
-  print("Job UUID: " + job_uuid_vm)
+  job_uuid = job_response.uuid
+  print("Job UUID: " + job_uuid)
   print("****************************************************")
 
 Jobs List
+^^^^^^^^^^^^^^^^^^^^^
 
-Now, when you do a jobs-list now, you can see your jobUuid.
+When you do a jobs list now, you can see your jobUuid.
 
 .. code-block:: text
 
-  client.jobs.getJobList()
+  t.jobs.getJobList()
 
 Jobs Output
 ^^^^^^^^^^^^^^^^^^^^^
 
-To download the output of job you need to give it jobUuid and output path. You can download a directory in the jobs’ outputPath in zip format. The outputPath is relative to archive system specified.
+To download the output of a job you need to give it the jobUuid and output path. You can download a directory in the jobs’ outputPath in zip format. The outputPath is relative to archive system specified.
 
 .. code-block:: text
 
@@ -479,8 +479,18 @@ To download the output of job you need to give it jobUuid and output path. You c
   print("Job Output file:")
 
   print("****************************************************")
-  jobs_output_vm= client.jobs.getJobOutputDownload(jobUuid=job_uuid_vm,outputPath='stdout')
-  print(jobs_output_vm)
+  jobs_output = t.jobs.getJobOutputDownload(jobUuid=job_uuid,outputPath='stdout')
+  print(jobs_output)
   print("****************************************************")
 
 
+
+
+
+
+Next Steps
+^^^^^^^^^^^^^^^^^^^^^
+
+
+This concludes the Sentiment-Analysis tutorial. This tutorial was presented at `PEARC'24 <https://tapis-project.github.io/pearc24-tapis-tutorial/>`_. Please feel free to explore and read more of the Tapis documentation.
+If you would like to see more recent Tapis tutorials, please see `Tapis Tutorials <https://tapis-project.github.io/tutorials/>`_.
