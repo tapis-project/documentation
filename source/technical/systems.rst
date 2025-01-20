@@ -289,13 +289,6 @@ following linux command useful in converting a multi-line private key into a sin
 
   cat $privateKeyFile | awk -v ORS='\\n' '1'
 
-Also, Tapis does not currently support OPENSSH type keys. After generating the keypair, please inspect the first few
-lines of the private key file and confirm that it is not of type OPENSSH. Typically, a valid private key file will
-start with the line ``-----BEGIN RSA PRIVATE KEY-----``.
-If your private key is of type OPENSSH please use a command similar to the following to generate your keypair::
-
-  ssh-keygen -t rsa -b 4096 -m PEM
-
 When generating the keypair, do not use a passphrase. This can interfere with non-interactive use of the keypair.
 
 Finally, please be aware that if the host has multi-factor authentication (MFA) enabled this may prevent Tapis from
@@ -304,7 +297,6 @@ communicating with the host. Tapis does not currently support MFA.
 When encountering problems here are some suggestions on what to check:
 
 * Public and private keys are each on one line in the json file. Newline characters in private key are properly encoded.
-* Keypair is not of type OPENSSH
 * Keypair does not have a passphrase
 * Public key has been added to the authorized_keys file for the target user. File ~/.ssh/authorized_keys
 * File ~/.ssh/authorized_keys has proper permissions.

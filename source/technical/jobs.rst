@@ -1230,8 +1230,12 @@ Singularity
 
 Tapis provides two distinct ways to launch a Singularity containers, using *singluarity instance start* or *singularity run*.
 
-Singularity Start
-^^^^^^^^^^^^^^^^^
+.. warning::
+  Please note that use of the SINGULARITY_START runtime option has been deprecated. Support for *singluarity instance start*
+  will be removed in a future release. If you have a need for this option please contact Tapis support (cicsupport@tacc.utexas.edu).
+
+Singularity Start (DEPRECATED)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Singularity's support for detached processes and services is implemented natively by its instance start_, stop_ and list_ commands.  To launch a container, the Jobs service will SSH to the target host and issue a command using this template:
 

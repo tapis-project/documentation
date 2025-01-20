@@ -66,6 +66,11 @@ Versioned Attributes
   Runtime version to be used when executing the application.
 *runtimeOptions*
   Options that apply to the runtime. Currently only applicable for SINGULARITY runtime.
+
+.. warning::
+  Please note that use of SINGULARITY_START has been deprecated. Support will be removed in a future release.
+  If you have a need for this option please contact Tapis support (cicsupport@tacc.utexas.edu).
+
 *containerImage*
   Reference to be used when running the container image.
 *jobType*
@@ -519,6 +524,8 @@ Application Attributes Table
 | runtimeOptions      | [enum]         |                      | - Options that apply to specific runtimes.                                           |
 |                     |                |                      | - Options: NONE, SINGULARITY_START, SINGULARITY_RUN                                  |
 |                     |                |                      | - If runtime is SINGULARITY then must have one of SINGULARITY_START, SINGULARITY_RUN |
+|                     |                |                      | - **WARNING** Please note that use of SINGULARITY_START has been deprecated.         |
+|                     |                |                      | - Support for SINGULARITY_START will be removed in a future release.                 |
 |                     |                |                      | - Default is NONE.                                                                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | containerImage      | String         |docker.io/hello-world | - Reference for the container image. Other examples:                                 |
