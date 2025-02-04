@@ -52,7 +52,7 @@ At a high level a system represents the following information:
 *systemType* - Type of system
   LINUX, S3, IRODS or GLOBUS
 *owner*
-  A specific user set at system creation. By default this is the resolved value for *${apiUserId}*, the user making
+  A specific user set at system creation. By default this is the resolved value for ``${apiUserId}``, the user making
   the request to create the system.
 *host* - Host name, IP address or Globus ID
   FQDN, IP address, Globus endpoint ID or Globus collection ID.
@@ -211,7 +211,7 @@ Effective User Id and Host Login
 
 The attribute *effectiveUserId* determines the host login user, the user used to access the underlying host or service.
 The attribute can be set to a static string indicating a specific user (such as a service account) or dynamically
-specified as *${apiUserId}*. For the case of *${apiUserId}*, the service resolves the variable by extracting the
+specified as ``${apiUserId}``. For the case of ``${apiUserId}``, the service resolves the variable by extracting the
 identity from the request to the service (i.e. the JWT) and applying a mapping to a host login user if such a mapping
 has been provided. If no mapping is provided, then the extracted identity is taken to be the host login user.
 
@@ -683,11 +683,16 @@ Sharing
 In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
 This approach is known simply as *sharing*. The sharing API allows you to share a system with a set of users
 as well as share publicly with all users in a tenant. Sharing provides ``READ+EXECUTE`` access.
-When the system has a dynamic *effectiveUserId*, sharing also allows for MODIFY access to all paths for calls
-made through the Files service.
+When the system has a dynamic *effectiveUserId*, sharing also allows for MODIFY access to all file paths for
+calls made through the Files service.
 
 .. note::
-  Tapis permissions and sharing are independent of native permissions enforced by the underlying system host.
+  Note that there is one other case when a system is treated as having a dynamic *effectiverUserId* in the
+  context of sharing, even with a static *effectiverUserId*. This is when the
+  system type is ``IRODS`` and the attribute *useProxy* is set to ``true``. In this case the connection to
+  the *IRODS* host is made using a special administrative account which then acts as the Tapis user.
+  So please be aware that for this type of system sharing the system or a file path will allow for
+  MODIFY access.
 
 The most common use case for sharing a system is to publicly share the system with all users in the tenant.
 This would allow any user to use the system for execution or storage when running an application.
@@ -705,8 +710,16 @@ This would allow any user to use the system for execution or storage when runnin
   *effectiveUserId* users are always logging in to the host as themselves. With a static *effectiveUserId*
   there is a privilege escalation security risk. 
 
+.. warning::
+  In the context of using a shared application to run a job, sharing a system (and hence all file paths
+  on the system) will grant users READ and MODIFY access to the file paths, even for the case of a
+  static effectiveUserId.
+
+.. note::
+  Tapis permissions and sharing are independent of native permissions enforced by the underlying system host.
 
 For more information on sharing please see :doc:`sharing`
+
 
 --------------------------
 Authentication Credentials
@@ -868,6 +881,7 @@ System Attributes Table
 |                     |                |                      | - Indicates if an IRODS proxy administrative user should be used.                    |
 |                     |                |                      | - *effectiveUserId* is the IRODS proxy admin user.                                   |
 |                     |                |                      | - Tapis user making the request is the IRODS user who will be impersonated.          |
+|                     |                |                      | - For this case *effectiveUserId* is considered dynamic in context of sharing.       |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | proxyHost           | String         |                      | - Name of proxy host.                                                                |
 |                     |                |                      | - Not currently supported. Please contact support if needed.                         |

@@ -698,12 +698,26 @@ File Path Sharing
 -----------------------------
 
 In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
-This approach is known simply as *sharing*. The sharing API allows you to share a path with a set of users
-as well as share publicly with all users in a tenant.
-Sharing a path grants users READ access to the path or, in the context of running a job, it grants users READ
-and MODIFY access to the path.
+This approach is known simply as *sharing*. The sharing API allows you to share a file path
+with a set of users as well as share publicly with all users in a tenant. Sharing provides READ access.
+When the system has a dynamic *effectiveUserId*, sharing also allows for MODIFY access to all paths for calls
+made through the Files service.
 
-Please note that the underlying host associated with a system typically also has it's own access controls.
+.. note::
+  Note that there is one other case when a system is treated as having a dynamic *effectiverUserId* in the
+  context of sharing, even with a static *effectiverUserId*. This is when the
+  system type is ``IRODS`` and the attribute *useProxy* is set to ``true``. In this case the connection to
+  the *IRODS* host is made using a special administrative account which then acts as the Tapis user.
+  So please be aware that for this type of system sharing a file path will allow for MODIFY access.
+
+.. warning::
+  In the context of using a shared application to run a job, sharing a path will grant users READ and MODIFY
+  access to the path, even for the case of a static effectiveUserId.
+
+.. note::
+  Tapis permissions and sharing are independent of native permissions enforced by the underlying system host.
+
+For more information on sharing please see :doc:`sharing`
 
 Getting share information
 ~~~~~~~~~~~~~~~~~~~~~~~~~
