@@ -168,6 +168,7 @@ The output should include a list of all files in the bucket. For this example we
     type: file
     url: tapis://your_tapis_system_id/test_image.jpg]
 
+.. _curl-example:
 
 cURL Example
 ----------------------

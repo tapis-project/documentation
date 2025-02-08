@@ -493,6 +493,16 @@ available to all users and their descriptions.
 | webhook             | URL to publish this actor's events to.                                           |
 |                     | (see :ref:`Actor Links, Events, and Webhooks <target actor links>`)              |
 +---------------------+----------------------------------------------------------------------------------+
+| cron_schedule       | String of 'yyyy-mm-dd hh + <increment>' format. Turns on cron feature for actor  |
+|                     | so that at the specified times the actor with execute with a generic static      |
+|                     | message. Increment looks like "5 days" or "1 week" (hours, days, weeks, months). |
+|                     | There's currently no support for increments shorter that an hour.                |
+|                     | (see :ref:`Actor Cron <target actor cron>`)                                      |
++---------------------+----------------------------------------------------------------------------------+
+| cron_on             | (True/False) - Whether to turn on or off the cron schedule feature for the actor |
+|                     | (see :ref:`Actor Cron <target actor cron>`)                                      |
++---------------------+----------------------------------------------------------------------------------+
+
 
 Notes
 -----
@@ -1432,6 +1442,123 @@ Result
 
 
 
+----
+
+.. _target actor cron:
+
+Cron Schedule
+=============
+
+.. Note::
+  The Abaco Cron Schedule feature was implemented in version 1.7.0.
+
+Abaco's cron schedule is a tool to automatically execute your actor based on a schedule.
+Each actor has two user-defined parameters associated with the cron execution: 
+``cron_schedule`` and ``cron_on``. The scheduler has another variable, ``cron_next_ex``,
+which holds the next execution time of the actor. This is an internal variable 
+and cannot be edited by users. 
+To create a schedule, set the ``cron_schedule`` parameter when registering a new actor or updating an
+existing actor.
+The value of ``cron_schedule`` should be a string in the following format:
+
+.. code-block:: bash
+
+  yyyy-mm-dd hh + <number> <unit of time>
+
+where the first part is the datetime when the first execution will happen, and the 
+second part is the time increment for each subsequent execution. Note that the spaces,
+plus characters (``+``) and dash characters (``-``) in the template above are meaningful and
+are a required part of
+the format. Abaco's cron schedule also has an alias
+called ``now``, which lets you execute the actor at the current UTC time. For example,
+if an actor was registered with this schedule
+
+.. code-block:: bash
+
+  "cron_schedule": "now + 1 hour"
+
+the actor would execute at the current time, and then again at the top of the hour every hour.
+
+.. Note::
+  The highest granularity is the hour, and the units of time that can be used are hour, day, week, and month.
+
+To create an actor with a schedule, make a request like the following:
+
+.. code-block:: bash
+
+    $ curl -H "X-Tapis-Token: $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{"image": "abacosamples/test", "cron_schedule": "2020-09-28 16 + 1 hour"}' \
+    https://tacc.tapis.io/v3/actors
+
+To update the schedule, make a request like the following:
+
+.. code-block:: bash
+
+    $ curl -H "X-Tapis-Token: $TOKEN" \
+    -X PUT \
+    -H "Content-Type: application/json" \
+    -d '{"image": "abacosamples/test", "cron_schedule": "2020-12-11 16 + 3 days"}' \
+    https://tacc.tapis.io/v3/actors/<actor_id>
+
+This last request above will update the cron schedule for the actor with id ``<actor_id>`` as
+follows: the actor will be scheduled to
+automatically execute on December 11th, 2020 at 4 pm, UTC timezone. 
+That actor will be executed again 3 days later on the 14th, 
+at 4pm, and then 3 days after that, again at 4pm. This execution will 
+recur every 3 days until the user changes the cron schedule,
+turns off the cron schedule, or deletes the actor.
+
+.. Note::
+  The cron schedule runs on the UTC timezone. 
+
+.. Note::
+  When making requests to set the cron_schedule, be sure to pass "application/json" content to avoid
+  issues requiring escaping characters inside the schedule value.
+
+
+To turn off the schedule, use the `cron_on` switch like so:
+
+.. code-block:: bash
+
+    $ curl -H "X-Tapis-Token: $TOKEN" \
+    -X PUT \
+    -H "Content-Type: application/json" \
+    -d '{"image": "abacosamples/test", "cron_on": "False"}' \
+    https://tacc.tapis.io/v3/actors/<actor_id>
+
+
+By turning off the schedule, the actor will no longer execute itself at each increment. 
+You can turn it on again at any time, and the actor will 
+resume incrementing as before. For example, if an actor is set to 
+execute every hour, and then the cron switch is turned off, the actor will
+stop executing itself. After a week, the switch can be turned back on, and the
+actor will resume executing on the hour. 
+
+Cron Schedule - Error Messages
+------------------------------
+If users supply a value for `cron_schedule` in an incorrect format, they will receive an error
+letting them know to check the format. The API also checks that the schedule
+sent in has not already past. For example, if you pass in the year 1955, you 
+will get an error message saying the cron schedule has already passed. The error 
+message will also tell you the current UTC time for reference. 
+
+Cron Message and Execution
+--------------------------
+When it is time to execute an actor configured with a ``cron_schedule``, Abaco's internal cron agent
+simply queues a message on the actor's internal message queue, just as if a client had sent a message
+to the actor using the ``/messages`` API. If the actor already has (unprocessed) messages in its queue,
+these messages will be processed first before the cron message. This means that there could be some delay
+between the time Abaco internally queues the message and the actor starts executing it.
+
+Currently, the cron message sent to the actor is the static string
+
+.. code-block:: bash
+
+  This is your cron execution
+
+Accordingly, the ``_abaco_Content_Type`` context variable is set to ``str``. The rest of the context
+variables are set normally, as described in :ref:`context`.
 
 
 ----
