@@ -269,7 +269,7 @@ Using CURL:
 
 .. code-block:: shell
 
-    curl -X POST https://tacc.tapis.io/v3/files/ops/<systemId> -H "X-Tapis-Token: $JWT" -H Content-Type:application/json -d '{"path":"<directory_path"}'
+    curl -H "X-Tapis-Token: $JWT" -H "Content-Type:application/json" -X POST https://tacc.tapis.io/v3/files/ops/<systemId> -d '{"path":"<directory_path"}'
 
 Uploading
 ~~~~~~~~~
@@ -287,7 +287,7 @@ Using the official Tapis Python SDK:
 
 .. code-block:: shell
 
-    curl -H "X-Tapis-Token: $JWT" -X POST -F "file=@someFile.txt" https://tacc.tapis.io/v3/files/ops/my-system/folderA/folderB/folderC/someFile.txt
+    curl -H "X-Tapis-Token: $JWT" -H "Content-Type:application/json" -X POST -F "file=@someFile.txt" https://tacc.tapis.io/v3/files/ops/my-system/folderA/folderB/folderC/someFile.txt
 
 
 For some system types (such as LINUX) any folders that do not exist in the specified path will automatically be created.
@@ -328,7 +328,7 @@ support this operation.
 
 .. code-block:: shell
 
-    $ curl -H "X-Tapis-Token: $JWT" -X POST -d @body.json -X POST https://tacc.tapis.io/v3/files/ops/my-system
+    $ curl -H "X-Tapis-Token: $JWT" -H "Content-Type:application/json" -X POST -d @body.json https://tacc.tapis.io/v3/files/ops/my-system
 
 with a JSON body of
 
@@ -360,7 +360,7 @@ For example, to change the owner of a file located at `/file1.txt` to :code:`aei
 
 .. code-block:: shell
 
-    curl -H "X-Tapis-Token: $JWT" -X POST -d @body.json "https://tacc.tapis.io/v3/files/utils/linux/aturing-storage/file1.txt"
+    curl -H "X-Tapis-Token: $JWT" -H "Content-Type:application/json" -X POST -d @body.json "https://tacc.tapis.io/v3/files/utils/linux/aturing-storage/file1.txt"
 
 with a JSON body of
 
@@ -425,7 +425,7 @@ large for the REST api to perform. Transfers occur *asynchronously*, and are exe
 increase performance. As such, the order in which the files are transferred is not deterministic.
 
 When a transfer is initiated, a *bill of materials* is created that creates a record of all the files from the
-*sourceUri* that are to be transferred to the *destinationUri*. Unless otherwise specified, all files in the
+*sourceURI* that are to be transferred to the *destinationURI*. Unless otherwise specified, all files in the
 *bill of materials* must transfer successfully in order for the overall transfer to be considered successful.
 A transfer task has an attribute named *status* which is updated as the transfer progresses.
 The possible states for a transfer are:
@@ -445,39 +445,39 @@ This method can be utilized to include outputs from other APIs into Tapis jobs.
 .. note::
   For transfers involving Globus, both the source and destination system must be of type GLOBUS.
 
-The number of files included in the *bill of materials* will depend on the system types and the *sourceUri* values
-provided in the transfer request. If the source system supports directories and *sourceUri* is a directory then
+The number of files included in the *bill of materials* will depend on the system types and the *sourceURI* values
+provided in the transfer request. If the source system supports directories and *sourceURI* is a directory then
 the directory will be processed recursively and all files will be added to the *bill of materials*. If the source
-system is of type S3 then all objects matching the *sourceUri* path as a prefix will be included.
+system is of type S3 then all objects matching the *sourceURI* path as a prefix will be included.
 
 System types and supported functionality
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As discussed above, the files included in a transfer will depend on the source system types and the *sourceUri* values
+As discussed above, the files included in a transfer will depend on the source system types and the *sourceURI* values
 provided in the transfer request. Here is a summary of the behavior:
 
 *LINUX/IRODS to LINUX/IRODS*
-  When the *sourceUri* is a directory a recursive listing is made and the files and directory structure are replicated
-  on the *destinationUri* system.
+  When the *sourceURI* is a directory a recursive listing is made and the files and directory structure are replicated
+  on the *destinationURI* system.
 
 *S3 to LINUX/IRODS*
-  All objects matching the *sourceUri* path as a prefix will be created as files on the *destinationUri* system.
+  All objects matching the *sourceURI* path as a prefix will be created as files on the *destinationURI* system.
 
 *LINUX/IRODS to S3*
-  When the *sourceUri* is a directory a recursive listing is made. For each entry in the listing the path relative to
+  When the *sourceURI* is a directory a recursive listing is made. For each entry in the listing the path relative to
   the source system rootDir is mapped to a key for the S3 destination system. In other words, a recursive listing is
-  made for the directory on the *sourceUri* system and for each non-directory entry an object is created on the S3
-  *destinationUri* system.
+  made for the directory on the *sourceURI* system and for each non-directory entry an object is created on the S3
+  *destinationURI* system.
 
 *S3 to S3*
-  All objects matching the *sourceUri* path as a prefix will be re-created as objects on the *destinationUri* system.
+  All objects matching the *sourceURI* path as a prefix will be re-created as objects on the *destinationURI* system.
 
 *HTTP/S to ANY*
   Transfer of a directory is not supported. Destination system may not be of type GLOBUS. The content of the object
-  from the *sourceUri* URL is used to create a single file or object on the *destinationUri* system.
+  from the *sourceURI* URL is used to create a single file or object on the *destinationURI* system.
 
 *ANY to HTTP/S*
-  Transfers not supported. Tapis does not support the use of protocol http/s for the *destinationUri*.
+  Transfers not supported. Tapis does not support the use of protocol http/s for the *destinationURI*.
 
 
 Creating Transfers
@@ -489,7 +489,7 @@ that should be transferred to a system with id :code:`aturing-compute`
 
 .. code-block:: shell
 
-    curl -H "X-Tapis-Token: $JWT" -X POST -d @body.json https://tacc.tapis.io/v3/files/tranfers
+    curl -H "X-Tapis-Token: $JWT" -H "Content-Type:application/json" -X POST -d @body.json https://tacc.tapis.io/v3/files/tranfers
 
 .. code-block:: json
 
@@ -497,8 +497,8 @@ that should be transferred to a system with id :code:`aturing-compute`
     "tag": "An optional identifier",
     "elements": [
       {
-        "sourceUri": "tapis://aturing-storage/experiments/experiment-1/",
-        "destinationUri": "tapis://aturing-compute/"
+        "sourceURI": "tapis://aturing-storage/experiments/experiment-1/",
+        "destinationURI": "tapis://aturing-compute/"
       }
     ]
   }
@@ -511,11 +511,11 @@ HTTP Source
 
 Unauthenticated HTTP/S endpoints can also be used as a source for a file transfer request.
 This can be useful, for instance, when the inputs for a job are from a separate web service, or perhaps stored in a
-public S3 bucket. Note that in this case the *sourceUri* does not refer to a Tapis system.
+public S3 bucket. Note that in this case the *sourceURI* does not refer to a Tapis system.
 
 .. code-block:: shell
 
-    curl -H "X-Tapis-Token: $JWT" -X POST -d @body.json https://tacc.tapis.io/v3/files/tranfers
+    curl -H "X-Tapis-Token: $JWT" -H "Content-Type:application/json" -X POST -d @body.json https://tacc.tapis.io/v3/files/tranfers
 
 .. code-block:: json
 
@@ -523,8 +523,8 @@ public S3 bucket. Note that in this case the *sourceUri* does not refer to a Tap
     "tag": "An optional identifier",
     "elements": [
       {
-        "sourceUri": "https://some-web-application.io/calculations/12345/results.csv",
-        "destinationUri": "tapis://aturing-compute/inputs.csv"
+        "sourceURI": "https://some-web-application.io/calculations/12345/results.csv",
+        "destinationURI": "tapis://aturing-compute/inputs.csv"
       }
     ]
   }
@@ -659,7 +659,7 @@ Lets say our user :code:`aturing` has a system with ID :code:`aturing-storage`. 
 
 .. code-block:: shell
 
-    curl -H "X-Tapis-Token: $JWT" -d @body.json -X POST https://tacc.tapis.io/v3/files/perms/aturing-storage/experiment1/
+    curl -H "X-Tapis-Token: $JWT" -H "Content-Type:application/json" -X POST -d @body.json https://tacc.tapis.io/v3/files/perms/aturing-storage/experiment1/
 
 with a JSON body with the following shape:
 
@@ -739,7 +739,7 @@ and MODIFY access to the path.
 
 .. code-block:: shell
 
-    curl -H "X-Tapis-Token: $JWT" -d @body.json -X POST https://tacc.tapis.io/v3/files/share/aturing-storage/experiment1/
+    curl -H "X-Tapis-Token: $JWT" -H "Content-Type:application/json" -X POST -d @body.json https://tacc.tapis.io/v3/files/share/aturing-storage/experiment1/
 
 with a JSON body with the following shape:
 
@@ -769,7 +769,7 @@ request body. Requester must be owner of the system.
 
 .. code-block:: shell
 
-    curl -H "X-Tapis-Token: $JWT" -d @body.json -X POST https://tacc.tapis.io/v3/files/unshare/aturing-storage/experiment1/
+    curl -H "X-Tapis-Token: $JWT" -H "Content-Type:application/json" -X POST -d @body.json https://tacc.tapis.io/v3/files/unshare/aturing-storage/experiment1/
 
 with a JSON body with the following shape:
 
@@ -1145,5 +1145,5 @@ Using python
 
 .. rubric:: Footnotes
 
-.. [#] With the exception of the *sourceUri* in a transfer request when the protocol is *http* or *https*.
+.. [#] With the exception of the *sourceURI* in a transfer request when the protocol is *http* or *https*.
 
