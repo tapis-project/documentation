@@ -8,32 +8,49 @@
 
 .. _pods:
 
-######
+####
 Pods 
-######
-
-----
+####
 
 Introduction to the Pods Service
 ================================
 
-What is the Pods Service
-------------------------
-
-The Pods Service is a web service and distributed computing platform providing pods-as-a-service (PaaS). The service 
+The Pods Service is a Tapis (TACC API) service which manages Kubernetes pods for a user. The service 
 implements a message broker and processor model that requests pods, alongside a health module to poll for pod
-data, including logs, status, and health. The primary use of this service is to have quick to deploy long-lived
-services based on Docker images that are exposed via HTTP or TCP endpoints listed by the API.
+data, including logs, status, and health. The service manages networking, certificates, authentication, and routing.
+The primary use of this service is to have quick-to-deploy long-lived services based on Docker images that are 
+exposed via HTTP or TCP endpoints listed by the API all running in Kubernetes.
 
-The Pods service provides functionality for two types of pod solutions:
-    * *Templated Pods* for run-as-is popular images. Neo4J is one example, the template manages TCP ports, user creation, and permissions.
-    * *Custom Pods* for arbitrary docker images with less functionality. In this case we will expose port 5000 and do nothing else.
+The Pods service provides endpoints for managing pods and their constituant components:
+    * **Pods** - The base unit of the service, a pod is a Docker container which a user can manage and interact with.
+    * **Templates** - A pod template is a pre-configured pod definition that can be recursively referenced by the definition of a pod.
+    * **Images** - Endpoints for managing the allowlist of Docker images that can be used in pods.
+    * **Volumes** - Volume endpoints are used to manage storage via networked storage solutions.
+    * **Snapshots** - Snapshots are used to save the state of a volume at a given time.
+    * **Cluster** - *WIP*
 
+Use Cases
+---------
 
-Using the Pods Service
-----------------------
+The Pods service is designed to be a flexible and powerful tool for deploying and managing containerized services. Pods are meant
+to be easy to use with the ability to reference pre-configured templates alongside a UI component in `TapisUI <https://tacc.tapis.io>`.
+Some common use cases for the Pods service include:
 
-Please create issues on our `github repo <https://github.com/tapis-project/pods_service>`_ and report problems to Christian R. Garcia.
+    * **Web Services** - Quickly deploy a web service from a Docker image.
+    * **Databases** - Postgres, Neo4j, MongoDB, MariaDB*.
+    * **Machine Learning** - Deploy inference interfaces like Ollama and OpenWebUI with GPUs.
+    * **Development** - Develop and test applications in a containerized environment.
+    * **Open-Source Tools** - Jupyter, VSCode, Bookstack, Uptime Kuma, and more.
+    * **Authenticated Apps** - Tapis OAuth2/OIDC auth can be configure to secure your pods.
+
+The flexible nature of pods means that most containerized applications can be deployed and managed using the Pods service. The
+exception to this are generally either applications with unique networking requirements or truly resource intensive applications
+(Multi-GPU + High RAM) due to the shared nature of our Kubernetes cluster.
+
+Feedback and Support
+--------------------
+
+Please create issues on our `github repo <https://github.com/tapis-project/pods_service>`_ and report problems to the Tapis team.
 The service is available to researchers and students. To learn more about the the system, including getting access, follow the
 instructions in :doc:`/getting-started/index`.
 
@@ -44,9 +61,9 @@ Getting Started
 ===============
 
 This Getting Started guide will walk you through the initial steps of setting up the necessary accounts and installing
-the required software before moving to the Pods Quickstart, where you will create your first Pods service pod. If
-you are already using Docker Hub and the TACC TAPIS APIs, feel free to jump right to the `Pods Quickstart`_ or check
-out the `Pods Live Docs <https://tapis-project.github.io/live-docs/?service=Pods>`_.
+the required software before moving to the Pods Quickstart, where the guide will walk through creating a first pod. If
+you are already using Docker Hub and Tapis, feel free to jump right to the `Pods Quickstart`_ or check
+out the `Pods Live Docs <https://tapis-project.github.io/live-docs/?service=Pods>`_ for an OpenAPI V3 specification of the API.
 
 
 Account Creation and Software Installation
@@ -67,7 +84,7 @@ Create a Docker account
 virtualization. The Pods service pulls images for its pods from the public Docker Hub. To register pods
 you will need to publish images on Docker Hub, which requires a `Docker account <https://hub.docker.com/>`_ .
 
-Install the Tapis Python SDK
+Install Tapipy or use cURL
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To interact with the TACC-hosted Abaco platform in Python, we will leverage the Tapis Python SDK, tapipy. To install it,
@@ -77,9 +94,11 @@ simply run:
 
     $ pip3 install tapipy
 
-.. attention::
-    ``tapipy`` works with Python 3.
+Tapipy provides a simple interface to interact with Tapis services. It provides tab-completion and support for all Tapis services. Read
+more about Tapipy :doc:`here <pythondev>` (see `Working with TACC OAuth`_).
 
+This documentation will also walk you through using the Pods service with the `cURL <https://curl.se/>`_ command line tool.
+If you will use cURL then make use of this guide :ref:`Tapis Quickstart's cURL example <curl-example>` and continue to the `Pods Quickstart`_.
 
 
 Working with TACC OAuth
@@ -90,6 +109,8 @@ Our implementation of OAuth2 is designed to give you the flexibility you need to
 while keeping your access credentials and digital assets secure. This is covered in great detail in our
 Tenancy and Authentication section, but some key concepts will be highlighted here, interleaved with Python code.
 
+
+.. _pods-tapipy-quickstart:
 
 Create an Tapis Client Object
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -158,36 +179,84 @@ the ``t`` object, passing the username of the profile to retrieve, as follows.
 Pods Quickstart
 ================
 
-In this Quickstart, we will create an Pods service pod from a basic Python function. Then we will get pod credentials and logs.
-
-Registering a templated Pod
+Registering a Pod via Template
 ---------------------------
 
-To get started we're going to create a templated Pod. To do this, we will use the ``Tapis`` client object we created above
-(see `Working with TACC OAuth`_).
+To get started we're going to create a Pod via a Template. You can use ``tapipy`` via Python or ``cURL`` via bash to make requests to the Pods service.
+It's good to mention that the service is a RESTful API, so you can use any tool that can make HTTP requests.
+
+Authentication is done via an ``X-Tapis-Token`` header, which is an OAuth2 access token, shown in the cURL flow and done in the background by Tapipy.
+Authentication is the first step in using Tapis services and is shown in this step.
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        The ``tapipy`` library is TACC's Python SDK for Tapis. The quickstart was `above <pods-tapipy-quickstart>`_. To get started, you'll need 
+        to authenticate with Tapis. Here's an additonal example of how to do that:
+
+        .. code-block:: python
+
+            from tapipy.tapis import Tapis
+
+            t = Tapis(
+                base_url='https://tacc.tapis.io',
+                username='<userid>',
+                password='*********'
+            )
+
+            # Makes a request using the user/pass to set an access token.
+            t.get_tokens()
+
+    .. group-tab:: Bash
+
+        If you are using cURL you should have an access token from the :ref:`Tapis Quickstart's cURL example <curl-example>`.
+        Here's an additional example of how to get an access token using cURL:
+
+        .. code-block:: bash
+
+            $ curl -H "Content-type: application/json" \
+                   -d '{"username": "your_tacc_username", \
+                        "password": "your_tacc_password", \
+                        "grant_type": "password" }' \
+                   https://tacc.tapis.io/v3/oauth2/tokens
+
+            $ export JWT=your_access_token_string_from_result_above
+
+Once a user has authenticated, they can create a pod. The Pods service uses a templating system to allow users to create pods from pre-configured, versioned, templates.
+Users can view templates via TapisUI or the API. The following example shows how to create a pod using the `neo4j` template. Note that fields that a user specifies will
+override any existing fields in the template.
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        Using ``tapipy``, we use the ``t.pods.create_pod()`` method and pass the arguments describing
+        the pod we want to register through the function parameters.
 
 
-To register an pod using the tapipy library, we use the ``pods.create_pod()`` method and pass the arguments describing
-the pod we want to register through the function parameters. For example:
+        .. code-block:: python
 
-.. code-block:: python
+            response = t.pods.create_pod(
+                pod_id='docpod',
+                template='neo4j',
+                description='My example pod!'
+            )
+            print(response)
 
-    from tapipy.tapis import Tapis
+    .. code-tab:: bash
 
-    t = Tapis(
-        base_url='https://tacc.tapis.io',
-        username='<userid>',
-        password='*********'
-    )
+        curl --request POST \
+             --url https://tacc.tapis.io/v3/pods \
+             --header 'Content-Type: application/json' \
+             --header 'X-Tapis-Token: $JWT' \
+             --data '{
+                "pod_id": "docpod",
+                "template": "neo4j",
+                "description": "My example pod!"
+             }'
 
-    t.pods.create_pod(
-        pod_id='docpod',
-        pod_template='template/neo4j',
-        description='My example pod!'
-    )
-
-As you can see, we're using pod_template equal to `template/neo4j`, template being the namespace for our templated pods.
-You should see a response like this:
+You should receive a response that looks like this.
 
 .. code-block:: bash
 
@@ -198,9 +267,7 @@ You should see a response like this:
     environment_variables: 
 
     pod_id: test
-    pod_template: template/neo4j
-    roles_inherited: []
-    roles_required: []
+    template: template/neo4j
     status: REQUESTED
     status_container: 
 
@@ -216,13 +283,22 @@ Notes:
   the pod described to our backend `spawner` infrastructure. The pod's image must be pulled, a pod service must be created
   (for networking), and the networking changes must propagate to the Pod's proxy before the Pod is ready for use.
 - When the pod itself has began running, the status will change to ``AVAILABLE``. Networking takes time to propagate (expect <1 minute).
-- An ``AVAILABLE``` pod only means the pod itself has started, check pod logs to see what your container is writing to stdout.
+- An ``AVAILABLE`` pod only means the pod itself has started, check pod logs to see what your container is writing to stdout.
 
 At any point we can check the details of our pods, including its status, with the following:
 
-.. code-block:: python
+.. tabs::
 
-    t.pods.get_pod(pod_id='docpod')
+    .. code-tab:: python
+
+        t.pods.get_pod(pod_id='docpod')
+    
+    .. code-tab:: bash
+        
+        curl --request GET \
+             --url https://tacc.tapis.io/v3/pods/docpod \
+             --header 'Content-Type: application/json' \
+             --header 'X-Tapis-Token: $JWT'
 
 The response format is identical to that returned from the ``t.pods.create_pod()`` method.
 
@@ -231,7 +307,7 @@ Accessing a Pod
 ---------------
 
 Once your pod is in the ``AVAILABLE`` state your pod's specified networking ports should be routed to port 443 at specified urls.
-Read more at #`Pod Networking`_.
+Read more at :ref:`Pod Networking`_.
 
 A pod's access urls specified in the pod's `networking` attribute. A pod can have multiple urls, each with different protocols and ports.
 
@@ -280,6 +356,202 @@ Conclusion
 
 Congratulations! You've now created, registered, and accessed your first pod. There is a lot more you can do with
 the Pods service though. To learn more about the additional capabilities, please continue on to the Technical Guide.
+
+----
+
+
+Templates
+=========
+
+Tapis Pods supports templating, which allows users to create reusable pod definitions. Users make use of templates and their underlying template tags to define a pod.
+
+Templates
+---------
+Templates are essentially groups of template tags that are shareable, providing users with access to any associated tag within the template.
+Templates facilitate the organization and sharing of pod configurations, allowing users to leverage predefined setups. The only way to currently share pod
+configurations is through templates, making them a crucial component for collaborative and consistent deployment practices.
+
+
+.. list-table::
+    :header-rows: 1
+    :widths: 24 76
+
+    * - Field
+      - Description
+    * - template_id
+      - **Required**. Name of the template. Type: string.
+    * - description
+      - Description of the template. Type: string. Default: "".
+    * - metatags
+      - Metadata tags for additional search/listing functionality for the template. Type: array of strings. Default: [].
+    * - archive_message
+      - If set, metadata message to give users of this template. Type: string. Default: "".
+    * - creation_ts
+      - Time (UTC) that this template was created. Type: string <date-time>.
+    * - update_ts
+      - Time (UTC) that this template was updated. Type: string <date-time>.
+    * - tenant_id
+      - Tapis tenant used during creation of this template. Type: string. Default: "".
+    * - site_id
+      - Tapis site used during creation of this template. Type: string. Default: "".
+    * - permissions
+      - Template permissions in user:level format. Type: array of strings. Default: [].
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        To list available templates, use the following command:
+
+        .. code-block:: python
+
+            templates = t.pods.list_templates()
+            print(templates)
+
+        To create a template in Tapis Pods, use the ``tapipy`` and the ``t.pods.create_template()`` function:
+
+        .. code-block:: python
+
+            t.pods.create_template(
+                template_id='mongo',
+                description="TACC's MongoDB template",
+                metatags=['mongo', 'database', 'TACC', 'http']
+            )
+
+    .. group-tab:: Bash
+
+        To list available templates, use the following command:
+
+        .. code-block:: bash
+
+            curl --request GET \
+                --url https://tacc.tapis.io/v3/pods/templates \
+                --header 'Content-Type: application/json' \
+                --header 'X-Tapis-Token: $JWT'
+
+        To create a template in Tapis Pods, use the corresponding ``curl`` request:
+
+        .. code-block:: bash
+
+            curl --request POST \
+                --url https://tacc.tapis.io/v3/pods/templates \
+                --header 'Content-Type: application/json' \
+                --header 'X-Tapis-Token: $JWT' \
+                --data '{  
+                    "template_id": "mongo",  
+                    "description": "TACC's MongoDB template",  
+                    "metatags": [ "mongo", "database", "TACC", "http" ]  
+                }'
+
+Template Tags
+-----------------------
+Template tags are the underlying definitions within a template, each marked with a ``tag_timestamp`` and immutable once created.
+These tags specify the pod configurations and can be overridden with user-defined values at runtime. Template tags can also reference
+other template tags, enabling a recursive definition of pod configurations. This flexibility allows users to save and share complex pod setups efficiently.
+
+Each template must have at least one tag, which specifies the pod configuration. If no tags are specified, ``latest`` is used by default.
+When a template tag is created a ``tag_timestamp`` field is used to specifically version the tag.
+
+Template tags resolve in the following ways when referenced:
+
+    * ``template:tag@timestamp`` - for a specific version of a template tag.
+    * ``template:tag`` - for a template with the newest version of a tag.
+    * ``template`` - for a template with the newest version of the ``latest`` tag.
+
+
+.. list-table::
+    :header-rows: 1
+    :widths: 24 76
+
+    * - Field
+      - Description
+    * - template_id
+      - **Required**. Name of the template. Type: string.
+    * - pod_definition
+      - **Required**. Pod definition fields. Type: object. Can be overridden.
+    * - commit_message
+      - **Required** Commit message for the template tag. Type: string. Default: "".
+    * - tag
+      - Tag name for the template tag. Type: string. Default: "latest".
+
+The following fields are set on creation and are useful to know:
+
+- **tag_timestamp**: Tag timestamp for this object and used for referencing this tag.
+- **added_by**: User who added this template tag.
+- **creation_ts**: Time (UTC) that this template tag was created.
+
+This example shows how to create a template tag for the ``mongo`` template:
+
+.. tabs::
+
+    .. code-tab:: python
+
+        t.pods.create_template_tag(
+            template_id='mongo',
+            pod_definition={
+                "image": "mongo:8",
+                "networking": {"default": {"port": 27017, "protocol": "tcp"}},
+                "time_to_stop_default": -1,
+                "environment_variables": {
+                    "MONGO_INITDB_ROOT_USERNAME": "<TAPIS_user_username>",
+                    "MONGO_INITDB_ROOT_PASSWORD": "<TAPIS_user_password>"
+                }
+            },
+            tag='8',
+            commit_message='mongo:8 template'
+        )
+
+    .. code-tab:: bash
+
+        curl --request POST \
+             --url https://tacc.tapis.io/v3/pods/templates/mongo/tags \
+             --header 'Content-Type: application/json' \
+             --header 'X-Tapis-Token: $JWT' \
+             --data '{  
+                 "pod_definition": {  
+                     "image": "mongo:8",  
+                     "networking": { "default": { "port": 27017, "protocol": "tcp" } },  
+                     "time_to_stop_default": -1,  
+                     "environment_variables": {  
+                         "MONGO_INITDB_ROOT_USERNAME": "<TAPIS_user_username>",  
+                         "MONGO_INITDB_ROOT_PASSWORD": "<TAPIS_user_password>"  
+                     }  
+                 },  
+                 "tag": "8",  
+                 "commit_message": "mongo:8 template"  
+             }'
+
+
+Using a Template Tag to Create a Pod
+--------------------------------
+
+To create a pod from a specific template tag and timestamp, use:
+
+.. tabs::
+
+
+    .. code-tab:: python
+
+        t.pods.create_pod(
+            pod_id='mypod',
+            template='neo4j:5.26s3se@2025-01-30-17:14:14',
+            time_to_stop_default=-1
+        )
+
+    .. code-tab:: bash
+
+        curl --request POST \
+             --url https://tacc.tapis.io/v3/pods \
+             --header 'Content-Type: application/json' \
+             --header 'X-Tapis-Token: $JWT' \
+             --data '{  
+                 "pod_id": "mypod",  
+                 "template": "neo4j:5.26s3se@2025-01-30-17:14:14",  
+                 "time_to_stop_default": -1  
+             }'
+
+
+Ensure that the template name and tag match exactly as shown in the Tapis UI or the ``list_templates()`` output.
 
 ----
 
