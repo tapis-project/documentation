@@ -403,11 +403,19 @@ Specify one or more command line arguments for the container runtime using the *
 schedulerOptions
 ^^^^^^^^^^^^^^^^
 
-Specify HPC batch scheduler arguments for the container runtime using the *schedulerOptions* parameter.  Arguments specified in the application definition are appended to those in the submission request.  The arguments for each scheduler are passed using that scheduler's conventions.
+Specify HPC batch scheduler arguments for the container runtime using the *schedulerOptions* parameter.  Arguments specified in the application definition are appended to those in the submission request. The arguments for each scheduler are passed using that scheduler's conventions.
 
-Tapis defines a special scheduler option, **\-\-tapis-profile**, to support local scheduler conventions.  Data centers sometimes customize their schedulers or restrict how those schedulers can be used.  The Systems_ service manages *SchedulerProfile* resources that are separate from any system definition, but can be referenced from system definitions.  The Jobs service uses directives contained in profiles to tailor application execution to local requirements.
+Tapis defines a special scheduler option, **\-\-tapis-profile**, to support local scheduler conventions. Data centers sometimes customize their schedulers or restrict how those schedulers can be used.  The Systems_ service manages *SchedulerProfile* resources that are separate from any system definition, but can be referenced from system definitions. The Jobs service uses directives contained in profiles to tailor application execution to local requirements.
 
-As an example, below is the JSON input used to create the TACC scheduler profile.  The *moduleLoads* array contains one or more objects. Each object contains a *moduleLoadCommand*, which specifies the local command used to load each of the modules (in order) in its *modulesToLoad* list.  *hiddenOptions* identifies scheduler options that the local implementation prohibits.  In this case, "MEM" indicates that the *\-\-mem* option should never be passed to Slurm.
+As an example, below is the JSON input used to create the TACC scheduler profile.
+
+The *moduleLoads* array contains one or more objects. Each object contains a *moduleLoadCommand*, which specifies the local command used to load each of the modules (in order) in its *modulesToLoad* list.
+
+The *hiddenOptions* array identifies scheduler options that the local implementation prohibits.
+Options specified here will have the corresponding Slurm option suppressed.
+Supported options are "MEM" for *\-\-mem* and "PARTITION" for *\-\-partition*.
+Including an option in the array indicates that the corresponding Slurm option should never be
+passed through to Slurm.
 
 ::
 

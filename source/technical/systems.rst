@@ -790,9 +790,12 @@ to the following::
 
 The *moduleLoads* array contains one or more entries. Each entry contains a *moduleLoadCommand*, which specifies the
 local command used to load each of the modules (in order) in its *modulesToLoad* list.
-The *hiddenOptions* attribute identifies scheduler options that the local implementation prohibits. 
-In this case, "MEM" indicates that the *\-\-mem* option should never be passed to Slurm.
 
+The *hiddenOptions* array identifies scheduler options that the local implementation prohibits.
+Options specified here will have the corresponding Slurm option suppressed.
+Supported options are "MEM" for *\-\-mem* and "PARTITION" for *\-\-partition*.
+Including an option in the array indicates that the corresponding Slurm option should never be
+passed through to Slurm.
 
 ..
     -----------------
@@ -1055,19 +1058,20 @@ LogicalQueue Attributes Table
 Scheduler Profile Attributes Table
 ----------------------------------
 
-+---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
-| Attribute           | Type     | Example              | Notes                                                                                |
-+=====================+==========+======================+======================================================================================+
-| name                | String   |   tacc               | - Name. Required. *tenant* + *name* uniquely identifies the profile.                 |
-+---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
-| owner               | String   |   jdoe               | - Tapis user that created the profile.                                               |
-+---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
-| description         | String   |                      | - Description                                                                        |
-+---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
-| moduleLoads         | Array    |                      | - Each entry contains a module command and a list of modules to load.                |
-+---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
-| hiddenOptions       | String[] |  ["MEM"]             | - List of locally prohibited scheduler options that should be filtered out.          |
-+---------------------+----------+----------------------+--------------------------------------------------------------------------------------+
++---------------+----------+---------+-----------------------------------------------------------------------------+
+| Attribute     | Type     | Example | Notes                                                                       |
++===============+==========+=========+=============================================================================+
+| name          | String   | tacc    | - Name. Required. *tenant* + *name* uniquely identifies the profile.        |
++---------------+----------+---------+-----------------------------------------------------------------------------+
+| owner         | String   | jdoe    | - Tapis user that created the profile.                                      |
++---------------+----------+---------+-----------------------------------------------------------------------------+
+| description   | String   |         | - Description                                                               |
++---------------+----------+---------+-----------------------------------------------------------------------------+
+| moduleLoads   | Array    |         | - Each entry contains a module command and a list of modules to load.       |
++---------------+----------+---------+-----------------------------------------------------------------------------+
+| hiddenOptions | String[] | ["MEM"] | - List of locally prohibited scheduler options that should be filtered out. |
+|               |          |         | - Allowed values: MEM, PARTITION                                            |
++---------------+----------+---------+-----------------------------------------------------------------------------+
 
 ..
     ---------------------------
