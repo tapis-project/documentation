@@ -759,6 +759,37 @@ protocol is used to perform a three-legged OAuth2 authorization code grant.
 For more information, please see Systems
 `Support For Globus <https://tapis.readthedocs.io/en/latest/technical/systems.html#support-for-globus>`_.
 
+---------------------------
+Configuring Support for TMS
+---------------------------
+
+Inlcuding support for the Trusted Manager System (TMS) is optional.
+
+
+In order for a primary or associate site to support TMS, the deployment file for the Systems service must be
+updated to set the following 5 enviornment variables.
+
+  .. code-block:: yaml
+
+          - name: TAPIS_TMS_ENABLED
+            value: "True"
+          - name: TAPIS_TMS_SERVER_URL
+            value: https://localhost:3000
+          - name: TAPIS_TMS_TENANT
+            value: default
+          - name: TAPIS_TMS_CLIENT_ID
+            value: tapis
+          - name: TAPIS_TMS_CLIENT_SECRET
+            value: ********************
+
+
+Each Tapis installation can be configured with it's TMS settings.
+The service must be restarted after updating the deployment file.
+
+For more information, please see Systems
+`Support For TMS <https://tapis.readthedocs.io/en/latest/technical/systems.html#support-for-tms>`_.
+
+
 -------------------------------------------
 Configuring Support for Email Notifications
 -------------------------------------------

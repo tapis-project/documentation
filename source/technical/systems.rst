@@ -65,7 +65,7 @@ At a high level a system represents the following information:
 *defaultAuthnMethod* - Default authentication method
   How access authentication is handled by default. Authentication method can also be
   specified as part of a request.
-  Supported methods: PASSWORD, PKI_KEYS, ACCESS_KEY, TOKEN.
+  Supported methods: PASSWORD, PKI_KEYS, ACCESS_KEY, TOKEN, TMS_KEYS.
 *bucketName* - Bucket name
   For an S3 system this is the name of the bucket.
 *rootDir* - Effective root directory
@@ -309,6 +309,41 @@ If problems persist you can also attempt to manually validate the keypair using 
 where /tmp/my_private_key contains the original multi-line private key. If everything is set up correctly and the
 keypair is valid you should be logged into the host without being prompted for a password.
 
+Use of TMS_KEYS for credentials
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Tapis supports the use of the Trust Manager System (TMS) for managing credentials.
+For more information on TMS refer to `TMS_Documentation`_.
+
+.. _TMS_Documentation: https://tms-documentation.readthedocs.io/en/latest/#
+
+Please note that your Tapis site installation must have been configured by the site administrator to support TMS.
+See `TMS_Config`_.
+
+.. _TMS_Config: https://tapis.readthedocs.io/en/latest/deployment/deployer.html#configuring-support-for-tms
+
+Also, any target hosts defined in Tapis systems must be configured to use the TMS KeyCmd program for ssh connections.
+Please refer to the TMS documentation for details.
+
+The integration of Tapis with TMS allows users to have Tapis automatically create and use SSH keypairs rather
+than having to provide their own. In order to register TMS credentials for a system, begin by making sure the
+system is defined with *defaultAuthnMethod* set to TMS_KEYS. Then when creating credentials simply add the flag
+``createTmsKeys=true``.
+
+Please note that the following restrictions apply:
+
+* Tapis installation for your site must be configured to support the Trust Manager System (TMS).
+* The host for the system must have the sshd configuration set up to use TMS.
+* The *effectiveUserId* must be dynamic.
+* Mapping of user using *loginUser* is not supported.
+
+For example, the CURL command to create TMS keys for a system might look as follows::
+
+   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/credential/tms-test/user/<userid>?createTmsKeys=true -d @cred_tmp.json
+
+Note that the request body may be empty.
+
+
 .. _registering_globus_credentials:
 
 Registering Credentials for a Globus System
@@ -319,7 +354,7 @@ the section above. For a GLOBUS type system, the user will need to use the TOKEN
 an ``accessToken`` and ``refreshToken`` using two special-purpose System service endpoints.
 
 Please note that your Tapis site installation must have been configured by the site administrator to support
-Globus. Please see `Globus_Config`_.
+Globus. See `Globus_Config`_.
 
 .. _Globus_Config: https://tapis.readthedocs.io/en/latest/deployment/deployer.html#configuring-support-for-globus
 
@@ -852,7 +887,7 @@ System Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | defaultAuthnMethod  | enum           | PKI_KEYS             | - How access authentication is handled by default.                                   |
 |                     |                |                      | - Can be overridden as part of a request to get a system or credential.              |
-|                     |                |                      | - Methods: PASSWORD, PKI_KEYS, ACCESS_KEY, TOKEN                                     |
+|                     |                |                      | - Methods: PASSWORD, PKI_KEYS, ACCESS_KEY, TOKEN, TMS_KEYS                           |
 |                     |                |                      | - See table *Credential Attributes* below for more information.                      |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | authnCredential     | Credential     |                      | - On input credentials to be stored in Security Kernel.                              |
@@ -972,7 +1007,7 @@ Credential Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | authnMethod         | String         | PKI_KEYS             | - Indicates the authentication method associated with a retrieved credential.        |
 |                     |                |                      | - When a credential is retrieved it is for a specific authentication method.         |
-|                     |                |                      | - Methods: PASSWORD, PKI_KEYS, ACCESS_KEY, TOKEN                                     |
+|                     |                |                      | - Methods: PASSWORD, PKI_KEYS, ACCESS_KEY, TOKEN, TMS_KEYS                           |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | loginUser           | String         |                      | - Optional native username valid on the system.                                      |
 |                     |                |                      | - May be used to map a Tapis user to a native login user.                            |
@@ -981,7 +1016,7 @@ Credential Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | privateKey          | String         |                      | - Private key for when authnMethod is PKI_KEYS. For LINUX systems.                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
-| publicKey           | String         |                      | - Public key for when authnMethod is PKI_KEYS.  For LINUX systems.                   |
+| publicKey           | String         |                      | - Public key for when authnMethod is PKI_KEYS. For LINUX systems.                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | accessKey           | String         |                      | - Access key for when authnMethod is ACCESS_KEY. For S3 systems.                     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -990,6 +1025,12 @@ Credential Attributes Table
 | accessToken         | String         |                      | - Access token for when authnMethod is TOKEN. For GLOBUS systems.                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | refreshToken        | String         |                      | - Refresh token for when authnMethod is TOKEN. For GLOBUS systems.                   |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| tmsPrivateKey       | String         |                      | - Private key for when authnMethod is TMS_KEYS. For LINUX systems.                   |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| tmsPublicKey        | String         |                      | - Public key for when authnMethod is TMS_KEYS. For LINUX systems.                    |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| tmsFingerprint      | String         |                      | - Fingerprint of public key for when authnMethod is TMS_KEYS. For LINUX systems.     |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 
 -----------------------------
