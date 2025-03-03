@@ -419,6 +419,85 @@ The response should look similar to the following::
 At this point the user will have registered credentials for a Tapis system that can be used as a source or destination
 for Globus operations.
 
+Registering Credentials for an S3 System
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Registering credentials for an S3 type system is a special case that involves steps different from those described in
+the section above. For an S3 type system, the user will need to first manage the S3 bucket and IAM access tokens within AWS, 
+then register the AWS access token with Tapis as a key pair. 
+
+Creating the S3 Bucket within AWS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The first step in registering S3 as a storage solution with Tapis is creating the S3 bucket.
+Tapis does not require any special considerations to be taken when creating the bucket, 
+but you will need to keep track of the bucket's name.
+
+Obtaining an Access Key Pair from AWS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _IAM_docs: https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html?icmpid=docs_iam_console 
+
+Although creating an IAM user is not strictly necessary, it is highly recommended. 
+You can create an access token for the root user by going to 'my security credentials' in the IAM console in AWS but this is not recommended for security reasons. 
+Instead, it is recommended to create an IAM user for Tapis access. Make sure that when you create the user, you explicitly give it permissions to access S3.
+Refer to the `IAM documentation <IAM_DOCS_>`_ for instructions on assigning permissions.
+
+Take the following steps to obtain an access token pair for an IAM user:
+
+1. In the IAM console in AWS, select the user who will be registered in the Tapis system.
+2. Navigate to the 'Security Credentials' tab, and select 'Create access key'.
+3. Go through the creation wizard, making sure that you save both the access key and the secret access key on the last page. You will need both of these in the next step to register the credentials with Tapis.
+
+Create the S3 System in Tapis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _create_system: https://tapis.readthedocs.io/en/latest/technical/systems.html#creating-a-system
+
+Now that you have everything you need from AWS, create the Tapis system. 
+Refer to the instructions in the `Creating a System <create_system_>`_ section for instructions, 
+making sure to use S3 for systemType and the name of the bucket for host. 
+
+The system definition should look something like this::
+
+    {
+      "id": "demo-aws-s3-bucket",
+      "description": "Demo S3 AWS acct.",
+      "host":"tapisdemo-bucket.s3.amazonaws.com",
+      "systemType": "S3",
+      "effectiveUserId": "tapisdemo",
+      "defaultAuthnMethod": "ACCESS_KEY",
+      "bucketName": "tapisdemo-bucket",
+      "rootDir": "",
+      "canExec": false
+    }
+
+Registering AWS Credentials with Tapis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now that we have a bucket, AWS tokens, and a Tapis system, the last step is to register the AWS credentials with Tapis. 
+
+using CURL, we can do something like::
+
+  $curl -X POST -H "content-type:applications/json" -H "X-Tapis-Token: $JWT"
+    -d {
+      "accessKey":"< AWS access key name >",
+      "accessSecret":"< AWS access key secret >"
+    }
+    https://dev.develop.tapis.io/v3/systems/credential/<system>/user/<user>
+
+Which should return a response similar to ::
+
+  {
+  "result": null,
+  "status": "success",
+  "message": "SYSAPI_CRED_UPDATED Credential updated. ...",
+  "version": "1.8.2",
+  "commit": "9e30ecbf",
+  "build": "2025-02-25T14:24:36Z",
+  "metadata": null
+  }
+
 Viewing Systems
 ~~~~~~~~~~~~~~~
 
