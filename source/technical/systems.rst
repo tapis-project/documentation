@@ -233,15 +233,16 @@ Registering Credentials for a System
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now that you have registered a system you will need to register credentials so you can use Tapis to access the host.
-Various authentication methods can be used to access a system, such as PASSWORD, PKI_KEYS and TOKEN. Note that the
-TOKEN authentication method is for systems of type GLOBUS. Registering credentials for a GLOBUS type system is a special
-case that involves steps different from those described in this section. Please see the section below on
-`Registering Credentials for a Globus System`_ for more information.
+Various authentication methods can be used to access a system. Supported methods are PASSWORD, PKI_KEYS, ACCESS_KEY,
+TOKEN and TMS_KEYS. The process of registering credentials can vary significantly depending on the authentication method.
+For more information please see the appropriate section below under `Authentication Credentials`_.
 
 Please note that there is support for only one set of credentials per user per system. Updating credentials overwrites
 previously registered data.
 
 Here we will cover registering PKI_KEYS (i.e. ssh keys) as an example.
+Please note that registering ssh keys requires special care when translating the generated keypair information to json format.
+For more information please see `Use of PKI_KEYS as credentials`_ under the section on `Authentication Credentials`_.
 
 Create a local file named ``cred_tmp.json`` with json similar to the following::
 
@@ -278,225 +279,6 @@ always used when accessing the system. When a *loginUser* is provided the json w
 
 Note that credentials are stored in the Security Kernel.
 Only specific Tapis services are authorized to retrieve credentials.
-
-Use of PKI_KEYS as credentials
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-When using an ssh keypair as credentials there are several important points to keep in mind. As discussed above, the
-public key and private key must be encoded on a single line. This can sometimes be challenging. For example, copying
-and pasting may convert newline characters in a way that is not compatible with processing in Tapis. You may find the
-following linux command useful in converting a multi-line private key into a single line::
-
-  cat $privateKeyFile | awk -v ORS='\\n' '1'
-
-When generating the keypair, do not use a passphrase. This can interfere with non-interactive use of the keypair.
-
-Finally, please be aware that if the host has multi-factor authentication (MFA) enabled this may prevent Tapis from
-communicating with the host. Tapis does not currently support MFA.
-
-When encountering problems here are some suggestions on what to check:
-
-* Public and private keys are each on one line in the json file. Newline characters in private key are properly encoded.
-* Keypair does not have a passphrase
-* Public key has been added to the authorized_keys file for the target user. File ~/.ssh/authorized_keys
-* File ~/.ssh/authorized_keys has proper permissions.
-* MFA is not enabled for the target host.
-
-If problems persist you can also attempt to manually validate the keypair using a command similar to this::
-
-  ssh -i /tmp/my_private_key testuser@myhost.com
-
-where /tmp/my_private_key contains the original multi-line private key. If everything is set up correctly and the
-keypair is valid you should be logged into the host without being prompted for a password.
-
-Use of TMS_KEYS for credentials
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Tapis supports the use of the Trust Manager System (TMS) for managing credentials.
-For more information on TMS refer to `TMS_Documentation`_.
-
-.. _TMS_Documentation: https://tms-documentation.readthedocs.io/en/latest/#
-
-Please note that your Tapis site installation must have been configured by the site administrator to support TMS.
-See `TMS_Config`_.
-
-.. _TMS_Config: https://tapis.readthedocs.io/en/latest/deployment/deployer.html#configuring-support-for-tms
-
-Also, any target hosts defined in Tapis systems must be configured to use the TMS KeyCmd program for ssh connections.
-Please refer to the TMS documentation for details.
-
-The integration of Tapis with TMS allows users to have Tapis automatically create and use SSH keypairs rather
-than having to provide their own. In order to register TMS credentials for a system, begin by making sure the
-system is defined with *defaultAuthnMethod* set to TMS_KEYS. Then when creating credentials simply add the flag
-``createTmsKeys=true``.
-
-Please note that the following restrictions apply:
-
-* Tapis installation for your site must be configured to support the Trust Manager System (TMS).
-* The host for the system must have the sshd configuration set up to use TMS.
-* The *effectiveUserId* must be dynamic.
-* Mapping of user using *loginUser* is not supported.
-
-For example, the CURL command to create TMS keys for a system might look as follows::
-
-   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/credential/tms-test/user/<userid>?createTmsKeys=true -d @cred_tmp.json
-
-Note that the request body may be empty.
-
-
-.. _registering_globus_credentials:
-
-Registering Credentials for a Globus System
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Registering credentials for a GLOBUS type system is a special case that involves steps different from those described in
-the section above. For a GLOBUS type system, the user will need to use the TOKEN authentication method and generate
-an ``accessToken`` and ``refreshToken`` using two special-purpose System service endpoints.
-
-Please note that your Tapis site installation must have been configured by the site administrator to support
-Globus. See `Globus_Config`_.
-
-.. _Globus_Config: https://tapis.readthedocs.io/en/latest/deployment/deployer.html#configuring-support-for-globus
-
-Obtain Globus Authorization Code
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The first step in generating Globus credentials is for the user to call the systems *authUrl* credential endpoint
-to obtain a Globus authorization code.
-
-Using CURL, the request would look something like this::
-
- $curl -H "X-Tapis-Token: $JWT" https://dev.tapis.io/v3/systems/credential/<system>/globus/authUrl
-
-The response should look similar to the following. Note that for brevity and readability, only the result portion of the
-response is shown, the response has been split into multiple lines and various IDs are not filled in::
-
- {
-   "url": "https://auth.globus.org/v2/oauth2/authorize?client_id=<client_id>
-       &redirect_uri=https%3A%2F%2Fauth.globus.org%2Fv2%2Fweb%2Fauth-code
-       &scope=openid+profile+email+urn%3Aglobus%3Aauth%3Ascope%3Atransfer.api.globus.org%3Aall
-       &state=_default&response_type=code&code_challenge=<challenge_id>
-       &code_challenge_method=S256&access_type=offline",
-   "sessionId": "<session_id>"
- }
-
-The user should copy the url (as a single string, no line breaks) and make note of the session Id for later use.
-The user then visits the provided URL and is presented with a Globus logon page that will allow them
-to authenticate using one of thousands of supported identity providers, including through their existing organization
-using CILogon.
-
-The user must use the following flow to obtain an authorization code:
-
-1. Visit the provided URL and authenticate through Globus. After authentication, user is re-directed back to a
-   Globus page showing the access being requested by Tapis.
-2. Fill in a label for future reference and click *Allow* to authorize Tapis to access Globus on their behalf.
-3. Copy the provided authorization code in preparation for the final step. Note that the code is valid for a short time
-   (as of this writing it is valid for 10 minutes).
-
-Exchange Authorization Code for Tokens
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The final step is for the user to call the systems credential endpoint to exchange the authorization code and session ID
-for tokens which are stored by the Systems service in a credentials record.
-
-Using CURL, the request would look something like this::
-
- $curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT"
-        https://dev.tapis.io/v3/systems/credential/<system>/user/<user>/globus/tokens/<authCode>/<sessionId>
-
-The response should look similar to the following::
-
- {
-   "result": null,
-   "status": "success",
-   "message": "SYSAPI_CRED_UPDATED Credential updated. ...",
-   "version": "1.3.1",
-   "commit": "619aa7ce",
-   "build": "2023-04-02T19:06:38Z",
-   "metadata": null
- }
-
-At this point the user will have registered credentials for a Tapis system that can be used as a source or destination
-for Globus operations.
-
-Registering Credentials for an AWS S3 System
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Registering credentials for an S3 type system is a special case that involves steps different from those described in
-the section above. For an S3 type system, the user will need to first manage the S3 bucket and IAM access tokens within AWS, 
-then register the AWS access token with Tapis as a key pair. 
-
-Creating the S3 Bucket within AWS
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The first step in registering S3 as a storage solution with Tapis is creating the S3 bucket.
-Tapis does not require any special considerations to be taken when creating the bucket, 
-but you will need to keep track of the bucket's name.
-
-Obtaining an Access Key Pair from AWS
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. _IAM_docs: https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html?icmpid=docs_iam_console 
-
-Although creating an IAM user is not strictly necessary, it is highly recommended. 
-You can create an access token for the root user by going to 'my security credentials' in the IAM console in AWS but this is not recommended for security reasons. 
-Instead, it is recommended to create an IAM user for Tapis access. Make sure that when you create the user, you explicitly give it permissions to access S3.
-Refer to the `IAM documentation <IAM_DOCS_>`_ for instructions on assigning permissions.
-
-Take the following steps to obtain an access token pair for an IAM user:
-
-1. In the IAM console in AWS, select the user who will be registered in the Tapis system.
-2. Navigate to the 'Security Credentials' tab, and select 'Create access key'.
-3. Go through the creation wizard, making sure that you save both the access key and the secret access key on the last page. You will need both of these in the next step to register the credentials with Tapis.
-
-Create the S3 System in Tapis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. _create_system: https://tapis.readthedocs.io/en/latest/technical/systems.html#creating-a-system
-
-Now that you have everything you need from AWS, create the Tapis system. 
-Refer to the `Creating a System <create_system_>`_ section for instructions, 
-making sure to use S3 for systemType and the name of the bucket for host. 
-
-The system definition should look something like this::
-
-    {
-      "id": "demo-aws-s3-bucket",
-      "description": "Demo S3 AWS acct.",
-      "host":"tapisdemo-bucket.s3.amazonaws.com",
-      "systemType": "S3",
-      "effectiveUserId": "tapisdemo",
-      "defaultAuthnMethod": "ACCESS_KEY",
-      "bucketName": "tapisdemo-bucket",
-      "rootDir": "",
-      "canExec": false
-    }
-
-Registering AWS Credentials with Tapis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Now that we have a bucket, AWS tokens, and a Tapis system, the last step is to register the AWS credentials with Tapis. 
-
-using CURL, we can do something like::
-
-  $curl -X POST -H "content-type:applications/json" -H "X-Tapis-Token: $JWT"
-    -d {
-      "accessKey":"< AWS access key name >",
-      "accessSecret":"< AWS access key secret >"
-    }
-    https://dev.develop.tapis.io/v3/systems/credential/<system>/user/<user>
-
-Which should return a response similar to ::
-
-  {
-  "result": null,
-  "status": "success",
-  "message": "SYSAPI_CRED_UPDATED Credential updated. ...",
-  "version": "1.8.2",
-  "commit": "9e30ecbf",
-  "build": "2025-02-25T14:24:36Z",
-  "metadata": null
-  }
 
 Viewing Systems
 ~~~~~~~~~~~~~~~
@@ -856,6 +638,227 @@ overwrites previously registered data.
 
 By default any credentials provided for LINUX and S3 type systems are verified. The query parameter
 *skipCredentialCheck=true* may be used to bypass the initial verification of credentials.
+
+Use of PKI_KEYS as credentials
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When using an ssh keypair as credentials there are several important points to keep in mind. As discussed above, the
+public key and private key must be encoded on a single line. This can sometimes be challenging. For example, copying
+and pasting may convert newline characters in a way that is not compatible with processing in Tapis. You may find the
+following linux command useful in converting a multi-line private key into a single line::
+
+  cat $privateKeyFile | awk -v ORS='\\n' '1'
+
+When generating the keypair, do not use a passphrase. This can interfere with non-interactive use of the keypair.
+
+Finally, please be aware that if the host has multi-factor authentication (MFA) enabled this may prevent Tapis from
+communicating with the host. Tapis does not currently support MFA.
+
+If problems are encountered here are some suggestions on what to check:
+
+* Public and private keys are each on one line in the json file. Newline characters in private key are properly encoded.
+* Keypair does not have a passphrase
+* Public key has been added to the authorized_keys file for the target user. File ~/.ssh/authorized_keys
+* File ~/.ssh/authorized_keys has proper permissions.
+* MFA is not enabled for the target host.
+
+If problems persist you can also attempt to manually validate the keypair using a command similar to this::
+
+  ssh -i /tmp/my_private_key testuser@myhost.com
+
+where /tmp/my_private_key contains the original multi-line private key. If everything is set up correctly and the
+keypair is valid you should be logged into the host without being prompted for a password.
+
+Use of TMS_KEYS for credentials
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tapis supports the use of the Trust Manager System (TMS) for managing credentials.
+For more information on TMS refer to `TMS_Documentation`_.
+
+.. _TMS_Documentation: https://tms-documentation.readthedocs.io/en/latest/#
+
+Please note that your Tapis site installation must have been configured by the site administrator to support TMS.
+See `TMS_Config`_.
+
+.. _TMS_Config: https://tapis.readthedocs.io/en/latest/deployment/deployer.html#configuring-support-for-tms
+
+Also, any target hosts defined in Tapis systems must be configured to use the TMS KeyCmd program for ssh connections.
+Please refer to the TMS documentation for details.
+
+The integration of Tapis with TMS allows users to have Tapis automatically create and use SSH keypairs rather
+than having to provide their own. In order to register TMS credentials for a system, begin by making sure the
+system is defined with *defaultAuthnMethod* set to TMS_KEYS. Then when creating credentials simply add the flag
+``createTmsKeys=true``.
+
+For example, the CURL command to create TMS keys for a system might look as follows::
+
+   $ curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT" https://tacc.tapis.io/v3/systems/credential/tms-test/user/<userid>?createTmsKeys=true -d @cred_tmp.json
+
+Note that the request body may be empty.
+
+Please note that the following restrictions apply:
+
+* Tapis installation for your site must be configured to support the Trust Manager System (TMS).
+* The host for the system must have the sshd configuration set up to use TMS.
+* The *effectiveUserId* must be dynamic.
+* Mapping of user using *loginUser* is not supported.
+
+
+.. _registering_globus_credentials:
+
+Registering Credentials for a Globus System
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Registering credentials for a GLOBUS type system is a special case that involves multiple steps and is significantly
+different compared to registering other types of credentials.
+For a GLOBUS type system, the user will need to use the TOKEN authentication method and generate
+an ``accessToken`` and ``refreshToken`` using two special-purpose System service endpoints.
+
+Please note that your Tapis site installation must have been configured by the site administrator to support
+Globus. See `Globus_Config`_.
+
+.. _Globus_Config: https://tapis.readthedocs.io/en/latest/deployment/deployer.html#configuring-support-for-globus
+
+Obtain Globus Authorization Code
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The first step in generating Globus credentials is for the user to call the systems *authUrl* credential endpoint
+to obtain a Globus authorization code.
+
+Using CURL, the request would look something like this::
+
+ $curl -H "X-Tapis-Token: $JWT" https://dev.tapis.io/v3/systems/credential/<system>/globus/authUrl
+
+The response should look similar to the following. Note that for brevity and readability, only the result portion of the
+response is shown, the response has been split into multiple lines and various IDs are not filled in::
+
+ {
+   "url": "https://auth.globus.org/v2/oauth2/authorize?client_id=<client_id>
+       &redirect_uri=https%3A%2F%2Fauth.globus.org%2Fv2%2Fweb%2Fauth-code
+       &scope=openid+profile+email+urn%3Aglobus%3Aauth%3Ascope%3Atransfer.api.globus.org%3Aall
+       &state=_default&response_type=code&code_challenge=<challenge_id>
+       &code_challenge_method=S256&access_type=offline",
+   "sessionId": "<session_id>"
+ }
+
+The user should copy the url (as a single string, no line breaks) and make note of the session Id for later use.
+The user then visits the provided URL and is presented with a Globus logon page that will allow them
+to authenticate using one of thousands of supported identity providers, including through their existing organization
+using CILogon.
+
+The user must use the following flow to obtain an authorization code:
+
+1. Visit the provided URL and authenticate through Globus. After authentication, user is re-directed back to a
+   Globus page showing the access being requested by Tapis.
+2. Fill in a label for future reference and click *Allow* to authorize Tapis to access Globus on their behalf.
+3. Copy the provided authorization code in preparation for the final step. Note that the code is valid for a short time
+   (as of this writing it is valid for 10 minutes).
+
+Exchange Authorization Code for Tokens
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The final step is for the user to call the systems credential endpoint to exchange the authorization code and session ID
+for tokens which are stored by the Systems service in a credentials record.
+
+Using CURL, the request would look something like this::
+
+ $curl -X POST -H "content-type: application/json" -H "X-Tapis-Token: $JWT"
+        https://dev.tapis.io/v3/systems/credential/<system>/user/<user>/globus/tokens/<authCode>/<sessionId>
+
+The response should look similar to the following::
+
+ {
+   "result": null,
+   "status": "success",
+   "message": "SYSAPI_CRED_UPDATED Credential updated. ...",
+   "version": "1.3.1",
+   "commit": "619aa7ce",
+   "build": "2023-04-02T19:06:38Z",
+   "metadata": null
+ }
+
+At this point the user will have registered credentials for a Tapis system that can be used as a source or destination
+for Globus operations.
+
+Registering Credentials for an AWS S3 System
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Registering credentials for a Tapis S3 type system referencing an AWS bucket is a special case that is significantly
+different compared to registering other types of credentials. For such a system, the user will need to first manage
+the S3 bucket and IAM access tokens within AWS, then register the AWS access token with Tapis as a key pair.
+
+Creating the S3 Bucket within AWS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The first step in registering S3 as a storage solution with Tapis is creating the S3 bucket.
+Tapis does not require any special considerations to be taken when creating the bucket, 
+but you will need to keep track of the bucket's name.
+
+Obtaining an Access Key Pair from AWS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _IAM_docs: https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html?icmpid=docs_iam_console 
+
+Although creating an IAM user is not strictly necessary, it is highly recommended. 
+You can create an access token for the root user by going to 'my security credentials' in the IAM console
+in AWS but this is not recommended for security reasons. Instead, it is recommended to create an IAM user
+for Tapis access. Make sure that when you create the user, you explicitly give it permissions to access S3.
+Refer to the `IAM documentation <IAM_DOCS_>`_ for instructions on assigning permissions.
+
+Take the following steps to obtain an access token pair for an IAM user:
+
+1. In the IAM console in AWS, select the user who will be registered in the Tapis system.
+2. Navigate to the 'Security Credentials' tab, and select 'Create access key'.
+3. Go through the creation wizard, making sure that you save both the access key and the secret access key on the last page. You will need both of these in the next step to register the credentials with Tapis.
+
+Create the S3 System in Tapis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _create_system: https://tapis.readthedocs.io/en/latest/technical/systems.html#creating-a-system
+
+Now that you have everything you need from AWS, create the Tapis system. 
+Refer to the `Creating a System <create_system_>`_ section for instructions, 
+making sure to use S3 for systemType and the name of the bucket for host. 
+
+The system definition should look something like this::
+
+    {
+      "id": "demo-aws-s3-bucket",
+      "description": "Demo S3 AWS acct.",
+      "host":"tapisdemo-bucket.s3.amazonaws.com",
+      "systemType": "S3",
+      "effectiveUserId": "tapisdemo",
+      "defaultAuthnMethod": "ACCESS_KEY",
+      "bucketName": "tapisdemo-bucket",
+      "rootDir": "",
+      "canExec": false
+    }
+
+Registering AWS Credentials with Tapis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now that we have a bucket, AWS tokens, and a Tapis system, the last step is to register the AWS credentials with Tapis. 
+
+using CURL, we can do something like::
+
+  $curl -X POST -H "content-type:applications/json" -H "X-Tapis-Token: $JWT"
+    -d {
+      "accessKey":"< AWS access key name >",
+      "accessSecret":"< AWS access key secret >"
+    }
+    https://dev.tapis.io/v3/systems/credential/<system>/user/<user>
+
+Which should return a response similar to ::
+
+  {
+  "result": null,
+  "status": "success",
+  "message": "SYSAPI_CRED_UPDATED Credential updated. ...",
+  "version": "1.8.2",
+  "commit": "9e30ecbf",
+  "build": "2025-02-25T14:24:36Z",
+  "metadata": null
+  }
 
 --------------------------
 Runtime
