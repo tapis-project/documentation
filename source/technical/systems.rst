@@ -419,7 +419,7 @@ The response should look similar to the following::
 At this point the user will have registered credentials for a Tapis system that can be used as a source or destination
 for Globus operations.
 
-Registering Credentials for an S3 System
+Registering Credentials for an AWS S3 System
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Registering credentials for an S3 type system is a special case that involves steps different from those described in
@@ -455,7 +455,7 @@ Create the S3 System in Tapis
 .. _create_system: https://tapis.readthedocs.io/en/latest/technical/systems.html#creating-a-system
 
 Now that you have everything you need from AWS, create the Tapis system. 
-Refer to the instructions in the `Creating a System <create_system_>`_ section for instructions, 
+Refer to the `Creating a System <create_system_>`_ section for instructions, 
 making sure to use S3 for systemType and the name of the bucket for host. 
 
 The system definition should look something like this::
