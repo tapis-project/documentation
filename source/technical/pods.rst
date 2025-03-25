@@ -359,9 +359,341 @@ the Pods service though. To learn more about the additional capabilities, please
 
 ----
 
+Pods
+==========
+
+Managing Pod Permissions
+-----------------------
+
+The Pods service provides a permissions model that allows pod owners to share access with other Tapis users. Permissions can be granted at different levels, controlling what actions other users can perform on a pod.
+
+Permission levels in the Pods service are hierarchical. If a user has ADMIN permission, they also have USER and READ permissions. If a user has USER permission, they also have READ permission. The following table lists the available permission levels and their descriptions:
+
+.. list-table::
+    :header-rows: 1
+    :widths: 20 80
+
+    * - Level
+      - Description
+    * - ADMIN
+      - Full control over the pod, including stopping, starting, and deleting
+    * - USER
+      - Can update pod, view credentials, and access permissions list
+    * - READ
+      - Can view pod details and logs but cannot modify the pod
+
+.. warning::
+    Even READ permission provides significant access to a pod. Users with READ permission can view logs, which may contain sensitive information such as connection strings, passwords, or user data depending on what the container writes to stdout/stderr. Have an idea on finer permission granularity? Let us know with a Github issue, we're improved by you!
+
+
+This table list the available endpoints and the permission that a user must have to access them:
+
+.. list-table::
+    :header-rows: 1
+    :widths: 40 15 13
+
+    * - Endpoint
+      - Method
+      - Required Permission
+    * - /pods/{pod_id}/permissions
+      - GET
+      - USER
+    * - /pods/{pod_id}/permissions/{user}
+      - DELETE
+      - ADMIN
+    * - /pods/{pod_id}/permissions
+      - POST
+      - ADMIN
+    * - /pods/{pod_id}/logs
+      - GET
+      - READ
+    * - /pods/{pod_id}/credentials
+      - GET
+      - USER
+    * - /pods/{pod_id}/save_pod_as_template_tag
+      - POST
+      - ADMIN
+    * - /pods/{pod_id}/stop
+      - GET
+      - ADMIN
+    * - /pods/{pod_id}/start
+      - GET
+      - ADMIN
+    * - /pods/{pod_id}/restart
+      - GET
+      - ADMIN
+    * - /pods/{pod_id}/derived
+      - GET
+      - READ
+    * - /pods/{pod_id}/exec
+      - POST
+      - ADMIN
+    * - /pods/{pod_id}
+      - GET
+      - READ
+    * - /pods/{pod_id}
+      - PUT
+      - USER
+    * - /pods/{pod_id}
+      - DELETE
+      - ADMIN
+    * - /pods
+      - GET
+      - NONE
+    * - /pods
+      - POST
+      - NONE
+
+
+
+Adding and Managing Permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The pod owner can add other users with specific permission levels using the following formats: 
+``username:ADMIN``, ``username:USER``, or ``username:READ``.
+
+Here are examples of how to manage pod permissions:
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        **Adding a user with permission**
+
+        .. code-block:: python
+
+            # Add user 'superuser' with ADMIN permission to pod 'docmost'
+            t.pods.set_pod_permission(
+                    pod_id='docmost',
+                    user='superuser',
+                    level='ADMIN'
+            )
+
+        **Listing all users with pod permissions**
+
+        .. code-block:: python
+
+            # Get all permissions for pod 'docmost'
+            permissions = t.pods.get_pod_permissions(pod_id='docmost')
+            print(permissions)
+            
+            # Response
+            [
+                "superuser:ADMIN",
+                "originaluser:ADMIN"
+            ]
+
+        **Removing a user's permission**
+
+        .. code-block:: python
+
+            # Remove permissions for user 'superuser' from pod 'docmost'
+            t.pods.delete_pod_permission(
+                    pod_id='docmost',
+                    user='superuser'
+            )
+
+    .. group-tab:: Bash
+
+        **Adding a user with permission**
+
+        .. code-block:: bash
+
+            curl --request POST \
+                 --url https://tacc.tapis.io/v3/pods/docmost/permissions \
+                 --header 'Content-Type: application/json' \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --data '{ 
+                     "user": "superuser", 
+                     "level": "ADMIN" 
+                 }'
+
+        **Listing all users with pod permissions**
+
+        .. code-block:: bash
+
+            curl --request GET \
+                    --url https://tacc.tapis.io/v3/pods/docmost/permissions \
+                    --header 'Content-Type: application/json' \
+                    --header 'X-Tapis-Token: $JWT'
+
+            # Response
+            {
+                "message": "Pod permissions retrieved successfully.",
+                "metadata": {},
+                "result": {
+                    "permissions": [
+                        "superuser:ADMIN",
+                        "originaluser:ADMIN"
+                    ]
+                },
+                "status": "success",
+                "version": "1.X.X"
+            }
+
+
+        **Removing a user's permission**
+
+        .. code-block:: bash
+
+            curl --request DELETE \
+                    --url https://tacc.tapis.io/v3/pods/docmost/permissions/superuser \
+                    --header 'Content-Type: application/json' \
+                    --header 'X-Tapis-Token: $JWT'
+
+Pod Networking
+-----------------------
+
+The Pods service manages networking for your containers through a Traefik proxy, automatically handling routing and domain configuration. Each pod gets a subdomain on the Tapis service domain (e.g. ``mypod.pods.tacc.tapis.io``), making it accessible through HTTPS without requiring any manual network configuration. The networking configuration allows you to control how your pods are accessed, including protocol selection, port definition, authentication, and access restrictions when using authentication.
+
+When a pod is created, the service configures networking based on the provided settings. For example, in the Neo4j quickstart example, the service automatically configured a TCP port for the Neo4j Bolt protocol and an HTTP port for the Neo4j Browser interface.
+
+Networking Configuration Options
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following table describes the key fields available for configuring networking for your pods:
+
+.. list-table::
+    :header-rows: 1
+    :widths: 24 76
+
+    * - Field
+      - Description
+    * - protocol
+      - Specifies the network protocol to use. Options include ``http``, ``tcp``, ``postgres``, or ``local_only``. The ``local_only`` option makes the pod accessible only from within the cluster. Default: ``http``.
+    * - port
+      - The container port to expose via the URL in this networking object. Default: ``5000``.
+    * - url
+      - URL used to access the pod. This is automatically generated by the service in the format ``<pod_id>.pods.<service_domain>``. ``mypod.pods.tacc.tapis.io`` for example.
+    * - ip_allow_list
+      - List of IP addresses/ranges that are allowed to access this specific pod port. If empty, all IPs are allowed. Example: ``['127.0.0.1/32', '192.168.1.7']``.
+
+The following example shows a basic networking configuration for a pod which exposes port 8080 via HTTP (all Pods traffic makes use of HTTPS) to ``<pod_id>.pods.<service_domain>``:
+
+.. code-block:: json
+
+    "networking": {
+      "default": {
+        "protocol": "http",
+        "port": 8080
+      }
+    }
+
+For database pods like PostgreSQL or Neo4j, specific protocols and configurations are recommended:
+
+.. tabs::
+
+    .. tab:: Neo4j
+
+        .. code-block:: json
+
+            "networking": {
+              "bolt": {
+                "protocol": "tcp",
+                "port": 7687
+              },
+              "default": {
+                "protocol": "http",
+                "port": 7474
+              }
+            }
+        
+        This configuration would proxy Neo4j's Bolt protocol to ``mypod-bolt.pods.tacc.tapis.io`` and the Browser interface to ``mypod.pods.tacc.tapis.io``.
+
+    .. tab:: PostgreSQL
+
+        .. code-block:: json
+
+            "networking": {
+              "postgres": {
+                "protocol": "postgres",
+                "port": 5432
+              }
+            }
+
+        This would proxy Postgres's 5432 port to mypod-postgres.pods.tacc.tapis.io. By not specifying ``default`` for the networking key we can allocate another interface on the "main subdomain".
+
+Tapis Authentication
+^^^^^^^^^^^^^^^^^^^
+
+The Pods service supports securing pods with Tapis authentication, allowing only authorized users access. When enabled, users are redirected to authenticate with Tapis before being sent back to the pod. This feature secures applications requiring authentication. Tenant authentication rules are enforced per-tenant, with additional configuration options available to manage access control via Pods.
+
+.. warning::
+    ``tapis_auth`` is a new feature and is definitely not foolproof. It may have limitations or unexpected behaviors in certain scenarios. Users should test thoroughly before relying on this authentication mechanism for sensitive applications. Please report any issues via github issues.
+
+.. list-table::
+    :header-rows: 1
+    :widths: 24 76
+
+    * - Field
+      - Description
+    * - tapis_auth
+      - Boolean flag that enables or disables Tapis authentication for the pod. Default: ``false``.
+    * - tapis_auth_response_headers
+      - Specifies which headers from the authentication should be passed to the pod. Useful for passing identity information to the container. Example: passing the username to allow the application to know who is accessing it.
+    * - tapis_auth_allowed_users
+      - List of users allowed to access the pod. If set to ``["*"]`` or not specified, all authenticated Tapis users can access the pod.
+    * - tapis_auth_return_path
+      - Path to redirect to after successful authentication. Default: ``/``.
+
+Example of a pod with Tapis authentication enabled:
+
+.. code-block:: json
+
+    "networking": {
+      "default": {
+        "protocol": "http",
+        "port": 8080,
+        "tapis_auth": true,
+        "tapis_auth_response_headers": {
+          "X-Tapis-Username": "<<tapis_username>>",
+          "X-Tapis-Token": "<<tapis_token>>"
+        },
+        "tapis_auth_allowed_users": ["superuser", "originaluser"]
+      }
+    }
+
+In this example, only users "superuser" and "originaluser" can access the pod, and their Tapis username and token will be passed to the application via HTTP headers.
+
+TapisUI Integration
+^^^^^^^^^^^^^^^^^^
+
+The Pods service includes features specifically designed to improve integration with the TapisUI web interface. These are a few helpful options.
+
+.. warning::
+    TapisUI integration features are currently a work in progress (WIP) and may not be fully functional. These features are under active development and subject to change without notice. Users should test thoroughly before relying on these features in production environments.
+
+.. list-table::
+    :header-rows: 1
+    :widths: 24 76
+
+    * - Field
+      - Description
+    * - tapis_ui_uri
+      - A URL path for the TapisUI to use when providing a link to this pod. Default: empty string.
+    * - tapis_ui_uri_redirect
+      - If ``true``, automatically redirects to the ``tapis_ui_uri`` when accessing the pod through TapisUI. If ``false``, the URL is displayed as read-only. Default: ``false``.
+    * - tapis_ui_uri_description
+      - A description of where the ``tapis_ui_uri`` will redirect, shown in the UI. Default: empty string.
+
+Example of TapisUI integration configuration:
+
+.. code-block:: json
+
+    "networking": {
+      "default": {
+        "protocol": "http",
+        "port": 8080,
+        "tapis_ui_uri": "/admin",
+        "tapis_ui_uri_redirect": true,
+        "tapis_ui_uri_description": "Admin dashboard for monitoring pod metrics"
+      }
+    }
+
+This will configure the TapisUI ``link`` button to redirect to the specified ``/admin`` route of the pod url (rather than ``/``), with a helpful description explaining where the link leads.
 
 Templates
-=========
+=================
 
 Tapis Pods supports templating, which allows users to create reusable pod definitions. Users make use of templates and their underlying template tags to define a pod.
 
@@ -654,14 +986,6 @@ DB with the Postgres' PgAdmin interface or Python Postgres drivers.
                 - PgAdmin GUI can be hosted by the Pods service, it just hasn't been tried yet.
 
 
-
-
-
-----
-
-Future work. Only quickstart is currently complete.
-===================================================
-Please view our API Reference to see what additional functionality is currently available.
 
 ----
 
