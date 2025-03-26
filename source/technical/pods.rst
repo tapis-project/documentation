@@ -740,11 +740,11 @@ configurations is through templates, making them a crucial component for collabo
             templates = t.pods.list_templates()
             print(templates)
 
-        To create a template in Tapis Pods, use the ``tapipy`` and the ``t.pods.create_template()`` function:
+        To create a template in Tapis Pods, use the ``tapipy`` and the ``t.pods.add_template()`` function:
 
         .. code-block:: python
 
-            t.pods.create_template(
+            t.pods.add_template(
                 template_id='mongo',
                 description="TACC's MongoDB template",
                 metatags=['mongo', 'database', 'TACC', 'http']
@@ -818,7 +818,7 @@ This example shows how to create a template tag for the ``mongo`` template:
 
     .. code-tab:: python
 
-        t.pods.create_template_tag(
+        t.pods.add_template_tag(
             template_id='mongo',
             pod_definition={
                 "image": "mongo:8",
