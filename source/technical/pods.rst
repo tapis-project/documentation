@@ -614,12 +614,15 @@ For database pods like PostgreSQL or Neo4j, specific protocols and configuration
         This would proxy Postgres's 5432 port to mypod-postgres.pods.tacc.tapis.io. By not specifying ``default`` for the networking key we can allocate another interface on the "main subdomain".
 
 Tapis Authentication
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
-The Pods service supports securing pods with Tapis authentication, allowing only authorized users access. When enabled, users are redirected to authenticate with Tapis before being sent back to the pod. This feature secures applications requiring authentication. Tenant authentication rules are enforced per-tenant, with additional configuration options available to manage access control via Pods.
+The Pods service supports securing pods with Tapis authentication, allowing only authorized users access. When enabled, users are redirected to authenticate with Tapis before being sent back to the pod. This feature secures applications requiring authentication. Tenant authentication rules are enforced per-tenant, with additional configuration options available to manage access control via Pods. This is implemented via the Traefik forwardAuth middleware.
 
 .. warning::
     ``tapis_auth`` is a new feature and is definitely not foolproof. It may have limitations or unexpected behaviors in certain scenarios. Users should test thoroughly before relying on this authentication mechanism for sensitive applications. Please report any issues via github issues.
+
+.. warning::
+    ``tapis_auth`` is one of many Tapis authentication methods. It does not provide token to user applications. But be aware that other Tapis authentication methods might pass along more information. Tapis supports full OIDC support via the Tapis Authenticator API.
 
 .. list-table::
     :header-rows: 1
@@ -630,11 +633,11 @@ The Pods service supports securing pods with Tapis authentication, allowing only
     * - tapis_auth
       - Boolean flag that enables or disables Tapis authentication for the pod. Default: ``false``.
     * - tapis_auth_response_headers
-      - Specifies which headers from the authentication should be passed to the pod. Useful for passing identity information to the container. Example: passing the username to allow the application to know who is accessing it.
+      - Specifies which headers from the authentication should be passed to the pod. Useful for passing identity information to the container. ``<<tapisusername>>``, ``<<tapistenantid>>``, and ``<<tapissiteid>>`` replace values in header values. Example: passing ``incominguser: <<tapisusername>>`` to provide user information to application.
     * - tapis_auth_allowed_users
-      - List of users allowed to access the pod. If set to ``["*"]`` or not specified, all authenticated Tapis users can access the pod.
+      - List of users allowed to access the pod. If set to ``["*"]`` or not specified, all authenticated Tapis users in the tenant can access it. Be aware that some tenant restrictions are quite lenient if not explicitly hardened.
     * - tapis_auth_return_path
-      - Path to redirect to after successful authentication. Default: ``/``.
+      - Path to redirect to after successful initial authentication. Default: ``/``.
 
 Example of a pod with Tapis authentication enabled:
 
@@ -646,14 +649,65 @@ Example of a pod with Tapis authentication enabled:
         "port": 8080,
         "tapis_auth": true,
         "tapis_auth_response_headers": {
-          "X-Tapis-Username": "<<tapis_username>>",
-          "X-Tapis-Token": "<<tapis_token>>"
+          "X-Tapis-Username": "<<tapisusername>>",
+          "X-Tapis-Tenant": "<<tapistenantid>>",
+          "X-Tapis-Site": "<<tapissiteid>>",
+          "Internal": "<<tapisusername>>.<<tapistenantid>>.<<tapissiteid>>",
+          "RandomHeaderWhichMustBeSet": "MyValue"
         },
         "tapis_auth_allowed_users": ["superuser", "originaluser"]
       }
     }
 
-In this example, only users "superuser" and "originaluser" can access the pod, and their Tapis username and token will be passed to the application via HTTP headers.
+In this example, only users "superuser" and "originaluser" can access the pod, and their Tapis username/tenant/site will be passed to the application via HTTP headers.
+
+Accessing a Pod with Tapis Auth via Browser
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tapis Auth intercepts calls to user pods in the browser. Only once authenticated will a user be able to access ``http`` ports from a pod. The flow is as follows:
+
+1. User accesses the pod URL (e.g., ``https://mypod.pods.tacc.tapis.io``).
+2. The Pods service checks if Tapis authentication is enabled.
+3. If enabled, the user session cookies are checked for "X-Tapis-Token".
+4. If the token is not present, the user is redirected to Tapis for authentication.
+5. After successful authentication, the user is redirected back to the pod URL.
+6. The Pods service checks the token and, if valid, allows access to the pod.
+7. The user can now interact with the pod as intended.
+
+
+Accessing a Pod with Tapis Auth via Code
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tapis Auth allows access to users pods via header auth via an ``X-Tapis-Token`` header. This allows access to user APIs or services via non-browser based flows.
+For instance if you had an Open WebUI pod which requires JWT auth with Tapis Auth enabled you'll need to provide two headers.
+
+.. code-block:: bash
+
+  curl --request GET \
+  --url https://openwebui.pods.tacc.tapis.io/ollama/api/tags \
+  --header 'Authorization: Bearer <<JWT-FROM-CONTAINER-GUI>>' \
+  --header 'X-Tapis-Token: <<pass tapis jwt>>'
+
+Above is a dual auth example. For example, if the pod doesn't implement it's own auth a user would only need to provide something like the following to list api endpoints on a flask server.
+
+.. code-block:: bash
+  
+  curl --request GET \
+  --url https://fastapi.pods.tacc.tapis.io/endpoints/list \
+  --header 'X-Tapis-Token: <<pass tapis jwt>>'
+
+It's important to note that currently if a user attempts authentication with headers they must specify ``X-Tapis-Token``. If a request doesn't contain the header they'll be redirected to webflow with no error message, which will break in code or CLI. If the header is non-valid a proper error response will be returned.
+
+Diagram of Tapis Auth logic
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Here's a diagram showing the flow a user's request would take to get to their pods. Essentially all requests are intercepted and validated before moving forward.
+
+.. image:: images/pods-tapis-auth-flow.png
+   :width: 100%
+   :align: center
+   :alt: Tapis Auth Logic Flow
+
 
 TapisUI Integration
 ^^^^^^^^^^^^^^^^^^
