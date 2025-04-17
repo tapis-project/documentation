@@ -618,7 +618,7 @@ Tapis Authentication
 
 The Pods service supports securing pods with Tapis authentication, allowing only authorized users access. When enabled, users are redirected to authenticate with Tapis before being sent back to the pod. This feature secures applications requiring authentication. Tenant authentication rules are enforced per-tenant, with additional configuration options available to manage access control via Pods. This is implemented via the Traefik forwardAuth middleware.
 
-.. warning::
+.. important::
     ``tapis_auth`` is a new feature and is definitely not foolproof. It may have limitations or unexpected behaviors in certain scenarios. Users should test thoroughly before relying on this authentication mechanism for sensitive applications. Please report any issues via github issues.
 
 .. warning::
@@ -638,10 +638,19 @@ The Pods service supports securing pods with Tapis authentication, allowing only
       - List of users allowed to access the pod. If set to ``["*"]`` or not specified, all authenticated Tapis users in the tenant can access it. Be aware that some tenant restrictions are quite lenient if not explicitly hardened.
     * - tapis_auth_return_path
       - Path to redirect to after successful initial authentication. Default: ``/``.
+    * - tapis_auth_allowed_roles
+      - **Not Implemented - Contact if you need it** List of Tapis roles required to access the pod.
+    * - tapis_auth_cors_headers
+      - **Not Implemented - Contact support if required** Headers allowed by CORS to the pod. This is useful for cross-origin requests, such as a UI.
+    * - tapis_auth_cors_methods
+      - **Not Implemented - Contact support if required** Methods allowed by CORS to the pod. This is useful for cross-origin requests, such as a UI.
+.. note::
+      
+    Flask drops response headers with underscores. Thus ``tapis_auth_response_headers`` headers with underscores will likely be dropped in Flask applications. This is a legacy restriction/issue tied to WSGI and the CGI specification. Hyphens are preferred in Flask.
 
 Example of a pod with Tapis authentication enabled:
 
-.. code-block:: json
+.. code-block:: python
 
     "networking": {
       "default": {
@@ -652,14 +661,18 @@ Example of a pod with Tapis authentication enabled:
           "X-Tapis-Username": "<<tapisusername>>",
           "X-Tapis-Tenant": "<<tapistenantid>>",
           "X-Tapis-Site": "<<tapissiteid>>",
+          "Flask-does-not-accept-underscores-in-headers": "tip#1",
+          "pods_service_still_accepts-underscores-in-headers_though": "tip#2"
+          "Random-Header-Which-User-Might-Set": "nottip#3"
+          # true email support changes per tenant, contact us to discuss
+          "Lot-Of-Apps-Expect-Email-This-Works-For-Some": "<<tapisusername>>@domain.io",
           "Internal": "<<tapisusername>>.<<tapistenantid>>.<<tapissiteid>>",
-          "RandomHeaderWhichMustBeSet": "MyValue"
         },
         "tapis_auth_allowed_users": ["superuser", "originaluser"]
       }
     }
 
-In this example, only users "superuser" and "originaluser" can access the pod, and their Tapis username/tenant/site will be passed to the application via HTTP headers.
+In this example, only users ``superuser`` and ``originaluser`` can access the pod, and their Tapis username/tenant/site will be passed to the application via HTTP headers.
 
 Accessing a Pod with Tapis Auth via Browser
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
