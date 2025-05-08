@@ -670,7 +670,7 @@ where /tmp/my_private_key contains the original multi-line private key. If every
 keypair is valid you should be logged into the host without being prompted for a password.
 
 Use of TMS_KEYS for credentials
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tapis supports the use of the Trust Manager System (TMS) for managing credentials.
 For more information on TMS refer to `TMS_Documentation`_.

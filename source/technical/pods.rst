@@ -177,10 +177,10 @@ the ``t`` object, passing the username of the profile to retrieve, as follows.
 ----
 
 Pods Quickstart
-================
+===============
 
 Registering a Pod via Template
----------------------------
+------------------------------
 
 To get started we're going to create a Pod via a Template. You can use ``tapipy`` via Python or ``cURL`` via bash to make requests to the Pods service.
 It's good to mention that the service is a RESTful API, so you can use any tool that can make HTTP requests.
@@ -307,7 +307,7 @@ Accessing a Pod
 ---------------
 
 Once your pod is in the ``AVAILABLE`` state your pod's specified networking ports should be routed to port 443 at specified urls.
-Read more at :ref:`Pod Networking`_.
+Read more at :ref:`Pod Networking`.
 
 A pod's access urls specified in the pod's `networking` attribute. A pod can have multiple urls, each with different protocols and ports.
 
@@ -922,7 +922,7 @@ This example shows how to create a template tag for the ``mongo`` template:
 
 
 Using a Template Tag to Create a Pod
---------------------------------
+------------------------------------
 
 To create a pod from a specific template tag and timestamp, use:
 

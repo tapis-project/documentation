@@ -12,13 +12,6 @@
 Security
 ########
 
-.. raw:: html
-
-    <style> .red {color:#FF4136; font-weight:bold; font-size:20px} </style>
-
-.. role:: red
-
-
 ----
 
 Introduction to the Security Kernel

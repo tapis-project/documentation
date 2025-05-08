@@ -305,12 +305,13 @@ Using the Auto-retry Functionality
 Users to configure a python client to automatically retry failed api calls.
 Retries can be configured on a per-call basis at the Operation level.
 Users may provide the following keyword arguments to any tapipy operation to make use of this feature:
-    * ``_retries: int = 0``  - The total number of times that a call should be retried. The default is 0. Specifying a value of 1 for retries is equivalent to making 2 back-to-back api calls
-    * ``_retry_delay_sec: Union[int,float] = 0`` - Total number of seconds to delay between api call retires. Defaults to no delay; all calls are made immediately one after the other until one succeeds or the number retry limit is reached
-    * ``_retry_on_exceptions: List[Exception] = [tapipy.errors.InternalServerError]`` - A list of exceptions that trigger a retry of an api call. Defaults to a list containing a single item (``tapipy.errors.InternalServerError``). Any other exception could be used, but in practice, it is likely that the default error is the only one that really makes sense to retry.
-    * ``_retry_backoff_algo: Literal["constant", "exponential"] = "constant"`` - The algorithm to use to calculate the duration from one retry to the next. Defaults to the value 'constant'. Note, this keyword argument has no effect if ``_retries`` == 0 or ``_retry_delay_sec`` == 0.  Any values provided to this keyword argument that are not one of the two string literals listed below with raise a ``TapyClientConfigurationError`` exception.
-        * ``constant`` - the delay between api calls will not change. For example, if a user specifies a 5 second delay with 5 retries. There will be a 5 second delay between each retry.
-        * ``exponential`` - the delay between api calls will change exponentially. For example, if a user specifies a retry limit of 5 (6 calls in total including the initial call), and a 2 second delay, the delays between each api call will be 2, 4, 8, 16, 32, and 64 respectively.
+
+* ``_retries: int = 0``  - The total number of times that a call should be retried. The default is 0. Specifying a value of 1 for retries is equivalent to making 2 back-to-back api calls
+* ``_retry_delay_sec: Union[int,float] = 0`` - Total number of seconds to delay between api call retires. Defaults to no delay; all calls are made immediately one after the other until one succeeds or the number retry limit is reached
+* ``_retry_on_exceptions: List[Exception] = [tapipy.errors.InternalServerError]`` - A list of exceptions that trigger a retry of an api call. Defaults to a list containing a single item (``tapipy.errors.InternalServerError``). Any other exception could be used, but in practice, it is likely that the default error is the only one that really makes sense to retry.
+* ``_retry_backoff_algo: Literal["constant", "exponential"] = "constant"`` - The algorithm to use to calculate the duration from one retry to the next. Defaults to the value 'constant'. Note, this keyword argument has no effect if ``_retries`` == 0 or ``_retry_delay_sec`` == 0.  Any values provided to this keyword argument that are not one of the two string literals listed below with raise a ``TapyClientConfigurationError`` exception.
+    * ``constant`` - the delay between api calls will not change. For example, if a user specifies a 5 second delay with 5 retries. There will be a 5 second delay between each retry.
+    * ``exponential`` - the delay between api calls will change exponentially. For example, if a user specifies a retry limit of 5 (6 calls in total including the initial call), and a 2 second delay, the delays between each api call will be 2, 4, 8, 16, 32, and 64 respectively.
 
 .. _tapipyuploadanchor:
 

@@ -12,60 +12,58 @@
 Jobs
 ####
 
-.. raw:: html
-
-    <style> .red {color:#FF4136; font-weight:bold; font-size:20px} </style>
-
-.. role:: red
-
-
 ----
 
 Introduction to Jobs
 ====================
 
-The Tapis v3 Jobs service is specialized to run containerized applications on any host that supports container runtimes.  Currently, Docker, Singularity and ZIP containers are supported.  The Jobs service uses the Systems, Apps, Files and Security Kernel services to process jobs.
+The Tapis v3 Jobs service is specialized to run containerized applications on any host that supports container runtimes. Currently, Docker, Singularity and ZIP containers are supported. The Jobs service uses the Systems, Apps, Files and Security Kernel services to process jobs.
 
-Implementation Status
----------------------
-The following table describes the current state of the Beta release of Jobs.  All UrlPaths shown start with /v3/jobs.  The unauthenticated health check, ready and hello APIs do not require a Tapis JWT in the request header.
+API Endpoints
+-------------
+The following table lists the available API endpoints for Jobs.
+All UrlPaths shown start with `/v3/jobs`. The unauthenticated health and ready check APIs
+do not require a Tapis JWT in the request header.
 
-================     ======   =======================================   ===========
-Name                 Method   UrlPath                                   Status
-================     ======   =======================================   ===========
-Submit               POST     /submit                                   Implemented
-Resubmit             POST     /{JobUUID}/resubmit                       Implemented
+====================     ======   =======================================
+Name                     Method   UrlPath                                
+====================     ======   =======================================
+Submit                   POST     /submit                                
+Resubmit                 POST     /{JobUUID}/resubmit                    
 \
-List                 GET      /list                                     Implemented
-Search               GET      /search                                   Implemented
-Search               POST     /search                                   Implemented
+List                     GET      /list                                  
+Search                   GET      /search                                
+Search                   POST     /search                                
 \
-Get                  GET      /{JobUUID}                                Implemented
-Get Status           GET      /{JobUUID}/status                         Implemented
-Get History          GET      /{JobUUID}/history                        Implemented
-Get Output list      GET      /{JobUUID}/output/list/{outputPath}       Implemented
-Download Output      GET      /{JobUUID}/output/download/{outputPath}   Implemented
-Resubmit Request     GET      /{JobUUID}/resubmit_request               Implemented
+Get                      GET      /{JobUUID}                             
+Get Status               GET      /{JobUUID}/status                      
+Get History              GET      /{JobUUID}/history                     
+Get Output list          GET      /{JobUUID}/output/list/{outputPath}    
+Download Output          GET      /{JobUUID}/output/download/{outputPath}
+Resubmit Request         GET      /{JobUUID}/resubmit_request            
 \
-Cancel               POST      /{JobUUID}/cancel                        Implemented
-Hide                 POST      /{JobUUID}/hide                          Implemented
-Unhide               POST      /{JobUUID}/unhide                        Implemented
-SendEvent            POST      /{JobUUID}/sendEvent                     Implemented
+Cancel                   POST      /{JobUUID}/cancel                     
+Hide                     POST      /{JobUUID}/hide                       
+Unhide                   POST      /{JobUUID}/unhide                     
+SendEvent                POST      /{JobUUID}/sendEvent                  
 \
-Post Share           POST      /{JobUUID}/share                         Implemented
-Get Share            GET       /{JobUUID}/share                         Implemented
-Delete Share         DELETE    /{JobUUID}/share/{user}                  Implemented
+Get Subscriptions        GET       /subscribe/{JobUUID}                  
+Create Subscription      POST      /subscribe/{JobUUID}                  
+Delete Subscriptions     DELETE    /subscribe/{JobUUID}                  
 \
-Health Check         GET       /healthcheck                             Implemented
-Ready                GET       /ready                                   Implemented
-Hello                GET       /hello                                   Implemented
-================     ======   =======================================   ===========
+Post Share               POST      /{JobUUID}/share                      
+Get Share                GET       /{JobUUID}/share                      
+Delete Share             DELETE    /{JobUUID}/share/{user}               
+\
+Health Check             GET       /healthcheck                          
+Ready Check              GET       /readycheck                           
+====================     ======   =======================================
 
 
 Job Processing Overview
 -----------------------
 
-Before discussing the details of how to construct a job request, we take this opportunity to describe overall lifecycle of a job.  When a job request is received as the payload of an POST call, the following steps are taken:
+Before discussing the details of how to construct a job request, we describe the overall lifecycle of a job. When a job request is received as the payload of a POST call, the following steps are taken:
 
 #. **Request authorization** - The tenant, owner, and user values from the request and Tapis JWT are used to authorize access to the application, execution system and, if specified, archive system.
 
@@ -73,20 +71,20 @@ Before discussing the details of how to construct a job request, we take this op
 
 #. **Job creation** - A Tapis job object is written to the database.
 
-#. **Job queuing** - The Tapis job is queue on an internal queue serviced by one or more Job Worker processes.
+#. **Job queuing** - The Tapis job is placed on an internal queue serviced by one or more Job Worker processes.
 
-#. **Response** - The initial Job object is sent back to the caller in the response.  This ends the synchronous portion of job submission.
+#. **Response** - The initial Job object is sent back to the caller in the response. This ends the synchronous portion of job submission.
 
-Once a response to the submission request is sent to the caller, job processing proceeds asynchronously.  Job worker processes read jobs from their work queues.  The number of workers and queues is limited only by hardware resource constraints.  Each job is assigned a worker thread.  This thread shepards a job through its lifecycle until the job completes, fails or becomes blocked due to a transient resource constraint.  The job lifecycle is reflected in the `Job Status`_ and generally progresses as follows:
+Once a response to the submission request is sent to the caller, job processing proceeds asynchronously. Job worker processes read jobs from their work queues. The number of workers and queues is limited only by hardware resource constraints. Each job is assigned a worker thread. This thread shepards a job through its lifecycle until the job completes, fails or becomes blocked due to a transient resource constraint. The job lifecycle is reflected in the `Job Status`_ and generally progresses as follows:
 
 ::
 
-    a) Stage inputs to execution system
-    b) Stage application artifacts to execution system
-    c) Queue or invoke job on execution system
-    d) Monitor job until it terminates
-    e) Collect job exit code
-    f) Archive job output
+    a) Stage inputs to execution system (PROCESSING_INPUTS, STAGING_INPUTS)
+    b) Stage application artifacts to execution system (STAGING_JOB)
+    c) Queue or invoke job on execution system (SUBMITTING_JOB)
+    d) Monitor job until it terminates (QUEUED, RUNNING)
+    e) Collect job exit code (RUNNING)
+    f) Archive job output (ARCHIVING)
 
 
 Simple Job Submission Example
@@ -102,7 +100,7 @@ The POST payload for the simplest job submission request looks like this:
      "appVersion": "1.0"
     }
 
-In this example, all input and output directories are either specified in the *myApp* definition or are assigned their default values.  Currently, the execution system on which an application runs must be specified in either the application definition or job request.  Our example assumes that *myApp* assigns the execution system.  Future versions of the Jobs service will support dynamic execution system selection.
+In this example, all input and output directories are either specified in the *myApp* definition or are assigned their default values.  Currently, the execution system on which an application runs must be specified in either the application definition or job request. Our example assumes that *myApp* assigns the execution system. Future versions of the Jobs service may support dynamic execution system selection.
 
 An archive system can also be specified in the application or job request; the default is for it to be the same as the execution system.
 
@@ -111,14 +109,14 @@ An archive system can also be specified in the application or job request; the d
 The Job Submission Request
 ==========================
 
-A job submission request must contain the name, appId and appVersion values as shown in the `Simple Job Submission Example`_.  Those values are marked *Required* in the list below, a list of all possible values allowed in a submission request.  If a parameter has a default value, that value is also shown.
+A job submission request must contain the name, appId and appVersion values as shown in the `Simple Job Submission Example`_. Those values are marked *Required* in the list below, a list of all possible values allowed in a submission request. If a parameter has a default value, that value is also shown.
 
-In addition, some parameters can inherit their values from the application or system definitions as discussed in `Parameter Precedence`_.  These parameters are marked *Inherit*.  Parameters that merge inherited values (rather than override them) are marked *InheritMerge*.
+In addition, some parameters can inherit their values from the application or system definitions as discussed in `Parameter Precedence`_. These parameters are marked *Inherit*. Parameters that merge inherited values (rather than override them) are marked *InheritMerge*.
 
-Parameters that do not need to be set are marked *Not Required*.  Finally, parameters that allow macro substitution are marked *MacroEnabled* (see `Macro Substitution`_ for details).
+Parameters that do not need to be set are marked *Not Required*. Finally, parameters that allow macro substitution are marked *MacroEnabled* (see `Macro Substitution`_ for details).
 
 **name**
-  The user chosen name of the job.  *MacroEnabled*, *Required.*
+  The user chosen name of the job. *MacroEnabled*, *Required.*
 **appId**
   The Tapis application to execute. *Required.*
 **appVersion**
@@ -126,61 +124,57 @@ Parameters that do not need to be set are marked *Not Required*.  Finally, param
 **jobType**
   A job's type can be either FORK or BATCH.
 **owner**
-  User ID under which the job runs.  Administrators can designate a user other than themselves.
+  User ID under which the job runs. Administrators can designate a user other than themselves.
 **tenant**
-  Tenant of job owner.  Default is job owner's tenant.
+  Tenant of job owner. Default is the tenant of the job owner.
 **description**
-  Human readable job description.  *MacroEnabled*, *Not Required*
+  Human readable job description. *MacroEnabled*, *Not Required*
 **archiveOnAppError**
-  Whether archiving should proceed even when the application reports an error.  Default is *true*.
-**dynamicExecSystem**
-  Whether the best fit execution system should be chosen using *execSystemConstraints*.  Default is *false*.
+  Whether archiving should proceed even when the application reports an error. Default is *true*.
 **execSystemId**
-  Tapis execution system ID.  *Inherit*.
+  Tapis execution system ID. *Inherit*.
 **execSystemExecDir**
-  Directory into which application assets are staged.  *Inherit*, see `Directories`_ for default.
+  Directory into which application assets are staged. *Inherit*, see `Directories`_ for default.
 **execSystemInputDir**
-  Directory into which input files are staged.  *Inherit*, see `Directories`_ for default.
+  Directory into which input files are staged. *Inherit*, see `Directories`_ for default.
 **execSystemOutputDir**
-  Directory into which the application writes its output.  *Inherit*, see `Directories`_ for default.
+  Directory into which the application writes its output. *Inherit*, see `Directories`_ for default.
 **execSystemLogicalQueue**
-  Tapis-defined queue that corresponds to a batch queue on the execution system.  *Inherit* when applicable.
+  Tapis-defined queue that corresponds to a batch queue on the execution system. *Inherit* when applicable.
 **archiveSystemId**
-  Tapis archive system ID.  *Inherit*, defaults to *execSystemId*.
+  Tapis archive system ID. *Inherit*, defaults to *execSystemId*.
 **archiveSystemDir**
-  Directory into which output files are archived after application execution.  *Inherit*, see `Directories`_ for default.
+  Directory into which output files are archived after application execution. *Inherit*, see `Directories`_ for default.
 **nodeCount**
-  Number of nodes required for application execution.  *Inherit*, default is 1.
+  Number of nodes required for application execution. *Inherit*, default is 1.
 **coresPerNode**
-  Number of cores to use on each node.  *Inherit*, default is 1.
+  Number of cores to use on each node. *Inherit*, default is 1.
 **memoryMB**
-  Megabytes of memory to use on each node.  *Inherit*, default is 100.
+  Megabytes of memory to use on each node. *Inherit*, default is 100.
 **maxMinutes**
-  Maximum number of minutes allowed for job execution.  *Inherit*, default is 10.
+  Maximum number of minutes allowed for job execution. *Inherit*, default is 10.
 **fileInputs**
-  Input files that need to be staged for the application.  *InheritMerge*.
+  Input files that need to be staged for the application. *InheritMerge*.
 **fileInputArrays**
-  Arrays of input files that need to be staged for the application.  *InheritMerge*.
+  Arrays of input files that need to be staged for the application. *InheritMerge*.
 **parameterSet**
-  Runtime parameters organized by category.  *Inherit*.
-**execSystemConstraints**
-  Constraints applied against execution system capabilities to validate application/system compatibility. *InheritMerge*.
+  Runtime parameters organized by category. *Inherit*.
 **subscriptions**
-  Subscribe to the job's events.  *InheritMerge*.
+  Subscribe to the job's events. *InheritMerge*.
 **tags**
-  An array of user-chosen strings that are associated with a job.  *InheritMerge*.
+  An array of user-chosen strings that are associated with a job. *InheritMerge*.
 **notes**
-  A JSON object containing any user-chosen data.  *Inherit*.
+  A JSON object containing any user-chosen data. *Inherit*.
 **isMpi**
-  Indicates whether this job is an MPI job.  *Inherit*, default is false.
+  Indicates whether this job is an MPI job. *Inherit*, default is false.
 **mpiCmd**
-  Specify the MPI launch command.  Conflicts with cmdPrefix if isMpi is set.  *Inherit*.
+  Specify the MPI launch command. Conflicts with cmdPrefix if isMpi is set. *Inherit*.
 **cmdPrefix**
-  String prepended to the application invocation command.  Conflicts with mpiCmd if isMpi is set.  *Inherit*.
+  String prepended to the application invocation command. Conflicts with mpiCmd if isMpi is set. *Inherit*.
 **notes**
-  Optional JSON object containing arbitrary user data, maximum length 65536 bytes.  *Inherit*.
+  Optional JSON object containing arbitrary user data, maximum length 65536 bytes. *Inherit*.
 
-The following subsections discuss the meaning and usage of each of the parameters available in a job request.  The schema_ and its referenced library_ comprise the actual JSON schema definition for job requests.
+The following subsections discuss the meaning and usage of each of the parameters available in a job request. The schema_ and its referenced library_ comprise the actual JSON schema definition for job requests.
 
 ..  _schema: https://github.com/tapis-project/tapis-jobs/blob/dev/tapis-jobsapi/src/main/resources/edu/utexas/tacc/tapis/jobs/api/jsonschema/SubmitJobRequest.json
 
@@ -190,7 +184,7 @@ The following subsections discuss the meaning and usage of each of the parameter
 Parameter Precedence
 --------------------
 
-The runtime environment of a Tapis job is determined by values in system definitions, the app definition and the job request, in low to high precedence order as listed.  Generally speaking, for values that can be assigned in multiple definitions, the values in job requests override those in app definitions, which override those in system definitions.  There are special cases, however, where the values from different definitions are merged.
+The runtime environment of a Tapis job is determined by values in system definitions, the app definition and the job request, in low to high precedence order as listed. Generally speaking, for values that can be assigned in multiple definitions, the values in job requests override those in app definitions, which override those in system definitions. There are special cases, however, where the values from different definitions are merged.
 
 See the jobs/apps/systems parameter matrix_ for a detailed description of how each parameter is handled.
 
@@ -200,14 +194,14 @@ See the jobs/apps/systems parameter matrix_ for a detailed description of how ea
 Job Type
 --------
 
-An execution system can run jobs using a batch scheduler (e.g., Slurm or Condor) or a native runtime (e.g., Docker or Singularity) or both.  Users specify how to run a job using the *jobType* parameter, which is set to "BATCH" to use a batch scheduler or "FORK" to use a native runtime.  The jobType can also be specified in application definitions.  The final value assigned to the jobType of a job is calculated as follows:
+An execution system can run jobs using a batch scheduler (e.g. Slurm) or a native runtime (e.g., Docker or Singularity) or both. Users specify how to run a job using the *jobType* parameter. This can be set to "BATCH" to use a batch scheduler or "FORK" to use a native runtime. The *jobType* can also be specified in application definitions. The final value assigned to the *jobType* of a job is calculated as follows:
 
 ::
 
     1. If the user specifies jobType in the job request, use it.
-    2. Otherwise, if the app.jobType != null, use it.
-    3. Otherwise, query the execution system and set jobType=BATCH if execSys.canRunBatch==true.
-    4. Otherwise, set jobType=FORK.
+    2. Otherwise, if the application defines the jobType, use it.
+    3. Otherwise, if the execution system specifies canRunBatch as true set jobType to BATCH.
+    4. Otherwise, set jobType to FORK.
 
 Directories
 -----------
@@ -293,7 +287,7 @@ JobFileInputs can be named or unnamed.  When the *name* field is assigned, Jobs 
 
 The *name* must start with an alphabetic character or an underscore (_) followed by zero or more alphanumberic or underscore characters.  If the name does not match one of the input names defined in the application, then the application must have *strictFileInputs=false*.  If the name matches an input name defined in the application, then the application's inputMode must be REQUIRED or OPTIONAL.  An error occurs if the inputMode is FIXED and there is a name match--job inputs cannot override FIXED application inputs.
 
-The *envKey* provides an easy way to insert the *targetPath* into the runtime environment of an application under a user-specified label.  The *envKey* string is used as the name of an environment variable that Jobs makes accessible to executing applications.  The environment variable's value is the *targetPath*.  *envKey* can only contain alphanumerics and underscore (_) and it's first character cannot be a number.  
+The *envKey* provides an easy way to insert the *targetPath* into the runtime environment of an application under a user-specified label.  The *envKey* string is used as the name of an environment variable that Jobs makes accessible to executing applications.  The environment variable's value is the *targetPath*.  *envKey* can only contain alphanumerics and underscore (_) and its first character cannot be a number.  
 
 The optional *notes* field can contain any valid user-specified JSON object. 
 
@@ -367,7 +361,7 @@ Each *sourceUrls* entry is a location from which data is copied to the *targetDi
 
 The *targetDir* is the directory into which all *sourceUrls* are copied.  The *targetDir* is always rooted at the *ExecSystemInputDir* and if *targetDir* is "*" or not specified, then it is assigned *ExecSystemInputDir*.  The simple name of each *sourceUrls* entry is the destination name used in *targetDir*.  Use different JobFileInputArrays with different targetDir's if name conflicts between *sourceUrls* entries exist.
 
-The *envKey* provides an easy way to insert the *targetDir* into the runtime environment of an application under a user-specified label.  The *envKey* string is used as the name of an environment variable that Jobs makes accessible to executing applications.  The environment variable's value is the *targetDir*.  *envKey* can only contain alphanumerics and underscore (_) and it's first character cannot be a number.  
+The *envKey* provides an easy way to insert the *targetDir* into the runtime environment of an application under a user-specified label.  The *envKey* string is used as the name of an environment variable that Jobs makes accessible to executing applications.  The environment variable's value is the *targetDir*.  *envKey* can only contain alphanumerics and underscore (_) and its first character cannot be a number.  
 
 The optional *notes* field can contain any valid user-specified JSON object.
 
@@ -502,15 +496,6 @@ The *cmdPrefix* parameter provides generalized support for launchers and is avai
 *mpiCmd* and *cmdPrefix* are mutually exclusive; so if *isMpi* is true, then *cmdPrefix* must not be set.
 
 
-ExecSystemConstraints
----------------------
-
-Future feature.
-
-Specifying execution system constraints is not yet implemented. These will be part of the feature to allow an execution
-system to be selected dynamically.
-
-
 Subscriptions
 -------------
 
@@ -554,7 +539,6 @@ String validation on job submission requests is as follows:
    *  job name
    *  environment variables
    *  system profile name
-   *  execution system constraints
    *  scheduler options
    *  container arguments
    *  application arguments
@@ -820,7 +804,7 @@ If the environment variable VAR does not exist on the host, then the literal pat
 Job Status
 ----------
 
-The list below contains all possible states of a Tapis job, which are indicated in the *status* field of a job record.  The initial state is PENDING.  Terminal states are FINISHED, CANCELLED and FAILED.  The BLOCKED state indicates that the job is recovering from a resource constraint, network problem or other transient problem.  When the problem clears, the job will restart from the state in which blocking occurred.
+The list below contains all possible states of a Tapis job, which are indicated in the *status* field of a job record. The initial state is PENDING. Terminal states are FINISHED, CANCELLED and FAILED. The BLOCKED state indicates that the job is recovering from a resource constraint, network problem or other transient problem. When the problem clears, the job will restart from the state in which blocking occurred.
 ::
 
     PENDING - Job processing beginning
@@ -828,7 +812,7 @@ The list below contains all possible states of a Tapis job, which are indicated 
     STAGING_INPUTS - Transferring job input data to execution system
     STAGING_JOB - Staging runtime assets to execution system
     SUBMITTING_JOB - Submitting job to execution system
-    QUEUED - Job queued to execution system queue
+    QUEUED - Job queued to execution system queue (when jobType is BATCH)
     RUNNING - Job running on execution system
     ARCHIVING - Transferring job output to archive system
     BLOCKED - Job blocked
@@ -907,6 +891,7 @@ When a job terminates, in addition to being assigned a terminal status, a job is
 	JOB_ARCHIVING_FAILED - Job error while archiving outputs
 	JOB_DATABASE_ERROR - Jobs is unable to access its database
 	JOB_EXECUTION_MONITORING_ERROR - An error occurred during application monitoring
+	JOB_EXECUTION_MONITORING_ERROR_TIMEOUT - Continuous monitor errors exceeded allowed time
 	JOB_EXECUTION_MONITORING_TIMEOUT - Job time expired during execution monitoring
 	JOB_FILES_SERVICE_ERROR - An error involving the Files service occurred
 	JOB_INTERNAL_ERROR - Jobs service internal error
@@ -935,13 +920,6 @@ The CANCELLED_BY_USER condition results from direct user action.
 Jobs that successfully execute are assigned the code NORMAL_COMPLETION.
 
 ..  _ConditionCodes: #Job Condition Codes on Termination
-
-Dynamic Execution System Selection
-----------------------------------
-
-Future feature.
-
-Selecting an execution system dynamically is not yet implemented.
 
 
 Data Transfer Nodes
@@ -1422,6 +1400,64 @@ If *isMPI=true*, then Jobs will insert the MPI run command on the command line a
 
 ------------------------------------------------------------
 
+Job Monitoring
+==============
+
+The Jobs service monitors a job during the two states where a job typically spends most of its time: QUEUED and RUNNING.
+
+Note that if the monitoring process encounters errors for more than one hour then the job will transition to the FAILED
+state and the job completion condition code will be set to JOB_EXECUTION_MONITORING_ERROR_TIMEOUT.
+
+Monitoring QUEUED State
+-----------------------
+
+Once a job enters the QUEUED state Tapis begins monitoring to detect when it becomes active and should
+be transitioned to the RUNNING state.
+
+If the *jobType* is FORK then it will immediately transition to the RUNNING state because the remote application
+process will have been started during the SUBMITTING_JOB phase.
+
+For BATCH jobs Tapis will monitor the remote status of the job at regular intervals to determine if it should be
+transitioned to the RUNNING state. The intervals for monitoring are based on a stepwise backoff policy as
+described below. The monitoring will be done indefinitely, allowing the job to remain in the QUEUED state as long
+as necessary.
+
+Monitoring RUNNING State
+------------------------
+
+Once a job enters the RUNNING state Tapis begins monitoring it to detect when it has finished and should be
+transitioned to the ARCHIVING state. The intervals for monitoring are based on a stepwise backoff policy as
+described below.
+
+Monitoring will not continue indefinitely, however. If the remote batch scheduler times out the job or Tapis detects
+that the job runtime exceeds the *maxMinutes* setting, then Tapis will transition the job to the FAILED state and the
+job completion condition code will be set to either SCHEDULER_TIMEOUT for the former case or
+JOB_EXECUTION_MONITORING_TIMEOUT for the latter case.
+
+Stepwise Backoff Monitoring Policy
+----------------------------------
+
+The polling intervals for job monitoring are based on a stepwise backoff policy. The table below shows the
+number of iterations and the polling interval (in seconds) for each step.
+
++----------------------+----------------------------+
+| Number of Iterations | Polling Interval (seconds) |
+|                      |                            |
++======================+============================+
+|     1                |        1                   |
++----------------------+----------------------------+
+|     5                |       10                   |
++----------------------+----------------------------+
+|    10                |       60                   |
++----------------------+----------------------------+
+|   100                |      180                   |
++----------------------+----------------------------+
+|   100                |      300                   |
++----------------------+----------------------------+
+|   Unlimited          |      600                   |
++----------------------+----------------------------+
+
+
 Querying Jobs
 =============
 
@@ -1547,7 +1583,6 @@ The response will look something like the following:
        maxMinutes: 240
        fileInputs: [{"name": "empty", "notes": "{}", "envKey": null, "optional": true, "sourceUrl": "tapis://tapisv3-exec/jobs/input/empty.txt", "targetPath": "empty.txt", "description": "An empty file", "autoMountLocal": true, "srcSharedAppCtx": "", "destSharedAppCtx": ""}, {"name": "file1", "notes": "{}", "envKey": null, "optional": true, "sourceUrl": "tapis://tapisv3-exec/jobs/input/file1.txt", "targetPath": "file1.txt", "description": "A random text file", "autoMountLocal": true, "srcSharedAppCtx": "", "destSharedAppCtx": ""}, {"name": "file2", "notes": "{}", "envKey": null, "optional": true, "sourceUrl": "tapis://tapisv3-exec/jobs/input/file2.txt", "targetPath": "file2.txt", "description": "Another random text file", "autoMountLocal": true, "srcSharedAppCtx": "", "destSharedAppCtx": ""}]
        parameterSet: {"appArgs": [], "logConfig": {"stderrFilename": "tapisjob.out", "stdoutFilename": "tapisjob.out"}, "envVariables": [{"key": "_tapisAppId", "notes": null, "value": "SleepSeconds", "include": null, "description": null}, {"key": "_tapisAppVersion", "notes": null, "value": "0.0.1", "include": null, "description": null}, {"key": "_tapisArchiveOnAppError", "notes": null, "value": "true", "include": null, "description": null}, {"key": "_tapisArchiveSystemDir", "notes": null, "value": "/jobs/aa83fce9-074c-47fb-a8a0-a9ad216093bb-007/archive", "include": null, "description": null}, {"key": "_tapisArchiveSystemId", "notes": null, "value": "tapisv3-exec", "include": null, "description": null}, {"key": "_tapisCoresPerNode", "notes": null, "value": "1", "include": null, "description": null}, {"key": "_tapisDynamicExecSystem", "notes": null, "value": "false", "include": null, "description": null}, {"key": "_tapisEffectiveUserId", "notes": null, "value": "testuser2", "include": null, "description": null}, {"key": "_tapisExecSystemExecDir", "notes": null, "value": "/workdir/jobs/aa83fce9-074c-47fb-a8a0-a9ad216093bb-007", "include": null, "description": null}, {"key": "_tapisExecSystemId", "notes": null, "value": "tapisv3-exec2", "include": null, "description": null}, {"key": "_tapisExecSystemInputDir", "notes": null, "value": "/workdir/jobs/aa83fce9-074c-47fb-a8a0-a9ad216093bb-007", "include": null, "description": null}, {"key": "_tapisExecSystemOutputDir", "notes": null, "value": "/workdir/jobs/aa83fce9-074c-47fb-a8a0-a9ad216093bb-007/output", "include": null, "description": null}, {"key": "_tapisJobCreateDate", "notes": null, "value": "2024-02-21Z", "include": null, "description": null}, {"key": "_tapisJobCreateTime", "notes": null, "value": "17:18:01.774367559Z", "include": null, "description": null}, {"key": "_tapisJobCreateTimestamp", "notes": null, "value": "2024-02-21T17:18:01.774367559Z", "include": null, "description": null}, {"key": "_tapisJobName", "notes": null, "value": "SleepSeconds", "include": null, "description": null}, {"key": "_tapisJobOwner", "notes": null, "value": "testuser2", "include": null, "description": null}, {"key": "_tapisJobUUID", "notes": null, "value": "aa83fce9-074c-47fb-a8a0-a9ad216093bb-007", "include": null, "description": null}, {"key": "_tapisJobWorkingDir", "notes": null, "value": "/workdir", "include": null, "description": null}, {"key": "_tapisMaxMinutes", "notes": null, "value": "240", "include": null, "description": null}, {"key": "_tapisMemoryMB", "notes": null, "value": "100", "include": null, "description": null}, {"key": "_tapisNodes", "notes": null, "value": "1", "include": null, "description": null}, {"key": "_tapisStderrFilename", "notes": null, "value": "tapisjob.out", "include": null, "description": null}, {"key": "_tapisStdoutFilename", "notes": null, "value": "tapisjob.out", "include": null, "description": null}, {"key": "_tapisSysHost", "notes": null, "value": "129.114.35.53", "include": null, "description": null}, {"key": "_tapisSysRootDir", "notes": null, "value": "/home/testuser2", "include": null, "description": null}, {"key": "_tapisTenant", "notes": null, "value": "dev", "include": null, "description": null}, {"key": "JOBS_PARMS", "notes": "{}", "value": "15", "include": true, "description": "nothing important"}, {"key": "MAIN_CLASS", "notes": "{}", "value": "edu.utexas.tacc.testapps.tapis.SleepSeconds", "include": null, "description": ""}], "archiveFilter": {"excludes": [], "includes": ["Sleep*"], "includeLaunchFiles": true}, "containerArgs": [], "schedulerOptions": []}
-       execSystemConstraints: null
        subscriptions: []
        blockedCount: 0
        remoteJobId: 1e35edb11ee05bacf3da7cf0fedc55cfb6e616e15982df5b6d5ba69a44029351
