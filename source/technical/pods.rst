@@ -359,8 +359,435 @@ the Pods service though. To learn more about the additional capabilities, please
 
 ----
 
-Pods
+
+Interacting with Pods
 ==========
+
+Managing Pod Definitions and Customizing Pod Behavior
+----------------------------------------------------
+
+Before interacting with your pod (e.g., retrieving logs), it's important to understand how to control the behavior of your container using the pod definition fields: ``command``, ``arguments``, and ``environment_variables``. These fields allow you to customize how your container runs, override default entrypoints, and inject configuration or secrets.
+
+**Entrypoint and Command Customization**
+
+Every Docker image has a default entrypoint and command, which determines what runs when the container starts. You can inspect these defaults using:
+
+.. code-block:: bash
+
+    docker inspect <image> | grep -i entrypoint
+
+If you want to override the entrypoint (for example, to run a shell before the default script), you can use the ``command`` field. For example, to run a shell and then the default entrypoint, you might use:
+
+.. code-block:: yaml
+
+    command: ["bash", "-c", "echo 'Debugging...' && ./docker-entrypoint.sh"]
+
+You can also use ``arguments`` to pass additional parameters to your command.
+
+**Using Environment Variables**
+
+The ``environment_variables`` field is the most flexible way to modify the behavior of your image. Many images support configuration via environment variables (e.g., setting ports, enabling features, or providing credentials).
+
+You can also pass through certain secrets using special placeholders. For example, you can use ``<<tapissecret_user_username>>`` or ``<<tapissecret_user_password>>`` in your environment variables, and these will be replaced with the appropriate values at pod creation time. This allows you to securely inject user or service credentials into your container.
+
+.. note::
+   Currently, only ``user_username``, ``user_password``, ``service_username``, and ``service_password`` are supported as secrets. Support for ``tapisusername``, ``tapistenant``, and ``tapissite`` will be added in the future, currently those are only available to response_headers.
+
+**Debugging, Custom Startup, and Best Practices**
+
+You can use the pod definition fields to customize startup behavior and debug your pod. For example, you might set the command to sleep for a long time or print environment variables before starting your application. This is useful for troubleshooting configuration issues or ensuring your environment is set up as expected.
+
+**Best Practices:**
+
+- Use ``environment_variables`` to enable or configure features in your image.
+- Use ``command`` and ``arguments`` to override the default startup behavior, especially for debugging or custom workflows.
+- Use secret placeholders to securely inject credentials.
+- For debugging, you can set the command to ``["sleep", "5000"]`` or print environment variables before starting your main process.
+
+**Example of setting Pod to sleep for debugging**
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        .. code-block:: python
+
+            t.pods.create_pod(
+                pod_id='debugpod',
+                image='myimage:latest',
+                command=['bash', '-c', 'echo "Starting debug..." && sleep 5000 && ./docker-entrypoint.sh'],
+                arguments=[],
+                environment_variables={
+                    'MY_FEATURE_FLAG': 'true',
+                    'DB_USER': '<<tapissecret_user_username>>',
+                    'DB_PASS': '<<tapissecret_user_password>>'
+                }
+            )
+
+    .. group-tab:: Bash
+
+        .. code-block:: bash
+
+            curl --request POST \
+                 --url https://tacc.tapis.io/v3/pods \
+                 --header 'Content-Type: application/json' \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --data '{
+                    "pod_id": "debugpod",
+                    "image": "myimage:latest",
+                    "command": ["bash", "-c", "echo \"Starting debug...\" && sleep 5000 && ./docker-entrypoint.sh"],
+                    "arguments": [],
+                    "environment_variables": {
+                        "MY_FEATURE_FLAG": "true",
+                        "DB_USER": "<<tapissecret_user_username>>",
+                        "DB_PASS": "<<tapissecret_user_password>>"
+                    }
+                 }'
+
+
+Logs
+----
+
+Logs are an essential tool for debugging errors in your code, monitoring the progress of your application, or diagnosing issues with your pod. The Pods service provides access to stdout and stderr logs from the container, making it easy to see what your application is doing in real-time.
+Logs are only relevant for ``AVAILABLE`` pods. If the pod has already ran, then logs will remain until next pod start. Only once a new pod starts will the logs be cleared and updated.
+
+**Retrieving stdout and stderr logs**
+
+You can retrieve the latest logs from your pod using the following methods:
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        .. code-block:: python
+
+            logs = t.pods.get_pod_logs(pod_id='mypod')
+            print(logs['logs'])
+
+    .. group-tab:: Bash
+
+        .. code-block:: bash
+
+            curl --request GET \
+                 --url https://tacc.tapis.io/v3/pods/mypod/logs \
+                 --header 'X-Tapis-Token: $JWT'
+
+    .. group-tab:: TapisUI
+
+        To view logs in TapisUI, navigate to the "Pods" page, select your pod, and click on the ``Logs`` tab. This will display the same logs as the API.
+
+        .. image:: images/tapisui-pods-logs.png
+          :width: 100%
+          :align: center
+          :alt: TapisUI page for Pods logs
+
+
+Action Logs
+--------
+
+Action logs provide a history of changes to your pod, such as health status updates, user modifications, or state changes. While not a full audit log, action logs can help you understand what has happened to your pod over time and identify potential issues. For example, you can see when a pod was started, stopped, or updated, and by whom.
+
+Retrieving action logs
+^^^^^^^^^^^^^^^^^^^^^^^
+
+You can retrieve action logs using the following methods:
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        .. code-block:: python
+
+            logs = t.pods.get_pod_logs(pod_id='mypod')
+            print(logs['action_logs'])
+
+    .. group-tab:: Bash
+
+        .. code-block:: bash
+
+            curl --request GET \
+                 --url https://tacc.tapis.io/v3/pods/mypod/logs \
+                 --header 'X-Tapis-Token: $JWT'
+
+    .. group-tab:: TapisUI
+
+        To view action logs in TapisUI, navigate to the "Pods" page, select your pod, and click on the ``Action Logs`` tab. This will display the same logs as the API.
+        
+        .. image:: images/tapisui-pods-actionlogs.png
+          :width: 100%
+          :align: center
+          :alt: TapisUI page for Pods action logs
+
+Storage Interactions
+--------------------
+
+The Pods service supports multiple methods for managing files and data:
+
+- **upload_to_pod**: For quick, temporary file uploads directly to a pod. Files are not persistent and will be lost on pod restarts.
+- **Volumes**: For declarative, persistent storage that can be shared across pods.
+- **Snapshots**: For creating backups of volumes or sharing read-only files.
+
+Uploading Files to a Pod
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The `upload_to_pod` endpoint allows you to quickly upload files directly to a pod. This is useful for temporary files or quick data transfers. Note that files uploaded this way are not persistent and will be lost if the pod is restarted. Additionally, large files (up to 3GB) may take up to 15 minutes to upload.
+
+No additional setup is required to use `upload_to_pod`. Simply specify the destination path within the pod and upload your file.
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        .. code-block:: python
+
+            with open('/path/to/local/file.sql', 'rb') as file:
+                response = t.pods.upload_to_pod(
+                    pod_id='mypod',
+                    file=file,
+                    dest_path='/path/in/pod/file.sql'
+                )
+
+    .. group-tab:: Bash
+
+        .. code-block:: bash
+
+            curl --request POST \
+                 --url https://tacc.tapis.io/v3/pods/mypod/upload_to_pod \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --form file=@/path/to/local/file.sql \
+                 --form dest_path='/path/in/pod/file.sql'
+
+Volumes
+^^^^^^^^^^
+
+Volumes provide persistent storage that can be shared across multiple pods. To use a volume, you must first create it using the `create_volume` API or TapisUI. This adds a layer of setup compared to `upload_to_pod`, but it ensures that your data is persistent and accessible even if the pod is restarted.
+
+Here's how to create a volume, mount it to a pod, upload files, and list files in the volume:
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        .. code-block:: python
+
+            # Create a volume
+            t.pods.create_volume(
+                volume_id='myvolume',
+                description='My persistent volume',
+                size_limit=1024
+            )
+
+            # Attach the volume to a pod on pod creation (can also update existing pods)
+            t.pods.create_pod(
+                pod_id='mypod',
+                volume_mounts={
+                  "myvolume": {
+                    "type": "tapisvolume",
+                    "mount_path": "/mnt/data",
+                    "volume_id": "myvolume"
+                  }
+                }
+            )
+
+            # List files in the volume
+            files = t.pods.list_volume_files(volume_id='myvolume')
+            print(files)
+
+            # Upload a file to the volume
+            with open('/path/to/local/file.sql', 'rb') as file:
+                t.pods.upload_to_volume(
+                    volume_id='myvolume',
+                    path='/data/file.sql',
+                    file=file
+                )
+
+            # Get contents of a file or directory (as zip, set zip=True)
+            contents = t.pods.get_volume_contents(volume_id='myvolume', path='/data', zip=False)
+            print(contents)
+
+    .. group-tab:: Bash
+
+        .. code-block:: bash
+
+            # Create a volume
+            curl --request POST \
+                 --url https://tacc.tapis.io/v3/volumes \
+                 --header 'Content-Type: application/json' \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --data '{"volume_id": "myvolume", "description": "My persistent volume", "size_limit": 1024}'
+
+            # Attach the volume to a pod on pod creation (can also update existing pods)
+            curl --request POST \
+                 --url https://tacc.tapis.io/v3/pods/mypod/volumes \
+                 --header 'Content-Type: application/json' \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --data '{"volume_mounts": {"myvolume": {"type": "tapisvolume", "mount_path": "/mnt/data", "volume_id": "myvolume"}}}'
+
+            # List files in the volume
+            curl --request GET \
+                 --url https://tacc.tapis.io/v3/volumes/myvolume/files \
+                 --header 'X-Tapis-Token: $JWT'
+
+            # Upload a file to the volume
+            curl --request POST \
+                 --url https://tacc.tapis.io/v3/volumes/myvolume/files/data/file.sql \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --form file=@/path/to/local/file.sql
+
+            # Get contents of a file or directory
+            curl --request GET \
+                 --url https://tacc.tapis.io/v3/volumes/myvolume/files/data \
+                 --header 'X-Tapis-Token: $JWT'
+
+    .. group-tab:: TapisUI
+
+        To create a volume in TapisUI, navigate to the "Volumes" page and click on the "Create Volume" button. Fill in the required details such as volume ID, description, and size limit, and submit the form.
+
+        To list files in a volume, navigate to the "Volumes" page, select the desired volume, and click on the "Files" tab. This will display the files stored in the volume.
+
+Snapshots
+^^^^^^^^^^^^
+
+Snapshots are read-only copies of a volume at a specific point in time. They are useful for creating backups or preserving the state of your data for later use. Snapshots can also be mounted if you need to access the data.
+
+To create a snapshot, you must specify the source volume and path. Snapshots can also include a description, size limit, and optional cron or retention policies.
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        .. code-block:: python
+
+            # Create a snapshot
+            t.pods.create_snapshot(
+                snapshot_id='mysnapshot',
+                source_volume_id='myvolume',
+                source_volume_path='/data',
+                description='Backup of my data'
+            )
+
+            # List files in the snapshot
+            files = t.pods.list_snapshot_files(snapshot_id='mysnapshot')
+            print(files)
+
+            # Get contents of a file or directory
+            contents = t.pods.get_snapshot_contents(snapshot_id='mysnapshot', path='/data')
+            print(contents)
+
+    .. group-tab:: Bash
+
+        .. code-block:: bash
+
+            # Create a snapshot
+            curl --request POST \
+                 --url https://tacc.tapis.io/v3/snapshots \
+                 --header 'Content-Type: application/json' \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --data '{"snapshot_id": "mysnapshot", "source_volume_id": "myvolume", "source_volume_path": "/data", "description": "Backup of my data"}'
+
+            # List files in the snapshot
+            curl --request GET \
+                 --url https://tacc.tapis.io/v3/snapshots/mysnapshot/files \
+                 --header 'X-Tapis-Token: $JWT'
+
+            # Get contents of a file or directory
+            curl --request GET \
+                 --url https://tacc.tapis.io/v3/snapshots/mysnapshot/files/data \
+                 --header 'X-Tapis-Token: $JWT'
+
+    .. group-tab:: TapisUI
+
+        To create a snapshot in TapisUI, navigate to the "Snapshots" page and click on the "Create Snapshot" button. Fill in the required details such as snapshot ID, source volume, and source path, and submit the form.
+
+        To list files in a snapshot, navigate to the "Snapshots" page, select the desired snapshot, and click on the "Files" tab. This will display the files stored in the snapshot.
+
+
+Pod Executions
+--------------
+
+The Pods service provides the `exec_pod_commands` endpoint, allowing you to execute one or more commands inside your running pod. This is especially useful for debugging, running shell commands like `ls`, or performing complex operations such as loading data into a database.
+
+You can execute either a single command (``["sleep", "5"]``) or multiple commands (``[["sleep", "5"], ["echo", "hello"]]``). Commands are run sequentially, and the request remains open until all commands complete. The response includes the output, success/failure status, and execution duration for each command.
+
+This feature is ideal for:
+- Debugging your application by running shell commands
+- Inspecting files and directories inside the pod
+- Running database import/export operations
+- Automating setup or maintenance tasks
+
+**Request Parameters**
+
+- `pod_id` (required): The ID of the pod to execute commands in
+- `commands` (required): List of commands to run. Each command can be a string or a list of strings (arguments)
+- `total_timeout` (optional): Total time (in seconds) to wait for all commands to finish. Default: 300
+- `command_timeout` (optional): Time (in seconds) to wait for each command to finish. Default: 60
+- `fail_on_non_success` (optional): If true, the request fails if any command does not return 0. Default: true
+
+**Example Use Case: Loading a MySQL Dump**
+
+Suppose you have a MySQL pod and want to load a database dump. You can use `upload_to_pod` to upload your SQL file to the pod. For persistence, you could use a volume, but for quick, temporary loads, uploading directly is often sufficient. If the pod restarts, simply re-upload the file as needed.
+
+Here is how you can upload a file and then load it into MySQL using pod executions:
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        .. code-block:: python
+
+            # Upload the SQL file (temporary, not persistent)
+            with open('/path/to/local/file.sql', 'rb') as file:
+                t.pods.upload_to_pod(
+                    pod_id='mysqlpod',
+                    file=file,
+                    dest_path='/tmp/file.sql'
+                )
+
+            # Execute commands: list files, then load SQL dump
+            response = t.pods.exec_pod_commands(
+                pod_id='mysqlpod',
+                commands=[
+                    ['ls', '-lah', '/tmp'],
+                    ['/bin/bash', '-c', 'mysql -u root -p<password> < /tmp/file.sql']
+                ],
+                command_timeout=3600,
+                total_timeout=3600,
+                fail_on_non_success=true
+            )
+            print(response)
+
+    .. group-tab:: Bash
+
+        .. code-block:: bash
+
+            # Upload the SQL file
+            curl --request POST \
+                 --url https://tacc.tapis.io/v3/pods/mysqlpod/upload_to_pod \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --form file=@/path/to/local/file.sql \
+                 --form dest_path=/tmp/file.sql
+
+            # Execute commands: list files, then load SQL dump
+            curl --request POST \
+                 --url https://tacc.tapis.io/v3/pods/mysqlpod/exec \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --header 'Content-Type: application/json' \
+                 --data '{
+                     "commands": [
+                         ["ls", "-lah", "/tmp"],
+                         ["/bin/bash", "-c", "mysql -u root -p<password> < /tmp/file.sql"]
+                     ],
+                     "command_timeout": 3600,
+                     "total_timeout": 3600,
+                     "fail_on_non_success": true
+                 }'
+
+    .. group-tab:: TapisUI
+
+        There's currently no TapisUI support for executing commands in pods. TapisUI support is planned for a future release.
+
+The consolidated response will include the output and status for each command, making it easy to verify success or debug issues.
+
 
 Managing Pod Permissions
 -----------------------
@@ -541,8 +968,19 @@ Here are examples of how to manage pod permissions:
                     --header 'Content-Type: application/json' \
                     --header 'X-Tapis-Token: $JWT'
 
+    .. group-tab:: TapisUI
+
+        To add a user with permission, navigate to the "Pods" page, select your pod, and click on the ``Perms`` tab. From there you have a list of users and can add users with the ``+`` button. Support for removing not yet implemented via UI.
+
+        .. image:: images/tapisui-pods-permissions.png
+          :width: 100%
+          :align: center
+          :alt: TapisUI adding permissions to pods
+
+
+
 Pod Networking
------------------------
+----------------
 
 The Pods service manages networking for your containers through a Traefik proxy, automatically handling routing and domain configuration. Each pod gets a subdomain on the Tapis service domain (e.g. ``mypod.pods.tacc.tapis.io``), making it accessible through HTTPS without requiring any manual network configuration. The networking configuration allows you to control how your pods are accessed, including protocol selection, port definition, authentication, and access restrictions when using authentication.
 
@@ -638,12 +1076,19 @@ The Pods service supports securing pods with Tapis authentication, allowing only
       - List of users allowed to access the pod. If set to ``["*"]`` or not specified, all authenticated Tapis users in the tenant can access it. Be aware that some tenant restrictions are quite lenient if not explicitly hardened.
     * - tapis_auth_return_path
       - Path to redirect to after successful initial authentication. Default: ``/``.
-    * - tapis_auth_allowed_roles
-      - **Not Implemented - Contact if you need it** List of Tapis roles required to access the pod.
-    * - tapis_auth_cors_headers
-      - **Not Implemented - Contact support if required** Headers allowed by CORS to the pod. This is useful for cross-origin requests, such as a UI.
-    * - tapis_auth_cors_methods
-      - **Not Implemented - Contact support if required** Methods allowed by CORS to the pod. This is useful for cross-origin requests, such as a UI.
+    * - cors_allow_origins
+      - List of allowed origins for CORS requests. Only requests from these origins will be accepted. Example: ``['https://tacc.develop.tapis.io', 'https://tacc.tapis.io']``
+    * - cors_allow_methods
+      - List of HTTP methods allowed for CORS requests. Example: ``['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH']``
+    * - cors_allow_headers
+      - List of HTTP headers allowed in CORS requests. Commonly includes ``'content-type'``, ``'x-tapis-token'``, and any custom headers your application needs. Example: ``['content-type', 'x-tapis-token', 'TAPIS-VALIDATED-USERNAME']``
+    * - cors_allow_credentials
+      - Boolean to allow credentials (such as cookies or HTTP authentication) to be sent with CORS requests. Default: ``false``.
+    * - cors_max_age
+      - Maximum age (in seconds) for which the results of a preflight request can be cached by the browser. Default: ``100`` seconds.
+    * - cors_add_vary_header
+      - **Not Implemented** - If you need this feature, please contact support to discuss your use case. Default is ``false``.
+
 .. note::
       
     Flask drops response headers with underscores. Thus ``tapis_auth_response_headers`` headers with underscores will likely be dropped in Flask applications. This is a legacy restriction/issue tied to WSGI and the CGI specification. Hyphens are preferred in Flask.
@@ -721,6 +1166,89 @@ Here's a diagram showing the flow a user's request would take to get to their po
    :align: center
    :alt: Tapis Auth Logic Flow
 
+
+Explanation of CORS and Tapis Auth interactions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. list-table::
+   :header-rows: 1
+   :widths: 24 76
+
+   * - Field
+     - Description
+   * - ``cors_allow_origins``
+     - Controls which remote domains (origins) are allowed to make requests to your pod. For example, setting this to your frontend's URL allows your web app to call your pod's API.
+   * - ``cors_allow_methods``
+     - Specifies which HTTP methods (GET, POST, etc.) are permitted in cross-origin requests. This should include all methods your application expects to handle.
+   * - ``cors_allow_headers``
+     - Lists which headers can be sent in CORS requests. At a minimum, you usually need ``content-type`` for POST/PUT requests, and any custom headers (like ``x-tapis-token``) your app or authentication requires.
+   * - ``cors_allow_credentials``
+     - If set to true, browsers are allowed to send credentials (like cookies or HTTP auth) with requests. Default is false for security.
+   * - ``cors_max_age``
+     - Sets how long (in seconds) browsers can cache the CORS preflight response. Default is 100 seconds, which reduces the number of preflight requests but can be adjusted as needed.
+   * - ``cors_add_vary_header``
+     - **Not Implemented** - If you need this feature, please contact support to discuss your use case. It is always set as ``false``. The setting is useful for caching proxies to understand that the response varies based on the origin of the request.
+
+.. note::
+      
+    When Tapis Auth is used CORS must be set via the pod networking configuration. This is because Tapis Auth relies on a forwardAuth middleware for auth handling. This layer is not aware of the pod's CORS settings and will pass nothing along for the client app to negotiate CORS with. If Tapis Auth is not used then users can set CORS via Pods or through client application such as Flask or FastAPI as CORS negotiations are routed to the application to handle.
+
+**Example CORS Configuration in Pod Networking:**
+
+This is a simple example of how to configure CORS in your pod's networking settings. This configuration allows requests from specific origins, supports various HTTP methods, and includes custom headers for authentication which the user service can utilize.
+
+Generally the aim is to minimize the number of origins and methods to only those that are necessary for your application. This reduces the attack surface and improves security. The example below could be good for debugging but should likely be tightened up for production use.
+
+.. code-block:: json
+
+    "networking": {
+      "default": {
+        "protocol": "http",
+        "port": 8080,
+        "cors_allow_origins": [
+          "https://myfrontend.pods.tacc.tapis.io",
+          "https://myfrontendauthtest.pods.tacc.tapis.io",
+          "https://myfrontendstaging.pods.tacc.tapis.io"
+        ],
+        "cors_allow_methods": [
+          "GET", "POST", "OPTIONS", "DELETE", "PUT", "HEAD", "PATCH"
+        ],
+        "cors_allow_headers": [
+          "content-type", "x-tapis-token", "TAPIS-VALIDATED-USERNAME"
+        ],
+        "cors_allow_credentials": false,
+        "cors_max_age": 100
+      }
+    }
+
+**Traefik Middleware Attachment**
+
+When you configure CORS in your pod's networking, the Pods service automatically creates a Traefik middleware with your settings and applies it to your pod. For example, the following Traefik middleware would be generated for the above configuration:
+
+.. code-block:: yaml
+
+    tapis-cors-pods-tacc-tacc-myfrontend:
+      headers:
+        accessControlAllowOriginList:
+          - "https://myfrontend.pods.tacc.tapis.io"
+          - "https://myfrontendauthtest.pods.tacc.tapis.io"
+          - "https://myfrontendstaging.pods.tacc.tapis.io"
+        accessControlAllowMethods:
+          - "GET"
+          - "POST"
+          - "OPTIONS"
+          - "DELETE"
+          - "PUT"
+          - "HEAD"
+          - "PATCH"
+        accessControlAllowHeaders:
+          - "content-type"
+          - "x-tapis-token"
+          - "TAPIS-VALIDATED-USERNAME"
+        accessControlAllowCredentials: false
+        accessControlMaxAge: 100
+        addVaryHeader: true
+
+This middleware is attached to your pod's subdomain, ensuring that CORS requests are handled according to your configuration.
 
 TapisUI Integration
 ^^^^^^^^^^^^^^^^^^
@@ -1052,6 +1580,30 @@ DB with the Postgres' PgAdmin interface or Python Postgres drivers.
                 - PgAdmin can work through the browser.
                 - PgAdmin GUI can be hosted by the Pods service, it just hasn't been tried yet.
 
+Additional Services and applications
+=================================
+Pods is a general purpose container service.
+We've ran a variety of applications and services on Pods, including, but not limited to:
+
+- JupyterLab
+- Code Server
+- Postgres
+- Neo4J
+- MariaDB (Can't connect remotely)
+- MySQL (Can't connect remotely)
+- MongoDB
+- Redis
+- Kafka
+- headscale
+- Django
+- FastAPI
+- Flask
+- Ollama
+- OpenWebUI
+- LangFlow
+- UptimeKuma
+
+That is to say the service works well with a variety of applications and services. Reach out to us if you have a specific application in mind and we can help you get it running on Pods. Some of these applications have templates, some run without no specific modifications, and other might require indepth development work.
 
 
 ----
