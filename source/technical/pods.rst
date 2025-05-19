@@ -1603,7 +1603,7 @@ We've ran a variety of applications and services on Pods, including, but not lim
 - LangFlow
 - UptimeKuma
 
-That is to say the service works well with a variety of applications and services. Reach out to us if you have a specific application in mind and we can help you get it running on Pods. Some of these applications have templates, some run without no specific modifications, and other might require indepth development work.
+That is to say the service works well with a variety of applications and services. Reach out to us if you have a specific application in mind and we can help you get it running on Pods. Some of these applications have templates, some run with no specific modifications, and other might require in-depth development work.
 
 
 ----

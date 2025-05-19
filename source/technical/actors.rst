@@ -1557,8 +1557,8 @@ Currently, the cron message sent to the actor is the static string
 
   This is your cron execution
 
-Accordingly, the ``_abaco_Content_Type`` context variable is set to ``str``. The rest of the context
-variables are set normally, as described in :ref:`context`.
+Accordingly, the ``_abaco_Content-Type`` context variable is set to ``str``. The rest of the context
+variables are set normally, as described in :ref:`Context`.
 
 
 ----

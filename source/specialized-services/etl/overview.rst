@@ -40,7 +40,7 @@ Here we introduce the Tapis ETL standard terminology for ETL pipelines
 How it works
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. image:: ./images/tapis-pipelines.webp
+.. image:: ../images/tapis-pipelines.png
   :alt: Tapis ETL diagram
 
 Step 0 must be completed by a user or other external workflow asynchronous Tapis ETL.
