@@ -222,7 +222,7 @@ package build time. To update specs,
    to file system permissions. You can use ``spec_dir`` as highlighted above and use a directory you have permission
    to write to. (Important for Docker containers)
 
-Two Spec Refresh Methods
+Three Spec Refresh Methods
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 1. ``t.update_spec_cache()`` -  No inputs
     - Will refresh client's ``t.resource_set`` resources and save to ``t.spec_dir``.
@@ -243,6 +243,18 @@ Two Spec Refresh Methods
         Resources = Dict[ResourceName, ResourceUrl]
         update_spec_cache(resources: Resources = None, spec_dir: str = None)
 
+3. ``download_latest_specs`` - On creation of the Tapis client it possible to specify ``download_latest_specs=True``.
+    - This will download the latest specs from the Tapis service and save them to ``t.spec_dir``.
+    - This is useful for development purposes, but should not be used in production as it can cause unexpected behavior
+      if the specs change due to errors or changes in specs.
+    
+    .. code-block:: python
+
+        from tapipy.tapis import Tapis
+        t = Tapis(base_url='https://admin.develop.tapis.io',
+                  username='username',
+                  password='password',
+                  download_latest_specs=True)
 
 Creating and Using Tapipy Refresh tokens
 ----------------------------------------

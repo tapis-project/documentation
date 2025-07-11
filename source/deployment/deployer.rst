@@ -726,9 +726,38 @@ Finally, deploy the secondary Tapis services:
 Bootstrapping an Initial Primary Site Deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------
 Bootstrapping an Initial Associate Site Deployment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------ 
+
+--------------------------
+Pointing to a Primary Site    
+--------------------------
+
+The associate site proxy must be modified to point to the primary site. This is done after deployer file generation.
+In the `generated_folder/proxy/locations/tenants.conf` file, the following modifications must be made:
+
+``proxy_ssl_server_name`` is required so that messages to the associate site contain the routing information for TLS.
+
+.. code-block:: console
+  
+  # tenants 
+  location /v3/tenants
+  {            
+      #auth_request /_auth; ## comment this line out
+      #error_page 500 /token-revoked.json; ## comment this line out
+
+      resolver 127.0.0.11;
+      set $upstream https://associate-tenant.tapis.io;
+      proxy_pass $upstream;
+
+      proxy_ssl_server_name on;  ## Add this line
+      proxy_redirect off;
+      proxy_set_header Host $proxy_host; ## change sent host # localhost:5000
+  }
+
+Associate Sites will also need to make themselves known to the primary site. Let an admin know so they can route
+expected domains to the primary site. `"~*.associate-tenant.domain.org"           8443;`
 
 ------------------------------
 Configuring Support for GLOBUS

@@ -34,6 +34,7 @@ Welcome to Tapis's Documentation!
    technical/notifications
    technical/sharing
    technical/pythondev
+   technical/tapisui
 
 .. toctree::
    :maxdepth: 2
