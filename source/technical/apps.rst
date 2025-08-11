@@ -65,11 +65,11 @@ Versioned Attributes
 *runtimeVersion*
   Runtime version to be used when executing the application.
 *runtimeOptions*
-  Options that apply to the runtime. Currently only applicable for SINGULARITY runtime.
+  Options that apply to the runtime. Note that currently there are no runtimes that require this.
 
 .. warning::
-  Please note that use of SINGULARITY_START has been deprecated. Support will be removed in a future release.
-  If you have a need for this option please contact Tapis support (cicsupport@tacc.utexas.edu).
+  Please note that support for SINGULARITY_START has been removed.
+  If you have a need for this option please contact Tapis support (cicsupport@tacc.utexas.edu) about an enhancement request.
 
 *containerImage*
   Reference to be used when running the container image.
@@ -522,10 +522,10 @@ Application Attributes Table
 | runtimeVersion      | String         | 2.5.2                | - Optional version or range of versions required.                                    |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | runtimeOptions      | [enum]         |                      | - Options that apply to specific runtimes.                                           |
-|                     |                |                      | - Options: NONE, SINGULARITY_START, SINGULARITY_RUN                                  |
-|                     |                |                      | - If runtime is SINGULARITY then must have one of SINGULARITY_START, SINGULARITY_RUN |
-|                     |                |                      | - **WARNING** Please note that use of SINGULARITY_START has been deprecated.         |
-|                     |                |                      | - Support for SINGULARITY_START will be removed in a future release.                 |
+|                     |                |                      | - Options: NONE, SINGULARITY_RUN                                                     |
+|                     |                |                      | - For SINGULARITY leave empty or specify SINGULARITY_RUN.                            |
+|                     |                |                      | - **WARNING** Please note that use of SINGULARITY_START is no longer supported.      |
+|                     |                |                      | - If SINGULARITY_START is needed please contact support about an enhancement request.|
 |                     |                |                      | - Default is NONE.                                                                   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | containerImage      | String         |docker.io/hello-world | - Reference for the container image. Other examples:                                 |

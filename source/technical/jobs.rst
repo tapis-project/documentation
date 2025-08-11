@@ -17,7 +17,9 @@ Jobs
 Introduction to Jobs
 ====================
 
-The Tapis v3 Jobs service is specialized to run containerized applications on any host that supports container runtimes. Currently, Docker, Singularity and ZIP containers are supported. The Jobs service uses the Systems, Apps, Files and Security Kernel services to process jobs.
+The Tapis v3 Jobs service is specialized to run containerized applications on any host that supports container runtimes.
+Currently, Docker, Singularity and ZIP containers are supported. The Jobs service uses the Systems, Apps, Files and
+Security Kernel services to launch, monitor and manage jobs.
 
 API Endpoints
 -------------
@@ -63,7 +65,8 @@ Ready Check              GET       /readycheck
 Job Processing Overview
 -----------------------
 
-Before discussing the details of how to construct a job request, we describe the overall lifecycle of a job. When a job request is received as the payload of a POST call, the following steps are taken:
+Before discussing the details of how to construct a job request, we describe the overall lifecycle of a job. When a job
+request is received as the payload of a POST call, the following steps are taken:
 
 #. **Request authorization** - The tenant, owner, and user values from the request and Tapis JWT are used to authorize access to the application, execution system and, if specified, archive system.
 
@@ -75,7 +78,11 @@ Before discussing the details of how to construct a job request, we describe the
 
 #. **Response** - The initial Job object is sent back to the caller in the response. This ends the synchronous portion of job submission.
 
-Once a response to the submission request is sent to the caller, job processing proceeds asynchronously. Job worker processes read jobs from their work queues. The number of workers and queues is limited only by hardware resource constraints. Each job is assigned a worker thread. This thread shepards a job through its lifecycle until the job completes, fails or becomes blocked due to a transient resource constraint. The job lifecycle is reflected in the `Job Status`_ and generally progresses as follows:
+Once a response to the submission request is sent to the caller, job processing proceeds asynchronously. Job worker
+processes read jobs from their work queues. The number of workers and queues is limited only by hardware resource
+constraints. Each job is assigned a worker thread. This thread shepards a job through its lifecycle until the job
+completes, fails or becomes blocked due to a transient resource constraint. The job lifecycle is reflected in
+the `Job Status`_ and generally progresses as follows:
 
 ::
 
@@ -100,20 +107,29 @@ The POST payload for the simplest job submission request looks like this:
      "appVersion": "1.0"
     }
 
-In this example, all input and output directories are either specified in the *myApp* definition or are assigned their default values.  Currently, the execution system on which an application runs must be specified in either the application definition or job request. Our example assumes that *myApp* assigns the execution system. Future versions of the Jobs service may support dynamic execution system selection.
+In this example, all input and output directories are either specified in the *myApp* definition or are assigned their
+default values. Currently, the execution system on which an application runs must be specified in either the
+application definition or job request. Our example assumes that *myApp* assigns the execution system. Future versions
+of the Jobs service may support dynamic execution system selection.
 
-An archive system can also be specified in the application or job request; the default is for it to be the same as the execution system.
+An archive system can also be specified in the application or job request; the default is for it to be the same as the
+execution system.
 
 -----------------------
 
 The Job Submission Request
 ==========================
 
-A job submission request must contain the name, appId and appVersion values as shown in the `Simple Job Submission Example`_. Those values are marked *Required* in the list below, a list of all possible values allowed in a submission request. If a parameter has a default value, that value is also shown.
+A job submission request must contain the name, appId and appVersion values as shown in the
+`Simple Job Submission Example`_. Those values are marked *Required* in the list below, a list of all possible values
+allowed in a submission request. If a parameter has a default value, that value is also shown.
 
-In addition, some parameters can inherit their values from the application or system definitions as discussed in `Parameter Precedence`_. These parameters are marked *Inherit*. Parameters that merge inherited values (rather than override them) are marked *InheritMerge*.
+In addition, some parameters can inherit their values from the application or system definitions as discussed in
+`Parameter Precedence`_. These parameters are marked *Inherit*. Parameters that merge inherited values (rather than
+override them) are marked *InheritMerge*.
 
-Parameters that do not need to be set are marked *Not Required*. Finally, parameters that allow macro substitution are marked *MacroEnabled* (see `Macro Substitution`_ for details).
+Parameters that do not need to be set are marked *Not Required*. Finally, parameters that allow macro substitution are
+marked *MacroEnabled* (see `Macro Substitution`_ for details).
 
 **name**
   The user chosen name of the job. *MacroEnabled*, *Required.*
@@ -174,7 +190,8 @@ Parameters that do not need to be set are marked *Not Required*. Finally, parame
 **notes**
   Optional JSON object containing arbitrary user data, maximum length 65536 bytes. *Inherit*.
 
-The following subsections discuss the meaning and usage of each of the parameters available in a job request. The schema_ and its referenced library_ comprise the actual JSON schema definition for job requests.
+The following subsections discuss the meaning and usage of each of the parameters available in a job request. 
+The schema_ and its referenced library_ comprise the actual JSON schema definition for job requests.
 
 ..  _schema: https://github.com/tapis-project/tapis-jobs/blob/dev/tapis-jobsapi/src/main/resources/edu/utexas/tacc/tapis/jobs/api/jsonschema/SubmitJobRequest.json
 
@@ -184,7 +201,10 @@ The following subsections discuss the meaning and usage of each of the parameter
 Parameter Precedence
 --------------------
 
-The runtime environment of a Tapis job is determined by values in system definitions, the app definition and the job request, in low to high precedence order as listed. Generally speaking, for values that can be assigned in multiple definitions, the values in job requests override those in app definitions, which override those in system definitions. There are special cases, however, where the values from different definitions are merged.
+The runtime environment of a Tapis job is determined by values in system definitions, the app definition and 
+the job request, in low to high precedence order as listed. Generally speaking, for values that can be assigned 
+in multiple definitions, the values in job requests override those in app definitions, which override those in 
+system definitions. There are special cases, however, where the values from different definitions are merged.
 
 See the jobs/apps/systems parameter matrix_ for a detailed description of how each parameter is handled.
 
@@ -194,7 +214,10 @@ See the jobs/apps/systems parameter matrix_ for a detailed description of how ea
 Job Type
 --------
 
-An execution system can run jobs using a batch scheduler (e.g. Slurm) or a native runtime (e.g., Docker or Singularity) or both. Users specify how to run a job using the *jobType* parameter. This can be set to "BATCH" to use a batch scheduler or "FORK" to use a native runtime. The *jobType* can also be specified in application definitions. The final value assigned to the *jobType* of a job is calculated as follows:
+An execution system can run jobs using a batch scheduler (e.g. Slurm) or a native runtime (e.g., Docker or Singularity) 
+or both. Users specify how to run a job using the *jobType* parameter. This can be set to "BATCH" to use a batch 
+scheduler or "FORK" to use a native runtime. The *jobType* can also be specified in application definitions. The 
+final value assigned to the *jobType* of a job is calculated as follows:
 
 ::
 
@@ -206,7 +229,11 @@ An execution system can run jobs using a batch scheduler (e.g. Slurm) or a nativ
 Directories
 -----------
 
-The execution and archive system directories are calculated before the submission response is sent.  This calculation can include the use of macro definitions that get replaced by values at submission request time.  The `Macro Substitution`_ section discusses what macro definitions are available and how substitution works.  In this section, we document the default directory assignments which may include macro definitions.
+The execution and archive system directories are calculated before the submission response is sent. 
+This calculation can include the use of macro definitions that get replaced by values at submission 
+request time. The `Macro Substitution`_ section discusses what macro definitions are available and 
+how substitution works. In this section, we document the default directory assignments which may 
+include macro definitions.
 
 .. _dir-definitions:
 
@@ -236,12 +263,13 @@ The directories assigned in application definitions and/or in a job submission r
 Directory Assignments
 ^^^^^^^^^^^^^^^^^^^^^
 
-The rootDir and jobWorkingDir are always assigned upon system creation, so they are available for use as macros when assigning directories in applications or job submission requests.
+The rootDir and jobWorkingDir are always assigned upon system creation, so they are available for use as macros when
+assigning directories in applications or job submission requests.
 
 When a job request is submitted, each of the job's four execution and archive system directories are assigned as follows:
 
-#. If the job submission request assigns the directory, that value is used.  Otherwise,
-#. If the application definition assigns the directory, that value is used.  Otherwise,
+#. If the job submission request assigns the directory, that value is used. Otherwise,
+#. If the application definition assigns the directory, that value is used. Otherwise,
 #. The default values shown below are assigned:
 
 ::
@@ -254,7 +282,8 @@ When a job request is submitted, each of the job's four execution and archive sy
 FileInputs
 ----------
 
-The *fileInputs* in Applications_ definitions are merged with those in job submission requests to produce the complete list of inputs to be staged for a job.  The following rules govern how job inputs are calculated.
+The *fileInputs* in Applications_ definitions are merged with those in job submission requests to produce the complete
+list of inputs to be staged for a job. The following rules govern how job inputs are calculated.
 
  1. The effective inputs to a job are the combined inputs from the application and job request.
  2. Only named inputs are allowed in application definitions.
@@ -283,44 +312,78 @@ The fileInputs array in job requests contains elements that conform to the follo
        "additionalProperties": false
    }
 
-JobFileInputs can be named or unnamed.  When the *name* field is assigned, Jobs will look for an input with the same name in the application definition (all application inputs are named).  When a match is found, values from the AppFileInput are merged into unassigned fields in the JobFileInput.
+JobFileInputs can be named or unnamed. When the *name* field is assigned, Jobs will look for an input with the 
+same name in the application definition (all application inputs are named). When a match is found, values from 
+the AppFileInput are merged into unassigned fields in the JobFileInput.
 
-The *name* must start with an alphabetic character or an underscore (_) followed by zero or more alphanumberic or underscore characters.  If the name does not match one of the input names defined in the application, then the application must have *strictFileInputs=false*.  If the name matches an input name defined in the application, then the application's inputMode must be REQUIRED or OPTIONAL.  An error occurs if the inputMode is FIXED and there is a name match--job inputs cannot override FIXED application inputs.
+The *name* must start with an alphabetic character or an underscore (_) followed by zero or more alphanumberic 
+or underscore characters. If the name does not match one of the input names defined in the application, then 
+the application must have *strictFileInputs=false*. If the name matches an input name defined in the application, 
+then the application's inputMode must be REQUIRED or OPTIONAL. An error occurs if the inputMode is FIXED and there 
+is a name match--job inputs cannot override FIXED application inputs.
 
-The *envKey* provides an easy way to insert the *targetPath* into the runtime environment of an application under a user-specified label.  The *envKey* string is used as the name of an environment variable that Jobs makes accessible to executing applications.  The environment variable's value is the *targetPath*.  *envKey* can only contain alphanumerics and underscore (_) and its first character cannot be a number.  
+The *envKey* provides an easy way to insert the *targetPath* into the runtime environment of an application under 
+a user-specified label. The *envKey* string is used as the name of an environment variable that Jobs makes 
+accessible to executing applications. The environment variable's value is the *targetPath*. *envKey* can 
+only contain alphanumerics and underscore (_) and its first character cannot be a number. 
 
 The optional *notes* field can contain any valid user-specified JSON object. 
 
-Except for in-place inputs discussed below, the *sourceUrl* is the location from which data are copied to the *targetPath*.  In Posix systems the sourceUrl can reference a file or a directory.  When a directory is specified, the complete directory subtree is copied.
+Except for in-place inputs discussed below, the *sourceUrl* is the location from which data are copied to 
+the *targetPath*. In Posix systems the sourceUrl can reference a file or a directory. When a directory is 
+specified, the complete directory subtree is copied.
 
-Any URL protocol accepted by the Tapis Files_ service can be used in a *sourceUrl*.  The most common protocols used are tapis, http, and https.  The standard tapis URL format is *tapis://<tapis-system>/<path>*; please see the Files_ service for the complete list of supported protocols.
+Any URL protocol accepted by the Tapis Files_ service can be used in a *sourceUrl*. The most common protocols 
+used are tapis, http, and https. The standard tapis URL format is *tapis://<tapis-system>/<path>*; please see 
+the Files_ service for the complete list of supported protocols.
 
-The *targetPath* is the location to which data are copied from the *sourceUrl*.  The target is rooted at the *execSystemInputDir* except, possibly, when HOST_EVAL() is used, in which case it is still relative to the execution system's rootDir.
+The *targetPath* is the location to which data are copied from the *sourceUrl*. The target is rooted at 
+the *execSystemInputDir* except, possibly, when HOST_EVAL() is used, in which case it is still relative 
+to the execution system's rootDir.
 
-A JobFileInput object is **complete** when its *sourceUrl* and *targetPath* are assigned; this provides the minimal information needed to effect a transfer.  If only the *sourceUrl* is set, Jobs will use the simple directory or file name from the URL to automatically assign the *targetPath*.  Specifying a *targetPath* as "*" results in the same automatic assignment.  Whether assigned by the user or Jobs, all job inputs that are not in-place and do not use the HOST_EVAL() function are copied into the *execSystemInputDir* subtree.
+A JobFileInput object is **complete** when its *sourceUrl* and *targetPath* are assigned; this provides
+the minimal information needed to effect a transfer. If only the *sourceUrl* is set, Jobs will use the
+simple directory or file name from the URL to automatically assign the *targetPath*. Specifying a *targetPath*
+as "*" results in the same automatic assignment. Whether assigned by the user or Jobs, all job inputs that are
+not in-place and do not use the HOST_EVAL() function are copied into the *execSystemInputDir* subtree.
 
-After application inputs are added to or merged with job request inputs, all complete JobFileInput objects are designated for staging.  Incomplete objects are ignored only if they were specified as OPTIONAL in the application definition.  Otherwise, an incomplete input object causes the job request to be rejected.
+After application inputs are added to or merged with job request inputs, all complete JobFileInput objects are
+designated for staging. Incomplete objects are ignored only if they were specified as OPTIONAL in the application
+definition. Otherwise, an incomplete input object causes the job request to be rejected.
 
 
 In-Place Inputs (tapislocal)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Job inputs already present on an execution system do not need to be transferred, yet users may still want to declare them for documentation purposes or to control how they are mounted into containers.  It's common, for example, for large data sets that cannot reasonably be copied to be mounted directly onto execution systems.  The Jobs and Applications services provide custom syntax that allows such input to be declared, but instructs the Jobs service to **not** copy that input.
+Job inputs already present on an execution system do not need to be transferred, yet users may still want to declare
+them for documentation purposes or to control how they are mounted into containers. It's common, for example, for
+large data sets that cannot reasonably be copied to be mounted directly onto execution systems. The Jobs and
+Applications services provide custom syntax that allows such input to be declared, but instructs the Jobs service
+to **not** copy that input.
 
-Tapis introduces a new URL scheme, *tapislocal*, that is only recognized by the Applications and Jobs services.  Here are example URLs:
+Tapis introduces a new URL scheme, *tapislocal*, that is only recognized by the Applications and Jobs services.
+Here are example URLs:
 
 ::
 
     tapislocal://exec.tapis/home/bud/mymri.dcm
     tapislocal://exec.tapis/corral/repl/shared
 
-Like the *tapis* scheme and all common schemes (https, sftp, etc.), the first segment following the double slashes designates a host.  For *tapislocal*, the host is always the literal **exec.tapis**, which serves as a placeholder for a job's execution system.  The remainder of the URL is the path on the Tapis system.  All paths on Tapis systems, including those using the HOST_EVAL() function and the tapislocal URL, are rooted at the Tapis system's rootDir.
+Like the *tapis* scheme and all common schemes (https, sftp, etc.), the first segment following the double slashes
+designates a host. For *tapislocal*, the host is always the literal **exec.tapis**, which serves as a placeholder
+for a job's execution system. The remainder of the URL is the path on the Tapis system. All paths on Tapis systems,
+including those using the HOST_EVAL() function and the tapislocal URL, are rooted at the Tapis system's rootDir.
 
 A *tapislocal* URL can only appear in the sourceUrl field of AppFileInput and JobFileInput parameters.
 
-The *tapislocal* scheme indicates to Jobs that a filepath already exists on the execution system and, therefore, does not require data transfer during job execution.  If targetPath is "*", the Jobs service will assign the target path inside the container to be the last segment of the tapislocal URL path (/mymri.dcm and /shared in the examples above).
+The *tapislocal* scheme indicates to Jobs that a filepath already exists on the execution system and, therefore, does
+not require data transfer during job execution. If targetPath is "*", the Jobs service will assign the target path
+inside the container to be the last segment of the tapislocal URL path (/mymri.dcm and /shared in the examples above).
 
-In container systems that require the explicit mounting of host filepaths, such as Docker, the Jobs service can mount the filepath into the container.  Both application definitions and job requests support the *autoMountLocal* boolean parameter.  This parameter is true by default, which causes Jobs to automatically mount the filepath into containers.  Setting autoMountLocal to false allows the user complete control over mounting using a *containerArgs* parameter.
+In container systems that require the explicit mounting of host filepaths, such as Docker, the Jobs service can
+mount the filepath into the container. Both application definitions and job requests support the *autoMountLocal*
+boolean parameter. This parameter is true by default, which causes Jobs to automatically mount the filepath into
+containers. Setting autoMountLocal to false allows the user complete control over mounting using a *containerArgs* parameter.
 
 
 .. _Files: https://tapis.readthedocs.io/en/latest/technical/files.html
@@ -333,7 +396,10 @@ In container systems that require the explicit mounting of host filepaths, such 
 FileInputArrays
 ---------------
 
-The *fileInputArrays* parameter provides an alternative syntax for specifying inputs in Applications_ and job requests.  This syntax is convenient for specifying multiple inputs destined for the same target directory, an I/O pattern sometimes refered to as *scatter-gather*.  Generally, input arrays support the same semantics as FileInputs_ with some restrictions.
+The *fileInputArrays* parameter provides an alternative syntax for specifying inputs in Applications_ and job requests.
+This syntax is convenient for specifying multiple inputs destined for the same target directory, an I/O pattern
+sometimes refered to as *scatter-gather*. Generally, input arrays support the same semantics as FileInputs_ with
+some restrictions.
 
 The fileInputArrays parameter in job requests contains elements that conform to the following JSON schema.
 
@@ -353,15 +419,27 @@ The fileInputArrays parameter in job requests contains elements that conform to 
         }
    }
 
-A fileInputArrays parameter is an array of JobFileInputArray objects, each of which contains an array of *sourceUrls* and a single *targetDir*.  One restriction is that *tapislocal* URLs cannot appear in *sourceUrls* fields.
+A fileInputArrays parameter is an array of JobFileInputArray objects, each of which contains an array of *sourceUrls* 
+and a single *targetDir*. One restriction is that *tapislocal* URLs cannot appear in *sourceUrls* fields.
 
-An application's fileInputArrays are added to or merged with those in a job request following the same rules established for fileInputs in the previous section.  In particular, when names match, the *sourceUrls* defined in a job request override (i.e., completely replace) those defined in an application.  After merging, each JobFileInputArray must have a non-empty *sourceUrls* array.  See FileInputs_ and Applications_ for related information.
+An application's fileInputArrays are added to or merged with those in a job request following the same rules 
+established for fileInputs in the previous section. In particular, when names match, the *sourceUrls* defined 
+in a job request override (i.e., completely replace) those defined in an application. After merging, each 
+JobFileInputArray must have a non-empty *sourceUrls* array. See FileInputs_ and Applications_ for related information.
 
-Each *sourceUrls* entry is a location from which data is copied to the *targetDir*.  In Posix systems each URL can reference a file or a directory.  In the latter case, the complete directory subtree is transferred.  All URLs recognized by the Tapis Files_ service can be used (*tapislocal* is not recognized by Files).
+Each *sourceUrls* entry is a location from which data is copied to the *targetDir*. In Posix systems each URL 
+can reference a file or a directory. In the latter case, the complete directory subtree is transferred. All URLs 
+recognized by the Tapis Files_ service can be used (*tapislocal* is not recognized by Files).
 
-The *targetDir* is the directory into which all *sourceUrls* are copied.  The *targetDir* is always rooted at the *ExecSystemInputDir* and if *targetDir* is "*" or not specified, then it is assigned *ExecSystemInputDir*.  The simple name of each *sourceUrls* entry is the destination name used in *targetDir*.  Use different JobFileInputArrays with different targetDir's if name conflicts between *sourceUrls* entries exist.
+The *targetDir* is the directory into which all *sourceUrls* are copied. The *targetDir* is always rooted at 
+the *ExecSystemInputDir* and if *targetDir* is "*" or not specified, then it is assigned *ExecSystemInputDir*. 
+The simple name of each *sourceUrls* entry is the destination name used in *targetDir*. Use different 
+JobFileInputArrays with different targetDir's if name conflicts between *sourceUrls* entries exist.
 
-The *envKey* provides an easy way to insert the *targetDir* into the runtime environment of an application under a user-specified label.  The *envKey* string is used as the name of an environment variable that Jobs makes accessible to executing applications.  The environment variable's value is the *targetDir*.  *envKey* can only contain alphanumerics and underscore (_) and its first character cannot be a number.  
+The *envKey* provides an easy way to insert the *targetDir* into the runtime environment of an application 
+under a user-specified label. The *envKey* string is used as the name of an environment variable that Jobs 
+makes accessible to executing applications. The environment variable's value is the *targetDir*. *envKey* can 
+only contain alphanumerics and underscore (_) and its first character cannot be a number. 
 
 The optional *notes* field can contain any valid user-specified JSON object.
 
@@ -382,28 +460,38 @@ archiveFilter       object                  File archiving selector
 logConfig           `LogConfig`_            User-specified stdout and stderr redirection
 ================    =====================   ===================================================
 
-Each of these objects can be specifed in Tapis application definitions and/or in job submission requests.  In addition, the execution system can also specify environment variable settings.
+Each of these objects can be specifed in Tapis application definitions and/or in job submission requests. 
+In addition, the execution system can also specify environment variable settings.
 
 appArgs
 ^^^^^^^
 
-Specify one or more command line arguments for the user application using the *appArgs* parameter.  Arguments specified in the application definition are appended to those in the submission request.
+Specify one or more command line arguments for the user application using the *appArgs* parameter. 
+Arguments specified in the application definition are appended to those in the submission request.
 
 containerArgs
 ^^^^^^^^^^^^^
 
-Specify one or more command line arguments for the container runtime using the *containerArgs* parameter.  Arguments specified in the application definition are appended to those in the submission request.
+Specify one or more command line arguments for the container runtime using the *containerArgs* parameter. 
+Arguments specified in the application definition are appended to those in the submission request.
 
 schedulerOptions
 ^^^^^^^^^^^^^^^^
 
-Specify HPC batch scheduler arguments for the container runtime using the *schedulerOptions* parameter.  Arguments specified in the application definition are appended to those in the submission request. The arguments for each scheduler are passed using that scheduler's conventions.
+Specify HPC batch scheduler arguments for the container runtime using the *schedulerOptions* parameter. 
+Arguments specified in the application definition are appended to those in the submission request. 
+The arguments for each scheduler are passed using that scheduler's conventions.
 
-Tapis defines a special scheduler option, **\-\-tapis-profile**, to support local scheduler conventions. Data centers sometimes customize their schedulers or restrict how those schedulers can be used.  The Systems_ service manages *SchedulerProfile* resources that are separate from any system definition, but can be referenced from system definitions. The Jobs service uses directives contained in profiles to tailor application execution to local requirements.
+Tapis defines a special scheduler option, **\-\-tapis-profile**, to support local scheduler conventions. 
+Data centers sometimes customize their schedulers or restrict how those schedulers can be used. 
+The Systems_ service manages *SchedulerProfile* resources that are separate from any system definition, 
+but can be referenced from system definitions. The Jobs service uses directives contained in profiles to 
+tailor application execution to local requirements.
 
 As an example, below is the JSON input used to create the TACC scheduler profile.
 
-The *moduleLoads* array contains one or more objects. Each object contains a *moduleLoadCommand*, which specifies the local command used to load each of the modules (in order) in its *modulesToLoad* list.
+The *moduleLoads* array contains one or more objects. Each object contains a *moduleLoadCommand*, 
+which specifies the local command used to load each of the modules (in order) in its *modulesToLoad* list.
 
 The *hiddenOptions* array identifies scheduler options that the local implementation prohibits.
 Options specified here will have the corresponding Slurm option suppressed.
@@ -428,12 +516,15 @@ passed through to Slurm.
 
 **Scheduler-Specific Processing**
 
-Jobs will perform `macro-substitution`_ on Slurm scheduler options *\-\-job-name* or *-J*.  This substitution allows Slurm job names to be dynamically generated before submitting them.
+Jobs will perform `macro-substitution`_ on Slurm scheduler options *\-\-job-name* or *-J*. This substitution allows
+Slurm job names to be dynamically generated before submitting them.
 
 envVariables
 ^^^^^^^^^^^^
 
-Specify key/value pairs that will be injected as environment variables into the application's container when it's launched.  Key/value pairs specified in the execution system definition, application definition, and job submission request are aggregated using precedence ordering (system < app < request) to resolve conflicts.
+Specify key-value pairs that will be injected as environment variables into the application's container when it is
+launched. Key-value pairs specified in the execution system definition, application definition, and job submission
+request are aggregated using precedence ordering (``system < app < request``) to resolve conflicts.
 
 archiveFilter
 ^^^^^^^^^^^^^
@@ -452,11 +543,19 @@ The *archiveFilter* conforms to this JSON schema:
       "additionalProperties": false
    }
 
-An *archiveFilter* can be specified in the application definition and/or the job submission request.  The *includes* and *excludes* arrays are merged by appending entries from the application definition to those in the submission request.
+An *archiveFilter* can be specified in the application definition and/or the job submission request. The *includes* 
+and *excludes* arrays are merged by appending entries from the application definition to those in the submission request.
 
-The *excludes* filter is applied first, so it takes precedence over *includes*.  If *excludes* is empty, then no output file or directory will be explicitly excluded from archiving.  If *includes* is empty, then all files in *execSystemOutputDir* will be archived unless explicitly excluded.  If *includes* is not empty, then only files and directories that match an entry and not explicitly excluded will be archived.
+The *excludes* filter is applied first, so it takes precedence over *includes*. If *excludes* is empty, 
+then no output file or directory will be explicitly excluded from archiving. If *includes* is empty, then 
+all files in *execSystemOutputDir* will be archived unless explicitly excluded. If *includes* is not empty, 
+then only files and directories that match an entry and not explicitly excluded will be archived.
 
-Each *includes* and *excludes* entry is a string, a string with wildcards or a regular expression.  Entries represent directories or files.  The wildcard semantics are that of glob (*), which is commonly used on the command line.  Tapis implements Java glob_ semantics.  To filter using a regular expression, construct the pattern using Java regex_ semantics and then preface it with **REGEX:** (case sensitive).  Here are examples of globs and regular expressions that could appear in a filter:
+Each *includes* and *excludes* entry is a string, a string with wildcards or a regular expression. 
+Entries represent directories or files. The wildcard semantics are that of glob (*), which is commonly 
+used on the command line. Tapis implements Java glob_ semantics. To filter using a regular expression, 
+construct the pattern using Java regex_ semantics and then preface it with **REGEX:** (case sensitive). 
+Here are examples of globs and regular expressions that could appear in a filter:
 
 ::
 
@@ -465,14 +564,20 @@ Each *includes* and *excludes* entry is a string, a string with wildcards or a r
                   "REGEX:^[\\p{IsAlphabetic}\\p{IsDigit}_\\.\\-]+$"
                   "REGEX:\\s+"
 
-When *includeLaunchFiles* is true (the default), then the script (*tapisjob.sh*) and environment (*tapisjob.env*) files that Tapis generates in the *execSystemExecDir* are also archived.  These launch files provide valuable information about how a job was configured and launched, so archiving them can help with debugging and improve reproducibility.  Since these files may contain application secrets, such database passwords or other credentials, care must be taken to not expose private data through archiving.
+When *includeLaunchFiles* is true (the default), then the script (*tapisjob.sh*) and environment (*tapisjob.env*) 
+files that Tapis generates in the *execSystemExecDir* are also archived. These launch files provide valuable 
+information about how a job was configured and launched, so archiving them can help with debugging and improve 
+reproducibility. Since these files may contain application secrets, such database passwords or other credentials, 
+care must be taken to not expose private data through archiving.
 
 If no filtering is specified at all, then all files in *execSystemOutputDir* and the launch files are archived.
 
 logConfig Spec
 ^^^^^^^^^^^^^^
 
-A `LogConfig`_ can be supplied in the job submission request and/or in the application definition, with the former overriding the latter when both are supplied.  In supported runtimes (currently Singularity), the *logConfig* parameter can be used to redirect the application container's stdout and stderr to user-specified files.
+A `LogConfig`_ can be supplied in the job submission request and/or in the application definition, with the former
+overriding the latter when both are supplied. In supported runtimes (currently Singularity and ZIP), the *logConfig*
+parameter can be used to redirect the application container's stdout and stderr to user-specified files.
 
 
 
@@ -485,13 +590,25 @@ A `LogConfig`_ can be supplied in the job submission request and/or in the appli
 MPI and Related Support
 -----------------------
 
-On many systems, running Message Passing Interface (MPI) jobs is simply a matter of launching programs that have been configured or compiled with the proper MPI libraries.  Most of the work in employing MPI involves parallelizing program logic and specifying the correct libraries for the target execution system.  Once that's done, a command such as *mpirun* (or on TACC systems, *ibrun*) is passed the program's pathname and arguments to kick off parallel execution.
+On many systems, running Message Passing Interface (MPI) jobs is simply a matter of launching programs that have
+been configured or compiled with the proper MPI libraries. Most of the work in employing MPI involves parallelizing
+program logic and specifying the correct libraries for the target execution system. Once that is done, a command such
+as *mpirun* (or on TACC systems, *ibrun*) is passed the program's pathname and arguments to kick off parallel execution.
 
-Tapis's *mpiCmd* parameter lets users set the MPI launch command in a system definition, application definition and/or job submission request (lowest to highest priority).  For example, if *mpiCmd=mpirun*, then the string "mpirun " will be prepended to the command normally used to execute the application.  Some MPI launchers have their own parameters, for instance, *mpiCmd=ibrun -n 4* requests 4 MPI tasks.
+Tapis's *mpiCmd* parameter lets users set the MPI launch command in a system definition, application definition
+and/or job submission request (lowest to highest priority). For example, if *mpiCmd=mpirun*, then the string "mpirun "
+will be prepended to the command normally used to execute the application. Some MPI launchers have their own parameters,
+for instance, *mpiCmd=ibrun -n 4* requests 4 MPI tasks.
 
-The *isMpi* parameter is specified in an application definition and/or job request to toggle MPI launching on or off.  This switch allows the same system to run both MPI and non-MPI jobs depending on the needs of particular jobs or applications.  The *isMpi* default is false, so this switch must be explicitly turned on to run an MPI job.  When turned on, *isMpi* requires *cmdMpi* be assigned in the system, application and/or job request.
+The *isMpi* parameter is specified in an application definition and/or job request to toggle MPI launching on or off.
+This switch allows the same system to run both MPI and non-MPI jobs depending on the needs of particular jobs or
+applications. The *isMpi* default is false, so this switch must be explicitly turned on to run an MPI job.
+When turned on, *isMpi* requires *cmdMpi* be assigned in the system, application and/or job request.
 
-The *cmdPrefix* parameter provides generalized support for launchers and is available in application definitions and job submission requests.  Like *mpiCmd*, a *cmdPrefix* value is simply prepended to a program's pathname and arguments.  Being more general, *cmdPrefix* could specify an MPI launcher, but it's not supported in system definitions and does not have a toggle to control usage.
+The *cmdPrefix* parameter provides generalized support for launchers and is available in application definitions
+and job submission requests. Like *mpiCmd*, a *cmdPrefix* value is simply prepended to a program's pathname and
+arguments. Being more general, *cmdPrefix* could specify an MPI launcher, but it's not supported in system
+definitions and does not have a toggle to control usage.
 
 *mpiCmd* and *cmdPrefix* are mutually exclusive; so if *isMpi* is true, then *cmdPrefix* must not be set.
 
@@ -499,11 +616,16 @@ The *cmdPrefix* parameter provides generalized support for launchers and is avai
 Subscriptions
 -------------
 
-Users can subscribe to job execution events.  Subscriptions specified in the application definition and those specified in the job request are merged to produce a job's initial subscription list.  New subscriptions can be added while a job is running, but not after the job has terminated.  A job's subscriptions can be listed and deleted.  Only job owners or tenant administrators can subscribe to a job, see the subscription_ APIs for details.
+Users can subscribe to job execution events. Subscriptions specified in the application definition and those
+specified in the job request are merged to produce a job's initial subscription list. New subscriptions can be
+added while a job is running, but not after the job has terminated. A job's subscriptions can be listed and deleted.
+Only job owners or tenant administrators can subscribe to a job, see the subscription_ APIs for details.
 
-When creating a subscription the *ttlminutes* parameter can specify up to 4 weeks.  If the parameter is not specified or if it's set to 0, a default value of 1 week is used.
+When creating a subscription the *ttlminutes* parameter can specify up to 4 weeks. If the parameter is not
+specified or if it's set to 0, a default value of 1 week is used.
 
-Subscribers are notified of job events by the Notifications_ service.  Currently, only email and webhook delivery methods are supported.  The event types to which users can subscribe are:
+Subscribers are notified of job events by the Notifications_ service. Currently, only email and webhook delivery
+methods are supported. The event types to which users can subscribe are:
 
 ===========================    ===================================================
 Event Type                     Description
@@ -518,9 +640,16 @@ JOB_USER_EVENT                 When a user sends the job a custom event
 ALL                            When any of the above occur
 ===========================    ===================================================
 
-All event types other than JOB_USER_EVENT are generated by Tapis. See `Notification Messages`_ for a description of what Jobs returns for each of the Tapis-generated event.
+All event types other than JOB_USER_EVENT are generated by Tapis. See `Notification Messages`_ for a description
+of what Jobs returns for each of the Tapis-generated event.
 
-A JOB_USER_EVENT contains a user-specified payload that targets an active job by using the job's UUID.  The sender must be in the same tenant as the job to inject custom events into the job's event stream.  The event payload must contain a JSON key named *eventData* with a string value of at least 1 character and no more than 16,384 characters.  The string can be unstructured or structured (such as a JSON object) as determined by the sender. The payload can optionally contain an *eventDetail* key with a string value of no more than 64 characters. This key is used to further categorize events and, if not provided, will default to "DEFAULT".  User events are always added to the job history and notifications are sent to subscribers interested in those events.
+A JOB_USER_EVENT contains a user-specified payload that targets an active job by using the job's UUID. The sender
+must be in the same tenant as the job to inject custom events into the job's event stream. The event payload must
+contain a JSON key named *eventData* with a string value of at least 1 character and no more than 16,384 characters.
+The string can be unstructured or structured (such as a JSON object) as determined by the sender. The payload can
+optionally contain an *eventDetail* key with a string value of no more than 64 characters. This key is used to
+further categorize events and, if not provided, will default to "DEFAULT". User events are always added to the job
+history and notifications are sent to subscribers interested in those events.
 
 .. _subscription: https://tapis-project.github.io/live-docs/?service=Jobs#tag/subscriptions
 
@@ -529,7 +658,10 @@ A JOB_USER_EVENT contains a user-specified payload that targets an active job by
 Request Validation 
 ------------------
 
-Jobs detects invalid request input early to streamline application debugging and to guard against improper execution.  In particular, Tapis usually double quotes strings that contain *dangerous* characters when those strings will appear on a command line. The set of command line dangerous characters is { **&**, **>**, **<**, **\|**, **`**, **;** }, all of which have special meaning when issued in a shell. 
+Jobs detects invalid request input early to streamline application debugging and to guard against improper execution.
+In particular, Tapis usually double quotes strings that contain *dangerous* characters when those strings will appear
+on a command line. The set of command line dangerous characters is { **&**, **>**, **<**, **\|**, **`**, **;** }, all
+of which have special meaning when issued in a shell. 
 
 String validation on job submission requests is as follows:
 
@@ -566,7 +698,9 @@ String validation on job submission requests is as follows:
    *  environment variable values
 
 .. note::
-  Application arguments can contain spaces. Tapis, however, does not automatically double quote these arguments since applications define their own command line conventions. *Therefore, it is the responsibility of the job submitter to use single quotes or escaped double quotes (\\\") if so desired.*  
+  Application arguments can contain spaces. Tapis, however, does not automatically double quote these arguments
+  since applications define their own command line conventions.
+  *Therefore, it is the responsibility of the job submitter to use single quotes or escaped double quotes (\\\") if so desired.*
 
 
 Shared Components
@@ -575,7 +709,9 @@ Shared Components
 JobArgSpec
 ^^^^^^^^^^
 
-Simple argument strings can be specified in application definitions (AppArgSpec) and in job submission requests (JobArgSpec).  These argument strings are passed to specific components in the runtime system, such as the batch scheduler (schedulerOptions_), the container runtime (containerArgs_) or the user's application (appArgs_).
+Simple argument strings can be specified in application definitions (AppArgSpec) and in job submission requests
+(JobArgSpec). These argument strings are passed to specific components in the runtime system, such as the batch
+scheduler (schedulerOptions_), the container runtime (containerArgs_) or the user's application (appArgs_).
 
 The following rules govern how job arguments are calculated.
 
@@ -583,10 +719,12 @@ The following rules govern how job arguments are calculated.
  2. Application arguments are either REQUIRED, FIXED or one of two optional types.
  3. Anonymous (unnamed) argument can be specified in job requests.
  4. Job request argument override values set in the application except for FIXED arguments.
- 5. The final argument ordering is the same as the order specified in the definitions, with application arguments preceding those from the job request.  Application arguments maintain their place even when overridden in the job request.
+ 5. The final argument ordering is the same as the order specified in the definitions, with application arguments preceding those from the job request. Application arguments maintain their place even when overridden in the job request.
  6. The notes field can be any JSON object, i.e., JSON that begins with a brace ("{").
 
-We define a **complete** AppArgSpec as one that has a non-empty name and arg value.  We define a **complete** JobArgSpec as one that has a non-empty arg value.  A JobArgSpec with the same name as an AppArgSpec inherits from the application and may override the AppArgSpec values.
+We define a **complete** AppArgSpec as one that has a non-empty name and arg value. We define a **complete**
+JobArgSpec as one that has a non-empty arg value. A JobArgSpec with the same name as an AppArgSpec inherits
+from the application and may override the AppArgSpec values.
 
 This is the JSON schema used to define runtime arguments in `ParameterSet`_.
 
@@ -606,34 +744,47 @@ This is the JSON schema used to define runtime arguments in `ParameterSet`_.
        "additionalProperties": false
    }
 
-As mentioned, the JobArgSpec is used in conjunction with the AppArgSpec defined in Applications_.  Arguments in application definitions are merged into job request arguments using the same name matching alorithm as in `FileInputs`_.
+As mentioned, the JobArgSpec is used in conjunction with the AppArgSpec defined in Applications_. Arguments in
+application definitions are merged into job request arguments using the same name matching alorithm as in `FileInputs`_.
 
-The *name* identifies the input argument.  If present, the name must start with an alphabetic character or an underscore (_) followed by zero or more alphanumeric or underscore characters.
+The *name* identifies the input argument. If present, the name must start with an alphabetic character or an
+underscore (_) followed by zero or more alphanumeric or underscore characters.
 
-The *description* is used to convey usage information to job requester.  If both application and request descriptions are provided, then the request description is appended as a separate paragraph to the application description.
+The *description* is used to convey usage information to job requester. If both application and request descriptions
+are provided, then the request description is appended as a separate paragraph to the application description.
 
-The required *arg* value is an arbitrary string and is used as-is.  If this argument's name matches that of an application argument, this *arg* value overrides the application's value except when *inputMode=FIXED* in the application.
+The required *arg* value is an arbitrary string and is used as-is. If this argument's name matches that of an
+application argument, this *arg* value overrides the application's value except when *inputMode=FIXED* in the
+application.
 
-The *include* field applies only on named arguments that are also defined in the application definition with *inputMode* INCLUDE_ON_DEMAND or INCLUDE_BY_DEFAULT; this parameter is ignored on all other inputModes.  Argument inclusion is discussed in greater detail in following subsection.
+The *include* field applies only on named arguments that are also defined in the application definition with
+*inputMode* INCLUDE_ON_DEMAND or INCLUDE_BY_DEFAULT; this parameter is ignored on all other inputModes. Argument
+inclusion is discussed in greater detail in following subsection.
 
 Argument Processing
 ~~~~~~~~~~~~~~~~~~~
 
-Applications_ use their AppArgSpecs to pass default values to job requests.  The AppArgSpec's *inputMode* determines how to handle arguments during job processing.  An *inputMode* field can have these values:
+Applications_ use their AppArgSpecs to pass default values to job requests. The AppArgSpec's *inputMode* determines
+how to handle arguments during job processing. An *inputMode* field can have these values:
 
 REQUIRED
-   The argument must be provided for the job to run.  If an arg value is not specified in the application       definition, then it must be specified in the job request.  When provided in both, the job request arg value overrides the one in application.
+   The argument must be provided for the job to run. If an arg value is not specified in the application definition,
+   then it must be specified in the job request. When provided in both, the job request arg value overrides the one
+   in application.
 
 FIXED
    The argument is completely defined in the application and not overridable in a job request.
 
 INCLUDE_ON_DEMAND
-   The argument, if complete, will only be included in the final argument list constructed by Jobs if it's explicitly referenced and included in the Job request.  This is the default value.
+   The argument, if complete, will only be included in the final argument list constructed by Jobs if it's explicitly
+   referenced and included in the Job request. This is the default value.
 
 INCLUDE_BY_DEFAULT
-    The argument, if complete, will automatically be included in the final argument list constructed by Jobs unless explicitly excluded in the Job request.
+    The argument, if complete, will automatically be included in the final argument list constructed by Jobs unless
+    explicitly excluded in the Job request.
 
-The truth table below defines how the AppArgSpec's *inputMode* and JobArgSpec's *include* settings interact to determine whether an argument is accepted or ignored during job processing.
+The truth table below defines how the AppArgSpec's *inputMode* and JobArgSpec's *include* settings interact to
+determine whether an argument is accepted or ignored during job processing.
 
 +--------------------+-------------+-------------+
 | AppArgSpec         | JobArgSpec  | Meaning     |
@@ -652,17 +803,19 @@ The truth table below defines how the AppArgSpec's *inputMode* and JobArgSpec's 
 | INCLUDE_BY_DEFAULT | undefined   | include arg |
 +--------------------+-------------+-------------+
 
-The JobArgSpec *include* value has no effect on REQUIRED or FIXED arguments.  In the cases where the value does apply, not specifying *include* in a named JobArgSpec that matches an AppArgSpec is effectively the same as setting *include=True*.  By setting *include=False*, a JobArgSpec can exclude any INCLUDE_ON_DEMAND or INCLUDE_BY_DEFAULT arguments.
+The JobArgSpec *include* value has no effect on REQUIRED or FIXED arguments. In the cases where the value does apply,
+not specifying *include* in a named JobArgSpec that matches an AppArgSpec is effectively the same as setting
+*include=True*. By setting *include=False*, a JobArgSpec can exclude any INCLUDE_ON_DEMAND or INCLUDE_BY_DEFAULT arguments.
 
 KeyValuePair
 ^^^^^^^^^^^^
 
-The JSON schema for defining key/value pairs of strings in various `ParameterSet`_ components is below.
+The JSON schema for defining key-value pairs of strings in various `ParameterSet`_ components is below.
 
 ::
 
    "KeyValuePair": {
-       "$comment": "A simple key/value pair",
+       "$comment": "A simple key-value pair",
        "type": "object",
            "properties": {
               "key":   {"type": "string", "minLength": 1},
@@ -686,7 +839,7 @@ The *notes* field can be any JSON object, i.e., JSON that begins with a brace ("
 LogConfig
 ^^^^^^^^^
 
-The JSON schema for used to redirect stdout and stderr to named file(s) in supported runtimes.  
+The JSON schema for used to redirect stdout and stderr to named file(s) in supported runtimes. 
 
 ::
 
@@ -701,9 +854,15 @@ The JSON schema for used to redirect stdout and stderr to named file(s) in suppo
            }
    }
 
-Currently, only the Singularity (Apptainer) and ZIP runtimes are supported.  For the Docker runtime, applications can redirect their *stdout* and *stderr* streams to a file (or files) in the *execSystemOutputDir* using an environment variable listed in the next section.  Jobs will treat this redirected output like all other application generated output for later retrieval.
+Currently, only the Singularity (Apptainer) and ZIP runtimes are supported. For the Docker runtime, applications
+can redirect their *stdout* and *stderr* streams to a file (or files) in the *execSystemOutputDir* using an
+environment variable listed in the next section. Jobs will treat this redirected output like all other application
+generated output for later retrieval.
 
-When specified, both file name fields must be explicitly assigned, though they can be assigned to the same file.  If a *logConfig* object is not specified, or in runtimes where it's not supported, then both stdout and stderr are directed to the default **tapisjob.out** file in the job's output directory.  Output files, even when *logConfig* is used, are always relative to the ExecSystemOuputDir (see `Directory Definitions`_).
+When specified, both file name fields must be explicitly assigned, though they can be assigned to the same file.
+If a *logConfig* object is not specified, or in runtimes where it is not supported, then both stdout and stderr are
+directed to the default **tapisjob.out** file in the job's output directory. Output files, even when *logConfig* is
+used, are always relative to the ExecSystemOuputDir (see `Directory Definitions`_).
 
 -------------------------------------------------
 
@@ -713,7 +872,8 @@ Job Execution
 Environment Variables
 ---------------------
 
-The following standard environment variables are passed into each application container run by Tapis as long as they have been assigned a value.
+The following standard environment variables are passed into each application container run by Tapis as long as
+they have been assigned a value.
 
 ::
 
@@ -759,19 +919,28 @@ The following standard environment variables are passed into each application co
 Macro Substitution
 ------------------
 
-Tapis defines macros or template variables that get replaced with actual values at well-defined points during job creation.  The act of replacing a macro with a value is often called macro substitution or macro expansion.  The complete list of Tapis macros can be found at JobTemplateVariables_.
+Tapis defines macros or template variables that get replaced with actual values at well-defined points during
+job creation. The act of replacing a macro with a value is often called macro substitution or macro expansion.
+The complete list of Tapis macros can be found at JobTemplateVariables_.
 
-There is a close relationship between these macro definitions and the Tapis environment variables just discussed:  Macros that have values assigned are passed as environment variables into application containers.  This makes macros used during job creation available to applications at runtime.
+There is a close relationship between these macro definitions and the Tapis environment variables just
+discussed:  Macros that have values assigned are passed as environment variables into application containers.
+This makes macros used during job creation available to applications at runtime.
 
-Most macro definitions are *ground* definitions because their values do not depend on any other macros.  On the other hand, *derived* macro definitions can include other macro definitions.  For example, in `Directory Assignments`_ the default input file directory is constructed with two macro definitions:
+Most macro definitions are *ground* definitions because their values do not depend on any other macros.
+On the other hand, *derived* macro definitions can include other macro definitions. For example,
+in `Directory Assignments`_ the default input file directory is constructed with two macro definitions:
 
 ::
 
    execSystemInputDir = ${JobWorkingDir}/jobs/${JobUUID}
 
-Macro values are referenced using the ${Macro-name} notation.  Since derived macro definitions reference other macros, there is the possibility of circular references.  Tapis detects these errors and aborts job creation.
+Macro values are referenced using the ${Macro-name} notation. Since derived macro definitions reference other
+macros, there is the possibility of circular references. Tapis detects these errors and aborts job creation.
 
-Below is the complete, ordered list of derived macros.  Each macro in the list can be defined using any ground macro and any macro that preceeds it in the list.  Result are undefined if a derived macro references a macro that follows it in the derived list.
+Below is the complete, ordered list of derived macros. Each macro in the list can be defined using any ground macro
+and any macro that preceeds it in the list. Result are undefined if a derived macro references a macro that follows
+it in the derived list.
 
 #. JobName
 #. JobWorkingDir
@@ -784,18 +953,27 @@ Below is the complete, ordered list of derived macros.  Each macro in the list c
 #. ContainerArgs
 #. LogConfig
 
-Finally, macro substitution is applied to the job *description* field, whether the description is specified in an application or a submission request.
+Finally, macro substitution is applied to the job *description* field, whether the description is specified in an
+application or a submission request.
 
 Macro Functions
 ^^^^^^^^^^^^^^^
 
-Directory assignments in systems, applications and job requests can also use the **HOST_EVAL($var)** function at the beginning of their path assignments.  This function dynamically extracts the named environment variable's value from an execution or archive host *at the time the job request is made*.  Specifically, the environment variable's value is retrieved by logging into the host as the Job owner and issuing "echo $var".  The example in `Data Transfer Nodes`_ uses this function.
+Directory assignments in systems, applications and job requests can also use the **HOST_EVAL($var)** function at the
+beginning of their path assignments. This function dynamically extracts the named environment variable's value from an
+execution or archive host *at the time the job request is made*. Specifically, the environment variable's value is
+retrieved by logging into the host as the Job owner and issuing "echo $var".
+The example in `Data Transfer Nodes`_ uses this function.
 
-To increase application portability, an optional default value can be passed into the **HOST_EVAL** function.  The function's complete signature with the optional path parameter is:
+To increase application portability, an optional default value can be passed into the **HOST_EVAL** function.
+The function's complete signature with the optional path parameter is:
 
         **HOST_EVAL($VAR, path)**
 
-If the environment variable VAR does not exist on the host, then the literal path parameter is returned by the function.  This added flexibility allows applications to run in different environments, such as on TACC HPC systems that automatically expose certain environment variables and VMs that might not.  If the environment variable does not exist and no optional path parameter is provided, the job fails due to invalid input.
+If the environment variable VAR does not exist on the host, then the literal path parameter is returned by the
+function. This added flexibility allows applications to run in different environments, such as on TACC HPC systems
+that automatically expose certain environment variables and VMs that might not. If the environment variable does not
+exist and no optional path parameter is provided, the job fails due to invalid input.
 
 
 .. _JobTemplateVariables: https://github.com/tapis-project/tapis-jobs/blob/dev/tapis-jobslib/src/main/java/edu/utexas/tacc/tapis/jobs/model/enumerations/JobTemplateVariables.java
@@ -804,7 +982,10 @@ If the environment variable VAR does not exist on the host, then the literal pat
 Job Status
 ----------
 
-The list below contains all possible states of a Tapis job, which are indicated in the *status* field of a job record. The initial state is PENDING. Terminal states are FINISHED, CANCELLED and FAILED. The BLOCKED state indicates that the job is recovering from a resource constraint, network problem or other transient problem. When the problem clears, the job will restart from the state in which blocking occurred.
+The list below contains all possible states of a Tapis job, which are indicated in the *status* field of a job record.
+The initial state is PENDING. Terminal states are FINISHED, CANCELLED and FAILED. The BLOCKED state indicates that the
+job is recovering from a resource constraint, network problem or other transient problem. When the problem clears,
+the job will restart from the state in which blocking occurred.
 ::
 
     PENDING - Job processing beginning
@@ -831,9 +1012,13 @@ Normal processing of a successfully executing job proceeds as follows:
 Notification Messages
 ---------------------
 
-Notifications are the messages sent to subscribers who have registered interest in certain job events.  In this section, we specify the messages sent to subscribers for event generated by the Jobs service.  See Subscriptions_ for an introduction to the different event types, including user generated events (type JOB_USER_EVENT), which are not discussed here.  
+Notifications are the messages sent to subscribers who have registered interest in certain job events. In this section,
+we specify the messages sent to subscribers for event generated by the Jobs service. See Subscriptions_ for an
+introduction to the different event types, including user generated events (type JOB_USER_EVENT), which are not
+discussed here. 
 
-For events generated by the Jobs service, the *data* field in notification messages received by subscribers contains a JSON object that always include these fields:
+For events generated by the Jobs service, the *data* field in notification messages received by subscribers contains
+a JSON object that always include these fields:
 
 - *jobName* - the user-specified job name
 - *jobOwner* - the user who submitted the job
@@ -884,7 +1069,8 @@ Job terminal statuses are FINISHED, CANCELLED and FAILED.
 Job Condition Codes on Termination
 ----------------------------------
 
-When a job terminates, in addition to being assigned a terminal status, a job is assigned one of the following condition codes. 
+When a job terminates, in addition to being assigned a terminal status, a job is assigned one of the following
+condition codes. 
 ::
 
 	CANCELLED_BY_USER - Job cancelled by user
@@ -931,11 +1117,11 @@ Introduction
 The Jobs, Applications, Files and Systems services cooperate to allow the configuration and execution of jobs.
 In this section, we discuss the use of a high throughput **Data Transfer Node** (DTN) to stage job inputs and
 archive outputs. DTNs are used to optimize transfer speeds and to allow nodes to be separately optimized for
-either storage or job execution.  For example, users often stage input data to long-term storage (the DTN), such
+either storage or job execution. For example, users often stage input data to long-term storage (the DTN), such
 as *cloud.corral* at TACC, and then copy that data to a fast, temporary file system, such as a "scratch" file
-system, when running jobs.  DTNs are also used when specialized transfer software, such as GLOBUS, is required
-on nodes to receive data, but those nodes are not appropriate to run jobs.  In this case, the DTN receives the
-data from a remote location and then another transfer copies them from the DTN to an execution system.  
+system, when running jobs. DTNs are also used when specialized transfer software, such as GLOBUS, is required
+on nodes to receive data, but those nodes are not appropriate to run jobs. In this case, the DTN receives the
+data from a remote location and then another transfer copies them from the DTN to an execution system. 
 
 The DTN usage pattern is effective when:
 
@@ -983,8 +1169,9 @@ Note that these attributes may be overriden by the job submission request. Pleas
 Constructing the Job Submission Request
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In a job submission request, the values for *dtnSystemInputDir* or *dtnSystemOutputDir* can be set in order
-to override the values defined by the application. They can be set to *!tapis_not_set* to turn off DTN usage or set to an alternate path.
+In a job submission request, the values for *dtnSystemInputDir* or *dtnSystemOutputDir* can be set in order to
+override the values defined by the application. They can be set to *!tapis_not_set* to turn off DTN usage or
+set to an alternate path.
 
 
 
@@ -1112,7 +1299,6 @@ Application definition::
     "containerImage": "example/example-app:1",
     "jobType": "BATCH",
     "runtime": "SINGULARITY",
-    "runtimeOptions": ["SINGULARITY_RUN"],
     "jobAttributes": {
       "description": "Transfer file and verify transfer",
       "execSystemId": "example-exec-with-dtn",
@@ -1161,9 +1347,16 @@ Note that the execution system specifies the DTN system and the application spec
 Container Runtimes
 ==================
 
-The Tapis v3 Jobs service supports Docker, Singularity and ZIP containers run natively (i.e., not run using a batch scheduler like Slurm).  In general, Jobs launches an application's container on a remote system, monitors the container's execution, and captures the application's exit code after it terminates.  Jobs uses SSH to connect to the execution system to issue Docker, Singularity or native operating system commands.
+The Tapis v3 Jobs service supports Docker, Singularity and ZIP containers run natively (i.e., not run using a
+batch scheduler like Slurm). In general, Jobs launches an application's container on a remote system, monitors
+the container's execution, and captures the application's exit code after it terminates. Jobs uses SSH to connect
+to the execution system to issue Docker, Singularity or native operating system commands.
 
-To launch a job, the Jobs service creates a bash script, **tapisjob.sh**, with the runtime-specific commands needed to execute the container.  This script references **tapisjob.env**, a file Jobs creates to pass environment variables to application containers.  Both files are staged in the job's execSystemExecDir and, by default, are archived with job output on the archive system.  See `archiveFilter`_ to override this default behavior, especially if archives will be shared and the scripts pass sensitive information into containers.
+To launch a job, the Jobs service creates a bash script, **tapisjob.sh**, with the runtime-specific commands needed
+to execute the container. This script references **tapisjob.env**, a file Jobs creates to pass environment variables
+to application containers. Both files are staged in the job's execSystemExecDir and, by default, are archived with job
+output on the archive system. See `archiveFilter`_ to override this default behavior, especially if archives will be
+shared and the scripts pass sensitive information into containers.
 
 Docker
 ------
@@ -1178,7 +1371,9 @@ To launch a Docker container, the Jobs service will SSH to the target host and i
 #. image:  (required) user-specified docker application image
 #. application arguments:  (optional) user-specified command line arguments passed to the application
 
-The docker run-command_ options *\-\-cidfile*, *-d*, *-e*, *\-\-env*, *\-\-name*, *\-\-rm*, and *\-\-user* are reserved for use by Tapis.  Most other Docker options are available to the user.  The Jobs service implements these calling conventions:
+The docker run-command_ options *\-\-cidfile*, *-d*, *-e*, *\-\-env*, *\-\-name*, *\-\-rm*, and *\-\-user* are
+reserved for use by Tapis. Most other Docker options are available to the user. The Jobs service implements
+these calling conventions:
 
 #. The container name is set to the job UUID.
 #. The container's user is set to the user ID used to establish the SSH session.
@@ -1188,17 +1383,26 @@ The docker run-command_ options *\-\-cidfile*, *-d*, *-e*, *\-\-env*, *\-\-name*
 Logging
 ^^^^^^^
 
-Logging should be considered up front when defining Tapis applications to run under Docker.  Since Jobs removes Docker containers after they execute, the container's log is lost under the default Docker logging_ configuration.  Typically, Docker pipes *stdout* and *stderr* to the container's log, which requires the application to take deliberate steps to preserve these outputs.
+Logging should be considered up front when defining Tapis applications to run under Docker. Since Jobs removes Docker
+containers after they execute, the container's log is lost under the default Docker logging_ configuration. Typically,
+Docker pipes *stdout* and *stderr* to the container's log, which requires the application to take deliberate steps to
+preserve these outputs.
 
-An application can maintain control over its log output by logging to a file outside of the container.  The application can do this by redirecting *stdout* and *stderr* or by explicitly writing to a file.  As discussed in `dir-definitions`_, the application always has read/write access to the host's *execSystemOutputDir*, which is mounted at /TapisOutput in the container (see next section).
+An application can maintain control over its log output by logging to a file outside of the container. The application
+can do this by redirecting *stdout* and *stderr* or by explicitly writing to a file. As discussed in
+`dir-definitions`_, the application always has read/write access to the host's *execSystemOutputDir*, which is mounted
+at /TapisOutput in the container (see next section).
 
-On the other hand, applications can run on machines where the default Docker log driver is configured to write to files or services outside of containers.  In addition, Tapis passes any user-specified *log-driver* and *log-opts* options to *docker run*, so all customizations_ supported by Docker are possible.
+On the other hand, applications can run on machines where the default Docker log driver is configured to write to
+files or services outside of containers. In addition, Tapis passes any user-specified *log-driver* and *log-opts*
+options to *docker run*, so all customizations_ supported by Docker are possible.
 
 
 Volume Mounts
 ^^^^^^^^^^^^^
 
-In addition to the above conventions, bind_ mounts are used to mount the execution system's standard Tapis directories at the same locations in every application container.
+In addition to the above conventions, bind_ mounts are used to mount the execution system's standard Tapis directories
+at the same locations in every application container.
 
 ::
 
@@ -1214,44 +1418,47 @@ In addition to the above conventions, bind_ mounts are used to mount the executi
 Singularity
 -----------
 
-Tapis provides two distinct ways to launch a Singularity containers, using *singluarity instance start* or *singularity run*.
+Tapis uses *singularity run* to launch a Singularity container.
 
 .. warning::
-  Please note that use of the SINGULARITY_START runtime option has been deprecated. Support for *singluarity instance start*
-  will be removed in a future release. If you have a need for this option please contact Tapis support (cicsupport@tacc.utexas.edu).
+  Please note that use of the SINGULARITY_START runtime option to use *singularity instance start* for launching a
+  container has been removed. If you have a need for this option please contact Tapis support
+  (cicsupport@tacc.utexas.edu) about an enhancement request.
 
-Singularity Start (DEPRECATED)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Singularity's support for detached processes and services is implemented natively by its instance start_, stop_ and list_ commands.  To launch a container, the Jobs service will SSH to the target host and issue a command using this template:
-
-::
-
+..
+  Singularity Start (DEPRECATED)
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  Singularity's support for detached processes and services is implemented natively by its instance start_, stop_
+  and list_ commands. To launch a container, the Jobs service will SSH to the target host and issue a command
+  using this template:
+  ::
    singularity instance start [singularity options] <image id> [application arguments] <job uuid>
 
-where:
+  where:
+    #. singularity options:  (optional) user-specified argument passed to singularity start
+    #. image id:  (required) user-specified singularity application image
+    #. application arguments:  (optional) user-specified command line arguments passed to the application
+    #. job uuid:  the job uuid used to name the instance (always set by Jobs)
+    
+  The singularity options *\-\-pidfile*, *\-\-env* and *\-\-name* are reserved for use by Tapis. Users specify the
+  environment variables to be injected into their application containers via the `envVariables`_ parameter. Most other
+  singularity options are available to users.
+  Jobs will then issue *singularity instance list* to obtain the container's process id (PID). Jobs determines that
+  the application has terminated when the PID is no longer in use by the operating system.
+  By convention, Jobs will look for a **tapisjob.exitcode** file in the Job's output directory after containers
+  terminate. If found, the file should contain only the integer code the application reported when it exited.
+  If not found, Jobs assumes the application exited normally with a zero exit code.
+  Finally, Jobs issues a *singularity instance stop <job uuid>* to clean up the singularity runtime environment and terminate all processes associated with the container.
 
-#. singularity options:  (optional) user-specified argument passed to singularity start
-#. image id:  (required) user-specified singularity application image
-#. application arguments:  (optional) user-specified command line arguments passed to the application
-#. job uuid:  the job uuid used to name the instance (always set by Jobs)
+  .. _start: https://sylabs.io/guides/3.7/user-guide/cli/singularity_instance_start.html
+  .. _stop: https://sylabs.io/guides/3.7/user-guide/cli/singularity_instance_stop.html
+  .. _list: https://sylabs.io/guides/3.7/user-guide/cli/singularity_instance_list.html
 
-The singularity options *\-\-pidfile*, *\-\-env* and *\-\-name* are reserved for use by Tapis.  Users specify the environment variables to be injected into their application containers via the `envVariables`_ parameter.  Most other singularity options are available to users.
+Singularity Launching
+^^^^^^^^^^^^^^^^^^^^^
 
-Jobs will then issue *singularity instance list* to obtain the container's process id (PID).  Jobs determines that the application has terminated when the PID is no longer in use by the operating system.
-
-By convention, Jobs will look for a **tapisjob.exitcode** file in the Job's output directory after containers terminate.  If found, the file should contain only the integer code the application reported when it exited.  If not found, Jobs assumes the application exited normally with a zero exit code.
-
-Finally, Jobs issues a *singularity instance stop <job uuid>* to clean up the singularity runtime environment and terminate all processes associated with the container.
-
-.. _start: https://sylabs.io/guides/3.7/user-guide/cli/singularity_instance_start.html
-.. _stop: https://sylabs.io/guides/3.7/user-guide/cli/singularity_instance_stop.html
-.. _list: https://sylabs.io/guides/3.7/user-guide/cli/singularity_instance_list.html
-
-Singularity Run
-^^^^^^^^^^^^^^^
-
-Jobs also supports a more do-it-yourself approach to running containers on remote system using singularity run_.  To launch a container, the Jobs service will SSH to the target host and issue a command using this template:
+Jobs supports running containers on the remote system using singularity run_.
+To launch a container, the Jobs service will SSH to the target host and issue a command using this template:
 
 ::
 
@@ -1260,48 +1467,56 @@ Jobs also supports a more do-it-yourself approach to running containers on remot
 where:
 
 #. nohup_:  allows the background process to continue running even if the SSH session ends.
-#. singularity options:  (optional) user-specified arguments passed to singularity run.
+#. singularity options:  (optional) user-specified arguments passed to *singularity run*.
 #. image id:  (required) user-specified singularity application image.
 #. application arguments:  (optional) user-specified command line arguments passed to the application.
 #. redirection:  stdout and stderr are redirected to **tapisjob.out** in the job's output directory.
 
-The singularity *\-\-env* option is reserved for use by Tapis.  Users specify the environment variables to be injected into their application containers via the `envVariables`_ parameter.  Most other singularity options are available to users.
+The singularity *\-\-env* option is reserved for use by Tapis. Users can specify the environment variables to be
+injected into their application containers via the `envVariables`_ parameter.
+Most other singularity options are available to users.
 
-Jobs will use the PID returned when issuing the background command to monitor the container's execution.  Jobs determines that the application has terminated when the PID is no longer in use by the operating system.
+Jobs will use the PID returned when issuing the background command to monitor the container's execution. Jobs
+determines that the application has terminated when the PID is no longer in use by the operating system.
 
-Jobs uses the same **TapisJob.exitcode** file convention introduced above to attain the application's exit code (if the file exists).
+Jobs uses the same **TapisJob.exitcode** file convention introduced above to attain the application's exit code
+(if the file exists).
 
 .. _run: https://sylabs.io/guides/3.7/user-guide/cli/singularity_run.html
 .. _nohup: https://en.wikipedia.org/wiki/Nohup
 
-Required Scripts
-^^^^^^^^^^^^^^^^
+Singularity Monitoring
+^^^^^^^^^^^^^^^^^^^^^^
 
-The Singularity Start and Singularity Run approaches boath allow SSH sessions between Jobs and execution hosts to end without interrupting container execution.  Each approach, however, requires that the application image be appropriately constructed.  Specifically,
+The Tapis approach to launching the singularity container allows SSH sessions between Jobs and execution hosts to end
+without interrupting container execution. For proper monitoring, however, the application image must be appropriately
+constructed. Specifically, the runscript should be defined in the image.
 
-::
-
-   Singularity start requires the startscript to be defined in the image.
-   Singularity run requires the runscript to be defined in the image.
-
-Required Termination Order
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Since Jobs monitors container execution by querying the operating system using the PID obtained at launch time, the initially launched program should be the last part of the application to terminate.  The program specified in the image script can spawn any number of processes (and threads), but it should not exit before those processes complete.
+Since Jobs monitors container execution by querying the operating system using the PID obtained at launch time,
+the initially launched program should be the last part of the application to terminate. The program specified in the
+image script can spawn any number of processes (and threads), but it should not exit before those processes complete.
 
 Optional Exit Code Convention
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Applications are not required to support the **TapisJob.exitcode** file convention as described above, but it is the only way in which Jobs can report the application specified exit status to the user.
+Applications are not required to support the **TapisJob.exitcode** file convention as described above, but it is the
+only way in which Jobs can report the application specified exit status to the user.
 
 ZIP
 ---
 
-Standard archive files, such as zip and compressed tar, can be treated as a type of custom *application image* and launched in a runtime environment defined by Tapis.  This *ZIP runtime environment* maximizes application flexibility while retaining much of the reproducibility and automation benefits of Tapis.   
+Standard archive files, such as zip and compressed tar, can be treated as a type of custom *application image* and
+launched in a runtime environment defined by Tapis. This *ZIP runtime environment* maximizes application flexibility
+while retaining much of the reproducibility and automation benefits of Tapis. 
 
-To define a ZIP application, specify "ZIP" as the *runtime* parameter in an `application definition`_. The ZIP runtime works with either BATCH or FORK job types.  For the ZIP runtime, *containerImage* must be an absolute path or a URL in a format supported by the Files service, such as URLs using the http, https or tapis protocols.  The Applications service validates the *containerImage* attribute when an application is created or updated. 
+To define a ZIP application, specify "ZIP" as the *runtime* parameter in an `application definition`_. The ZIP runtime
+works with either BATCH or FORK job types. For the ZIP runtime, *containerImage* must be an absolute path or a URL in
+a format supported by the Files service, such as URLs using the http, https or tapis protocols. The Applications
+service validates the *containerImage* attribute when an application is created or updated.
 
-An application's archive file can contain scripts, binary executables, libraries and any other data the application developer needs---Tapis does not restrict content.  The archive must be in `zip`_ format or any format readable by `tar`_.  In order to run correctly, the application must:
+An application's archive file can contain scripts, binary executables, libraries and any other data the application
+developer needs---Tapis does not restrict content. The archive must be in `zip`_ format or any format readable
+by `tar`_. In order to run correctly, the application must:
 
 #. Have a designated executable program for Tapis to launch,
 #. guarantee that the executable code is compatible with the target system's runtime,
@@ -1323,27 +1538,41 @@ Inputs are staged in exactly the same way as in other runtime environments.
 Staging Application Assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-ZIP jobs package executable code and data in an archive file that either already exists on the execution system or gets downloaded as part of job execution. The archive file is unpacked into the *execSystemExecDir*.
+ZIP jobs package executable code and data in an archive file that either already exists on the execution system or gets
+downloaded as part of job execution. The archive file is unpacked into the *execSystemExecDir*.
 
-The archive file's location is specified in the *containerImage* attribute of the application. The location may either be (1) an absolute path on the execution system or (2) a URL.  When an absolute path is used, the application archive already resides on the execution system.  When a URLs is used, the archive is downloaded using one of following protocols: *http://*, *https://* and *tapis://*.  The destination is always *execSystemExecDir* when URLs are used.
+The archive file's location is specified in the *containerImage* attribute of the application. The location may either
+be (1) an absolute path on the execution system or (2) a URL. When an absolute path is used, the application archive
+already resides on the execution system. When a URLs is used, the archive is downloaded using one of following
+protocols: *http://*, *https://* and *tapis://*. The destination is always *execSystemExecDir* when URLs are used.
 
-Application archives are always unpacked into *execSystemExecDir* whether the archive already existed on the system or was downloaded to the system.  Jobs uses either *unzip* or *tar* as shown below.  
+Application archives are always unpacked into *execSystemExecDir* whether the archive already existed on the system
+or was downloaded to the system. Jobs uses either *unzip* or *tar* as shown below. 
 ::
 
         unzip <pathToArchiveFile>
         tar -xf <pathToArchiveFile>
 
-The *<pathToArchiveFile>* is the absolute path to the archive file, such as */path/to/archive/app.zip* or */path/to/archive/app.tgz*.  The *<pathToArchiveFile>* must be present and accessible on the execution system.  When an application archive is already present on the system (the non-URL case), the archive is not be copied, but its contents are extracted directly into the *execSystemExecDir*.
+The *<pathToArchiveFile>* is the absolute path to the archive file, such as */path/to/archive/app.zip* or
+*/path/to/archive/app.tgz*. The *<pathToArchiveFile>* must be present and accessible on the execution system.
+When an application archive is already present on the system (the non-URL case), the archive is not be copied,
+but its contents are extracted directly into the *execSystemExecDir*.
 
-Note that the version of tar distributed with typical Linux distributions can unpack a number of compression formats, including gzip, bzip2 and xz, but **not** zip. When an archive file name uses the *.zip* suffix, Tapis assumes *zip* formatting is being used.  Tapis checks that the *unzip* command is available on the execution system and, if not, the job aborts.
+Note that the version of tar distributed with typical Linux distributions can unpack a number of compression formats,
+including gzip, bzip2 and xz, but **not** zip. When an archive file name uses the *.zip* suffix, Tapis assumes *zip*
+formatting is being used. Tapis checks that the *unzip* command is available on the execution system and, if not,
+the job aborts.
 
 Launching the Application
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once an application archive is unpacked, Jobs creates its own launch script, *tapisjob.sh*, and places it in the *execSystemExecDir*.  From that directory, *tapisjob.sh* calls the user-provided executable.  This executable is either **./tapisjob_app.sh**, if it exists, or an executable named in the **./tapisjob.manifest** file.  The manifest file has these characteristics:
+Once an application archive is unpacked, Jobs creates its own launch script, *tapisjob.sh*, and places it in the
+*execSystemExecDir*. From that directory, *tapisjob.sh* calls the user-provided executable. This executable is either
+**./tapisjob_app.sh**, if it exists, or an executable named in the **./tapisjob.manifest** file. The manifest file has
+these characteristics:
 
 * The manifest file is optional.
-* If *tapisjob_app.sh* does not exist then *tapisjob.manifest* must exist at the top-level of the archive and must specify the key/value pair:  *tapisjob_executable=<relative path to executable file>*.
+* If *tapisjob_app.sh* does not exist then *tapisjob.manifest* must exist at the top-level of the archive and must specify the key-value pair:  *tapisjob_executable=<relative path to executable file>*.
    
    * The *tapisjob_executable* value is a path relative to *execSystemExecDir*.
    * The *tapisjob_executable* value cannot contain a double dot ".." or semicolon ";".
@@ -1354,44 +1583,63 @@ Once an application archive is unpacked, Jobs creates its own launch script, *ta
    *  The format of all entries in the manifest is: <key>=<value>, each on its own line.
    *  Tapis ignores additional entries in the manifest.
 
-Other than *tapisjob.manifest* and *tapisjob_app.sh*, no user-defined files in the top level archive directory should have a name that starts with "tapisjob".  All such file names are reserved by Tapis and may be overwritten by the Jobs service. Specifically, the Jobs service creates files named *tapisjob.sh*, *tapisjob.env* and several temporary files that start with "tapisjob".
+Other than *tapisjob.manifest* and *tapisjob_app.sh*, no user-defined files in the top level archive directory should
+have a name that starts with "tapisjob". All such file names are reserved by Tapis and may be overwritten by the Jobs
+service. Specifically, the Jobs service creates files named *tapisjob.sh*, *tapisjob.env* and several temporary files
+that start with "tapisjob".
 
 **Environment and Executable Output**
 
-ZIP applications can expect to run in a environment that closely matches other Tapis runtimes.  In particular, Jobs exports all user-specified and Tapis-generated environment variables in the SSH terminal from which it launches the application's executable.  These are the same variables available to applications in other runtime environments.  Similarly, *appArgs*, *containerArgs* and *schedulerOptions* semantics are unchanged.
+ZIP applications can expect to run in a environment that closely matches other Tapis runtimes. In particular, Jobs
+exports all user-specified and Tapis-generated environment variables in the SSH terminal from which it launches the
+application's executable. These are the same variables available to applications in other runtime environments.
+Similarly, *appArgs*, *containerArgs* and *schedulerOptions* semantics are unchanged.
 
-Jobs also sets up the redirection of stdout and stderr using the `LogConfig`_ parameter as it does in other environments. Both streams are directed to *execSystemOutputDir/tapisjob.out* by default. 
+Jobs also sets up the redirection of stdout and stderr using the `LogConfig`_ parameter as it does in other
+environments. Both streams are directed to *execSystemOutputDir/tapisjob.out* by default. 
 
 Monitoring the Application
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For ZIP BATCH jobs, Tapis monitors the slurm job just as it does for other runtime types.
 
-For ZIP FORK jobs, Tapis monitors the PID of the process launched by *tapisjob.sh*.  When that PID goes away, Jobs assumes application processing has completed.  
+For ZIP FORK jobs, Tapis monitors the PID of the process launched by *tapisjob.sh*.
+When that PID goes away, Jobs assumes application processing has completed.
 
 .. note::
-  It is the application developer's responsibility to terminate the executable launched by Tapis ONLY AFTER all other processes spawned by the application have terminated.
+  It is the application developer's responsibility to terminate the executable launched by Tapis ONLY AFTER all other
+  processes spawned by the application have terminated.
 
-After a ZIP FORK job completes, Jobs looks for a file named **tapisjob.exitcode** in the *execSystemOutputDir*. If present, it is assumed to contain a single line with the application's exit code. A non-zero code is interpreted as a failure. If the file is not found, Jobs assumes success and reports an exit code of zero. 
+After a ZIP FORK job completes, Jobs looks for a file named **tapisjob.exitcode** in the *execSystemOutputDir*.
+If present, it is assumed to contain a single line with the application's exit code. A non-zero code is interpreted
+as a failure. If the file is not found, Jobs assumes success and reports an exit code of zero. 
 
-As with other runtimes, files created by Tapis during job execution are archived if *includeLaunchFiles* is true (the default).  These files include *tapisjob.sh* and *tapisjob.env*.
+As with other runtimes, files created by Tapis during job execution are archived if *includeLaunchFiles* is true
+(the default). These files include *tapisjob.sh* and *tapisjob.env*.
 
 Archiving Application Output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ZIP job outputs are archived using the same source and target specifications as other runtime types.
 
-For ZIP jobs that specify their *containerImage* with an absolute path, the application archive file is never removed.
+For ZIP jobs that specify the *containerImage* with an absolute path, the application archive file is never removed.
 
-For ZIP jobs that specify their *containerImage* with a URL, Jobs removes the downloaded archive file by default to conserve storage. To prevent this automatic clean up, a new *containerArgs* flag, **\-\-tapis-zip-save**, is defined. The flag takes no value and can be specified in the *containerArgs* list in the application definition or in the job submission request.  If this argument is present, then the application's archive file will be left in the *execSystemExecDir*.
+For ZIP jobs that specify the *containerImage* with a URL, Jobs removes the downloaded archive file by default in
+order to conserve storage. To prevent this automatic clean up, a new *containerArgs* flag, **\-\-tapis-zip-save**,
+is defined. The flag takes no value and can be specified in the *containerArgs* list in the application definition or
+in the job submission request. If this argument is present, then the application's archive file will be left in
+the *execSystemExecDir*.
 
 Usage Notes
 ^^^^^^^^^^^
 
-To minimize ZIP archive size, jobs that invoke singularity containers may want to pre-position any large SIF files in shared directories on execution systems.
+To minimize ZIP archive size, jobs that invoke singularity containers may want to pre-position any large SIF files in
+shared directories on execution systems.
 
 
-If *isMPI=true*, then Jobs will insert the MPI run command on the command line as usual.  This is true for both BATCH and FORK job types.  If the user-designated executable program launches MPI jobs itself, setting *isMPI=false* (the default) prevents Jobs from making conflicting MPI calls.
+If *isMPI=true*, then Jobs will insert the MPI run command on the command line as usual. This is true for both BATCH
+and FORK job types. If the user-designated executable program launches MPI jobs itself, setting *isMPI=false*
+(the default) prevents Jobs from making conflicting MPI calls.
 
 
 .. _application definition: https://tapis-project.github.io/live-docs/?service=Apps#tag/Applications/operation/createAppVersion
@@ -1628,7 +1876,8 @@ The response will look something like the following:
 Understanding Job Timestamps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Timestamps are assigned as a job progresses, so they won't always have a value.  All job timestamps are in Coordinated Universal Time (UTC) and have the following meanings:  
+Timestamps are assigned as a job progresses, so they won't always have a value. All job timestamps are in Coordinated
+Universal Time (UTC) and have the following meanings:
 
 1. *created*:  When the job request has been accepted by the Jobs front-end.
 2. *ended*:  When the job reached a terminal state (FINISHED, FAILED or CANCELLED).
@@ -1637,7 +1886,11 @@ Timestamps are assigned as a job progresses, so they won't always have a value. 
 5. *remoteStarted*:  When Jobs detected that the job began running on the execution system.
 6. *remoteEnded*:  When Job detected that the job stopped running on the executions system.
 
-The *remoteSubmitted* timestamp indicates when batch jobs are submitted to the batch scheduler.  Forked jobs, however, are not submitted to a scheduler, so in these cases *remoteSubmitted* indicates when application invocation began.  Job monitoring typically involves polling an execution system to determine a job's state.  The precision of the *remoteStarted* and *remoteEnded* timestamps is a function of the polling frequency, which changes based on Job service configuration and policies.  
+The *remoteSubmitted* timestamp indicates when batch jobs are submitted to the batch scheduler. Forked jobs, however,
+are not submitted to a scheduler, so in these cases *remoteSubmitted* indicates when application invocation began.
+Job monitoring typically involves polling an execution system to determine a job's state. The precision of the
+*remoteStarted* and *remoteEnded* timestamps is a function of the polling frequency, which changes based on Job
+service configuration and policies.
 
 
 Get Job Status
@@ -1909,7 +2162,9 @@ Note that if a file is being written at the time of the request, the file is sti
 
 Dedicated Search Endpoint
 ==========================
-The jobs service provides dedicated search end-points to query jobs based on different conditions. The GET end-point allows to specify the query in the query parameters while the POST end-point allows complex queries in the request body using SQL-like syntax.
+The jobs service provides dedicated search end-points to query jobs based on different conditions. The GET end-point
+allows to specify the query in the query parameters while the POST end-point allows complex queries in the request
+body using SQL-like syntax.
 
 
 Search using GET on Dedicated Endpoint
@@ -2153,7 +2408,8 @@ Job Sharing
 
 Share a Job
 ------------
-A previously submitted job can be shared with a user in the same tenant. Job resources that can shared are: JOB_HISTORY, JOB_RESUBMIT_REQUEST, JOB_OUTPUT. Currently only READ permission on the resources are allowed.
+A previously submitted job can be shared with a user in the same tenant. Job resources that can shared are:
+JOB_HISTORY, JOB_RESUBMIT_REQUEST, JOB_OUTPUT. Currently only READ permission on the resources are allowed.
 
 
 With PySDK:
@@ -2301,7 +2557,9 @@ The response will look something like this:
 List Shared Jobs
 -----------------
 
-The query parameter listType=SHARED_JOBS in the jobs list end-point allows to  list all shared jobs for a user, say testuser6, using testuser6's JWT. Note testuser6 is not the owner of the jobs listed. Default value for listType is MY_JOBS and to list all jobs including both shared and testuser6 owned job, listType=ALL_JOBS.
+The query parameter listType=SHARED_JOBS in the jobs list end-point allows to  list all shared jobs for a user, say
+testuser6, using testuser6's JWT. Note testuser6 is not the owner of the jobs listed. Default value for listType is
+MY_JOBS and to list all jobs including both shared and testuser6 owned job, listType=ALL_JOBS.
 
 With PySDK:
 
@@ -2417,8 +2675,12 @@ The response will look something like this:
 Share Job Output
 -----------------
 
-As shown in the previous example of share a job, job output resource can be shared with a user, say testuser5, in the same tenant. This includes testuser5 can do job output listing and job output download with its own JWT even though its not the owner of the job.
+As shown in the previous example of share a job, job output resource can be shared with a user, say testuser5,
+in the same tenant. This includes testuser5 can do job output listing and job output download with its own JWT
+even though its not the owner of the job.
 
 Share Job History
 ------------------
-As shown in the previous example of share a job, job history can be shared with a user, say testuser5, in the same tenant. This includes testuser5 can get job's history, status and job's detail information for jobs that are shared with it using its own JWT.
+As shown in the previous example of share a job, job history can be shared with a user, say testuser5, in the same
+tenant. This includes testuser5 can get job's history, status and job's detail information for jobs that are shared
+with it using its own JWT.
