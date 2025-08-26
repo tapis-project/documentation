@@ -227,7 +227,8 @@ Note that if my Tapis user id happened to also be ``jdoe3`` then no mapping woul
 
 Please note that if the system is defined using a static *effectiveUserId*, then there is no need for a mapping.
 In this case the *effectiveUserId* is logically independent of the Tapis identity and may be set to any valid
-host username value.
+host username value. To this end, TAPIS will reject a credential creation request with a *loginUser* in the request body
+if the system is already created with a static *effectiveUserId*. 
 
 Registering Credentials for a System
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
