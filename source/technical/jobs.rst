@@ -146,7 +146,9 @@ marked *MacroEnabled* (see `Macro Substitution`_ for details).
 **description**
   Human readable job description. *MacroEnabled*, *Not Required*
 **archiveOnAppError**
-  Whether archiving should proceed even when the application reports an error. Default is *true*.
+  *Deprecated. Use archiveMode.* Whether archiving should proceed even when the application reports an error. Default is *true*.
+**archiveMode**
+  Indicates if outputs should be archived after running the job. Default is *ALWAYS*.
 **execSystemId**
   Tapis execution system ID. *Inherit*.
 **execSystemExecDir**
@@ -880,6 +882,7 @@ they have been assigned a value.
  _tapisAppId - Tapis app ID
  _tapisAppVersion - Tapis app version
  _tapisArchiveOnAppError - true means archive even if the app returns a non-zero exit code
+ _tapisArchiveMode - ALWAYS, SKIP_ON_FAIL or NEVER
  _tapisArchiveSystemDir - the archive system directory on which app output is archived
  _tapisArchiveSystemId - Tapis system used for archiving app output
  _tapisCoresPerNode - number of cores used per node by app
@@ -1814,6 +1817,7 @@ The response will look something like the following:
        appId: SleepSeconds
        appVersion: 0.0.1
        archiveOnAppError: true
+       archiveMode: ALWAYS
        dynamicExecSystem: false
        execSystemId: tapisv3-exec2
        execSystemExecDir: /workdir/jobs/aa83fce9-074c-47fb-a8a0-a9ad216093bb-007
