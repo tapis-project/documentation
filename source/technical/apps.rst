@@ -221,6 +221,7 @@ The response should look similar to the following::
             "archiveSystemId": null,
             "archiveSystemDir": null,
             "archiveOnAppError": false,
+            "archiveMode": "NEVER",
             "isMpi": false,
             "mpiCmd": null,
             "cmdPrefix": null,
@@ -621,6 +622,11 @@ JobAttributes Table
 +---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
 | archiveOnAppError   | boolean          |                    | - Indicates if outputs should be archived if there is an error while running job.    |
 |                     |                  |                    | - The default is TRUE.                                                               |
+|                     |                  |                    | - DEPRACATED. Please use archiveMode.                                                |
++---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
+| archiveMode         | enum             |  NEVER             | - Indicates if outputs should be archived after running the job.                     |
+|                     |                  |                    | - Options: ALWAYS, SKIP_ON_FAIL, NEVER                                               |
+|                     |                  |                    | - Default is ALWAYS                                                                  |
 +---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
 | isMpi               | boolean          |                    | - Indicates that application is to be executed as an MPI job.                        |
 |                     |                  |                    | - The default is FALSE.                                                              |
