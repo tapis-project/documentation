@@ -47,7 +47,9 @@ Resubmit Request         GET      /{JobUUID}/resubmit_request
 Cancel                   POST      /{JobUUID}/cancel                     
 Hide                     POST      /{JobUUID}/hide                       
 Unhide                   POST      /{JobUUID}/unhide                     
-SendEvent                POST      /{JobUUID}/sendEvent                  
+SendEvent                POST      /{JobUUID}/sendEvent
+PatchAnnotation          PATCH     /{JobUUID}/annotation
+UpdateAnnotation         PUT       /{JobUUID}/annotation                  
 \
 Get Subscriptions        GET       /subscribe/{JobUUID}                  
 Create Subscription      POST      /subscribe/{JobUUID}                  
@@ -2403,6 +2405,161 @@ The response will look something like the following:
     "metadata": null
     }
 
+
+Put Job Annotations
+----------------------
+Replace the tags and notes of a specified job with the provided tags and notes.
+If no tags or notes are not provided at all, the current tags or notes are not changed.
+If empty tags ([]) or notes ({}) are provided, the current tags or notes are removed.
+The total size of notes and the total size of all tags of a job cannot exceed 128KB each.
+
+With PySDK:
+
+.. code-block:: python
+
+  $ job_annotation=t.jobs.putJobAnnotations(jobUuid=resubmitted_job, tags= [
+            "A"
+        ],
+        notes= {
+            "a": [
+                "1"
+            ],
+            "b": {
+                "c": "label1"
+            },
+            "c": 1
+        }
+    )
+
+
+With CURL:
+
+.. code-block:: bash
+
+       $ curl -X PUT -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/6269c8f1-a89b-40ae-86ff-6674125b563a-007/annotations -d '{
+          "tags": [
+              "A"
+          ],
+          "notes": {
+              "a": [
+                  "1"
+              ],
+              "b": {
+                  "c": "label1"
+              },
+              "c": 1
+          }
+      }'
+
+The response will look something like the following:
+
+::
+
+    {
+        "result": {
+            "id": 47099,
+            "uuid": "6269c8f1-a89b-40ae-86ff-6674125b563a-007",
+            "tags": [
+                "A"
+            ],
+            "notes": {
+                "a": [
+                    "1"
+                ],
+                "b": {
+                    "c": "label1"
+                },
+                "c": 1
+            }
+        },
+        "status": "success",
+        "message": "JOBS_JOB_ANNOTATION_UPDATED Job 6269c8f1-a89b-40ae-86ff-6674125b563a-007 annotation updated for user testuser7 in tenant dev.",
+        "version": "1.9.1",
+        "commit": "037fab4a",
+        "build": "2025-10-09T18:13:04Z",
+        "metadata": null
+    }
+
+
+Patch Job Annotations
+---------------------
+Patch the tags and notes of a specified job with the provided tags and notes.
+If no tags or notes are provided, the current tags and notes are not changed.
+If empty tags ([]) or notes ({}) are provided, the current tags or notes are not changed. 
+Only the new tags provided are added to the current tags list of a job, in a case-sensitive manner. 
+Only the top-level keys in notes provided are added or updated in the current notes of a job.
+The total size of notes and the total size of all tags of a job cannot exceed 128KB each.
+
+With PySDK:
+
+.. code-block:: python
+
+      $ t.jobs.patchJobAnnotations(jobUuid=resubmitted_job, tags=[
+          "A",
+          "a",
+          "B",
+          "b",
+          ""
+      ], notes={
+          "a": ["2", ""],
+          "b": 2,
+          "c": "c",
+          "d": {}
+      })
+
+
+With CURL:
+
+.. code-block:: bash
+
+       $ curl -X PATCH -H "X-Tapis-Token:$jwt" $BASE_URL/v3/jobs/6269c8f1-a89b-40ae-86ff-6674125b563a-007/annotation -d '{
+            "tags": [
+                "A",
+                "a",
+                "B",
+                "b",
+                ""
+            ],
+            "notes": {
+                "a": ["2", ""],
+                "b": 2,
+                "c": "c",
+                "d": {}
+            }
+        }'
+
+The response will look something like the following:
+
+::
+
+    {
+        "result": {
+            "id": 47099,
+            "uuid": "6269c8f1-a89b-40ae-86ff-6674125b563a-007",
+            "tags": [
+                "",
+                "A",
+                "B",
+                "a",
+                "b"
+            ],
+            "notes": {
+                "a": [
+                    "2",
+                    ""
+                ],
+                "b": 2,
+                "c": "c",
+                "d": {}
+            }
+        },
+        "status": "success",
+        "message": "JOBS_JOB_ANNOTATION_PATCHED Job 6269c8f1-a89b-40ae-86ff-6674125b563a-007 annotation updated for user testuser7 in tenant dev.",
+        "version": "1.9.1",
+        "commit": "037fab4a",
+        "build": "2025-10-09T18:13:04Z",
+        "metadata": null
+    }
 
 
 ------------------------------------------------------------
