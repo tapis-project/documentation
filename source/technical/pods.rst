@@ -584,7 +584,6 @@ Here's how to create a volume, mount it to a pod, upload files, and list files i
                   "myvolume": {
                     "type": "tapisvolume",
                     "mount_path": "/mnt/data",
-                    "volume_id": "myvolume"
                   }
                 }
             )
@@ -982,7 +981,7 @@ Here are examples of how to manage pod permissions:
 Pod Networking
 ----------------
 
-The Pods service manages networking for your containers through a Traefik proxy, automatically handling routing and domain configuration. Each pod gets a subdomain on the Tapis service domain (e.g. ``mypod.pods.tacc.tapis.io``), making it accessible through HTTPS without requiring any manual network configuration. The networking configuration allows you to control how your pods are accessed, including protocol selection, port definition, authentication, and access restrictions when using authentication.
+The Pods service manages networking for your containers through a Traefik proxy, automatically handling routing and domain configuration. Each pod gets a subdomain on the Tapis service domain (e.g. ``mypod.pods.tacc.tapis.io``), making it accessible through HTTPS without requiring any manual network configuration. The networking configuration allows you to control how your pods are accessed, including protocol selection, port definition, authentication, and access restrictions when using authentication. Notice that all traffic in Pods is externally reached via port 443. Traefik proxy routes traffic based on subdomain to a Pod's specified internal port from port 443. 
 
 When a pod is created, the service configures networking based on the provided settings. For example, in the Neo4j quickstart example, the service automatically configured a TCP port for the Neo4j Bolt protocol and an HTTP port for the Neo4j Browser interface.
 
@@ -1595,6 +1594,8 @@ We've ran a variety of applications and services on Pods, including, but not lim
 - Redis
 - Kafka
 - headscale
+- headplane
+- MinIO
 - Django
 - FastAPI
 - Flask
@@ -1602,6 +1603,7 @@ We've ran a variety of applications and services on Pods, including, but not lim
 - OpenWebUI
 - LangFlow
 - UptimeKuma
+- Streamlit
 
 That is to say the service works well with a variety of applications and services. Reach out to us if you have a specific application in mind and we can help you get it running on Pods. Some of these applications have templates, some run with no specific modifications, and other might require in-depth development work.
 
