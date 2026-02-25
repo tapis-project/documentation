@@ -589,7 +589,7 @@ calls made through the Files service.
   system type is ``IRODS`` and the attribute *useProxy* is set to ``true``. In this case the connection to
   the *IRODS* host is made using a special administrative account which then acts as the Tapis user.
   So please be aware that for this type of system sharing the system or a file path will allow for
-  MODIFY access.
+  MODIFY access to files paths on that system.
 
 The most common use case for sharing a system is to publicly share the system with all users in the tenant.
 This would allow any user to use the system for execution or storage when running an application.
@@ -1132,6 +1132,7 @@ KeyValuePair Attributes Table
 | inputMode           | enum   |   REQUIRED           | - Indicates how argument is to be treated when processing individual job requests.   |
 |                     |        |                      | - Modes: REQUIRED, FIXED, INCLUDE_ON_DEMAND, INCLUDE_BY_DEFAULT                      |
 |                     |        |                      | - Default is INCLUDE_BY_DEFAULT.                                                     |
+|                     |        |                      | - `************************************************************`                     |
 |                     |        |                      | - REQUIRED: Must be provided in a job request or application definition.             |
 |                     |        |                      | - FIXED: Not overridable in application or job request.                              |
 |                     |        |                      | - INCLUDE_ON_DEMAND: Included if referenced in a job request.                        |
@@ -1177,6 +1178,41 @@ LogicalQueue Attributes Table
 | maxMinutes          | int            |                      | - Maximum run time in minutes that can be requested when submitting a job.           |
 |                     |                |                      | - Default is unlimited                                                               |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+| schedulerOptions    | [Arg]          |                      | - Scheduler options passed to the HPC batch scheduler.                               |
+|                     |                |                      | - See table below for more information on *Arg* type entries.                        |
+|                     |                |                      | - For more information on *schedulerOptions* please see the chapter on *Jobs*        |
++---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
+
+------------------------
+Arg Attributes Table
+------------------------
+For more information on how the *inputMode* attribute is used during job processing, please see JobsArgProcessing_.
+
+.. _JobsArgProcessing: https://tapis.readthedocs.io/en/latest/technical/jobs.html#argument-processing
+
++---------------------+------------+----------------------+--------------------------------------------------------------------------------------+
+| Attribute           | Type       | Example              | Notes                                                                                |
++=====================+============+======================+======================================================================================+
+| name                | String     |                      | - Identifying label associated with the argument.                                    |
+|                     |            |                      | - **Required** at creation time.                                                     |
++---------------------+------------+----------------------+--------------------------------------------------------------------------------------+
+| description         | String     |                      | - Optional description of the argument which may include usage, purpose, etc.        |
++---------------------+------------+----------------------+--------------------------------------------------------------------------------------+
+| inputMode           | enum       |                      | - Indicates how argument is to be treated when processing individual job requests.   |
+|                     |            |                      | - Modes: REQUIRED, FIXED, INCLUDE_ON_DEMAND, INCLUDE_BY_DEFAULT                      |
+|                     |            |                      | - Default is INCLUDE_BY_DEFAULT.                                                     |
+|                     |            |                      | - `************************************************************`                     |
+|                     |            |                      | - REQUIRED: Must be provided in a job request.                                       |
+|                     |            |                      | - FIXED: Completely defined in the application and not overridable in a job request. |
+|                     |            |                      | - INCLUDE_ON_DEMAND: Included if referenced in a job request.                        |
+|                     |            |                      | - INCLUDE_BY_DEFAULT: Included unless *include=false* in a job request.              |
++---------------------+------------+----------------------+--------------------------------------------------------------------------------------+
+| arg                 | String     |                      | - Value for the argument                                                             |
+|                     |            |                      | - **Required** at creation time.                                                     |
++---------------------+------------+----------------------+--------------------------------------------------------------------------------------+
+| notes               | String     | {"fieldType": "int"} | - Metadata in the form of a Json object, such as type, allowed values, etc.          |
+|                     |            |                      | - Not used by Tapis.                                                                 |
++---------------------+------------+----------------------+--------------------------------------------------------------------------------------+
 
 ----------------------------------
 Scheduler Profile Attributes Table

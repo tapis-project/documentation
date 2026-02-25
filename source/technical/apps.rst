@@ -622,7 +622,8 @@ JobAttributes Table
 +---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
 | archiveOnAppError   | boolean          |                    | - Indicates if outputs should be archived if there is an error while running job.    |
 |                     |                  |                    | - The default is TRUE.                                                               |
-|                     |                  |                    | - DEPRACATED. Please use archiveMode.                                                |
+|                     |                  |                    | - `************************************************************`                     |
+|                     |                  |                    | - DEPRECATED. Please use archiveMode.                                                |
 +---------------------+------------------+--------------------+--------------------------------------------------------------------------------------+
 | archiveMode         | enum             |  NEVER             | - Indicates if outputs should be archived after running the job.                     |
 |                     |                  |                    | - Options: ALWAYS, SKIP_ON_FAIL, NEVER                                               |
@@ -691,6 +692,7 @@ ParameterSet Attributes Table
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
 | archiveFilter       | ArchiveFilter  |                      | - Sets of files to include or exclude when archiving.                                |
 |                     |                |                      | - Default is to include all files in *execSystemOutputDir*.                          |
+|                     |                |                      | - `************************************************************`                     |
 |                     |                |                      | - See table below for details of *ArchiveFilter* structure.                          |
 |                     |                |                      | - For more information on *archiveFilter* support please see the chapter on *Jobs*   |
 +---------------------+----------------+----------------------+--------------------------------------------------------------------------------------+
@@ -729,6 +731,7 @@ For more information on how the *inputMode* attribute is used during job process
 | inputMode           | enum       |                      | - Indicates how argument is to be treated when processing individual job requests.   |
 |                     |            |                      | - Modes: REQUIRED, FIXED, INCLUDE_ON_DEMAND, INCLUDE_BY_DEFAULT                      |
 |                     |            |                      | - Default is INCLUDE_ON_DEMAND.                                                      |
+|                     |            |                      | - `************************************************************`                     |
 |                     |            |                      | - REQUIRED: Must be provided in a job request.                                       |
 |                     |            |                      | - FIXED: Completely defined in the application and not overridable in a job request. |
 |                     |            |                      | - INCLUDE_ON_DEMAND: Included if referenced in a job request.                        |
@@ -757,6 +760,7 @@ KeyValuePair Attributes Table
 | inputMode           | enum   |   REQUIRED           | - Indicates how argument is to be treated when processing individual job requests.   |
 |                     |        |                      | - Modes: REQUIRED, FIXED, INCLUDE_ON_DEMAND, INCLUDE_BY_DEFAULT                      |
 |                     |        |                      | - Default is INCLUDE_BY_DEFAULT.                                                     |
+|                     |        |                      | - `************************************************************`                     |
 |                     |        |                      | - REQUIRED: Must be provided in a job request or application definition.             |
 |                     |        |                      | - FIXED: Not overridable in application or job request.                              |
 |                     |        |                      | - INCLUDE_ON_DEMAND: Included if referenced in a job request.                        |
