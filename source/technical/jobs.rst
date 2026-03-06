@@ -483,8 +483,8 @@ schedulerOptions
 ^^^^^^^^^^^^^^^^
 
 Specify HPC batch scheduler arguments for the container runtime using the *schedulerOptions* parameter. 
-Arguments specified in the application definition are appended to those in the submission request. 
-The arguments for each scheduler are passed using that scheduler's conventions.
+Arguments specified in the system *logicalQueue* and the application are merged with those in the
+job submission request. The arguments for each scheduler are passed using that scheduler's conventions.
 
 Tapis defines a special scheduler option, **\-\-tapis-profile**, to support local scheduler conventions. 
 Data centers sometimes customize their schedulers or restrict how those schedulers can be used. 
@@ -713,9 +713,10 @@ Shared Components
 JobArgSpec
 ^^^^^^^^^^
 
-Simple argument strings can be specified in application definitions (AppArgSpec) and in job submission requests
-(JobArgSpec). These argument strings are passed to specific components in the runtime system, such as the batch
-scheduler (schedulerOptions_), the container runtime (containerArgs_) or the user's application (appArgs_).
+Simple argument strings can be specified in the system *logicalQueue* and the application (AppArgSpec) as well
+as a job submission request (JobArgSpec). These argument strings are passed to specific components in the runtime
+system, such as the batch scheduler (schedulerOptions_), the container runtime (containerArgs_) or the user's
+application (appArgs_). Note for the system *logicalQueue* only schedulerOptions_ may be defined.
 
 The following rules govern how job arguments are calculated.
 
