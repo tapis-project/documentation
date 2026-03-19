@@ -21,7 +21,7 @@ data, including logs, status, and health. The service manages networking, certif
 The primary use of this service is to have quick-to-deploy long-lived services based on Docker images that are 
 exposed via HTTP or TCP endpoints listed by the API all running in Kubernetes.
 
-The Pods service provides endpoints for managing pods and their constituant components:
+The Pods service provides endpoints for managing pods and their constituent components:
     * **Pods** - The base unit of the service, a pod is a Docker container which a user can manage and interact with.
     * **Templates** - A pod template is a pre-configured pod definition that can be recursively referenced by the definition of a pod.
     * **Images** - Endpoints for managing the allowlist of Docker images that can be used in pods.
@@ -87,7 +87,7 @@ you will need to publish images on Docker Hub, which requires a `Docker account 
 Install Tapipy or use cURL
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To interact with the TACC-hosted Abaco platform in Python, we will leverage the Tapis Python SDK, tapipy. To install it,
+To interact with the TACC-hosted Pods platform in Python, we will leverage the Tapis Python SDK, tapipy. To install it,
 simply run:
 
 .. code-block:: bash
@@ -107,7 +107,7 @@ Working with TACC OAuth
 Authentication and authorization to the Tapis APIs uses `OAuth2 <https://oauth.net/2/>`_, a widely-adopted web standard.
 Our implementation of OAuth2 is designed to give you the flexibility you need to script and automate use of Tapis
 while keeping your access credentials and digital assets secure. This is covered in great detail in our
-Tenancy and Authentication section, but some key concepts will be highlighted here, interleaved with Python code.
+:doc:`Tenancy and Authentication </technical/authentication>` section, but some key concepts will be highlighted here, interleaved with Python code.
 
 
 .. _pods-tapipy-quickstart:
@@ -120,7 +120,7 @@ the ``Tapis`` class and create python object called ``t`` that points to the Tap
 username and password. Do so by typing the following in a Python shell:
 
 .. Important::
-   Support for Pods service in Tapipy was added in version 1.2.3.
+   Support for Pods service in Tapipy requires version 1.7.0 or later.
 
 
 .. code-block:: python
@@ -154,8 +154,8 @@ Note that the tapipy ``t`` object will store and pass your access token for you,
 the token when using the tapipy operations. You are now ready to check your access to the Tapis APIs. It will
 expire though, after 4 hours, at which time you will need to generate a new token. If you are interested, you
 can create an OAuth client (a one-time setup step, like creating a TACC account) that can be used to generate
-access and refresh tokens. For simplicity, we are skipping that but if you are interested, check out the Tenancy and
-Authentication section.
+access and refresh tokens. For simplicity, we are skipping that but if you are interested, check out the
+:doc:`Tenancy and Authentication </technical/authentication>` section.
 
 Check Access to the Tapis APIs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -244,17 +244,19 @@ override any existing fields in the template.
             )
             print(response)
 
-    .. code-tab:: bash
+    .. group-tab:: Bash
 
-        curl --request POST \
-             --url https://tacc.tapis.io/v3/pods \
-             --header 'Content-Type: application/json' \
-             --header 'X-Tapis-Token: $JWT' \
-             --data '{
-                "pod_id": "docpod",
-                "template": "neo4j",
-                "description": "My example pod!"
-             }'
+        .. code-block:: bash
+
+            curl --request POST \
+                 --url https://tacc.tapis.io/v3/pods \
+                 --header 'Content-Type: application/json' \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --data '{
+                    "pod_id": "docpod",
+                    "template": "neo4j",
+                    "description": "My example pod!"
+                 }'
 
 You should receive a response that looks like this.
 
@@ -266,14 +268,14 @@ You should receive a response that looks like this.
     description: My example pod!
     environment_variables: 
 
-    pod_id: test
+    pod_id: docpod
     template: template/neo4j
     status: REQUESTED
     status_container: 
 
     status_requested: ON
     update_ts: None
-    url: docpod.pods.tacc.develop.tapis.io
+    url: docpod.pods.tacc.tapis.io
 
 Notes:
 
@@ -282,23 +284,27 @@ Notes:
 - Pods returned a status of ``REQUESTED`` for the pod; behind the scenes, the Pods service has sent a message requesting
   the pod described to our backend `spawner` infrastructure. The pod's image must be pulled, a pod service must be created
   (for networking), and the networking changes must propagate to the Pod's proxy before the Pod is ready for use.
-- When the pod itself has began running, the status will change to ``AVAILABLE``. Networking takes time to propagate (expect <1 minute).
+- When the pod itself has begun running, the status will change to ``AVAILABLE``. Networking takes time to propagate (expect <1 minute).
 - An ``AVAILABLE`` pod only means the pod itself has started, check pod logs to see what your container is writing to stdout.
 
 At any point we can check the details of our pods, including its status, with the following:
 
 .. tabs::
 
-    .. code-tab:: python
+    .. group-tab:: Python
 
-        t.pods.get_pod(pod_id='docpod')
+        .. code-block:: python
+
+            t.pods.get_pod(pod_id='docpod')
     
-    .. code-tab:: bash
+    .. group-tab:: Bash
+
+        .. code-block:: bash
         
-        curl --request GET \
-             --url https://tacc.tapis.io/v3/pods/docpod \
-             --header 'Content-Type: application/json' \
-             --header 'X-Tapis-Token: $JWT'
+            curl --request GET \
+                 --url https://tacc.tapis.io/v3/pods/docpod \
+                 --header 'Content-Type: application/json' \
+                 --header 'X-Tapis-Token: $JWT'
 
 The response format is identical to that returned from the ``t.pods.create_pod()`` method.
 
@@ -322,7 +328,7 @@ passing in ``pod_id``:
 
     t.pods.get_pod_logs(pod_id='docpod')
 
-The response should be similar to the following:
+The response should be similar to the following (actual output will vary based on your template version):
 
 .. code-block:: python
 
@@ -356,6 +362,114 @@ Conclusion
 
 Congratulations! You've now created, registered, and accessed your first pod. There is a lot more you can do with
 the Pods service though. To learn more about the additional capabilities, please continue on to the Technical Guide.
+
+----
+
+Pod Lifecycle
+=============
+
+Pod Status
+----------
+
+Each pod has two key status fields: ``status_requested`` (what the user wants) and ``status`` (the current state of the pod).
+The ``status_requested`` field accepts the values ``ON``, ``OFF``, or ``RESTART`` and defaults to ``ON`` at pod creation.
+
+The following table describes the pod statuses you may observe:
+
+.. list-table::
+    :header-rows: 1
+    :widths: 24 76
+
+    * - Status
+      - Description
+    * - REQUESTED
+      - Pod creation has been requested and is queued for processing by the spawner.
+    * - SPAWNING
+      - The pod is being created in Kubernetes (image pull, networking setup, etc.).
+    * - AVAILABLE
+      - The pod's container is running. Networking may still be propagating (<1 minute).
+    * - STOPPED
+      - The pod has been stopped by user request (``status_requested: OFF``) or by ``time_to_stop`` expiration.
+    * - RESTARTING
+      - The pod is being restarted (``status_requested: RESTART``).
+    * - SHUTTING_DOWN
+      - The pod is in the process of shutting down.
+    * - COMPLETE
+      - The pod's container exited successfully (exit code 0).
+    * - ERROR
+      - The pod encountered an error during creation or runtime. Check logs and action logs for details.
+
+.. note::
+    An ``AVAILABLE`` status means the container is running, but your application inside the container may still be
+    initializing. Always check pod logs to confirm your application is ready.
+
+Time-to-Stop
+-------------
+
+Pods support automatic stopping via the ``time_to_stop_default`` and ``time_to_stop_instance`` fields:
+
+- ``time_to_stop_default``: Default time in seconds for the pod to run from each instance start. Default: ``43200`` (12 hours). Set to ``-1`` for unlimited.
+- ``time_to_stop_instance``: Time in seconds for the current instance. Resets each time the pod is started. Set to ``-1`` for unlimited. If ``None``, uses the default.
+
+Managing Pods
+-------------
+
+You can manage the full lifecycle of a pod — update, start, stop, restart, and delete — using the following methods:
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        .. code-block:: python
+
+            # Update a pod (e.g., change description or environment variables)
+            t.pods.update_pod(
+                pod_id='docpod',
+                description='Updated description'
+            )
+
+            # Stop a pod
+            t.pods.stop_pod(pod_id='docpod')
+
+            # Start a stopped pod
+            t.pods.start_pod(pod_id='docpod')
+
+            # Restart a running pod
+            t.pods.restart_pod(pod_id='docpod')
+
+            # Delete a pod
+            t.pods.delete_pod(pod_id='docpod')
+
+    .. group-tab:: Bash
+
+        .. code-block:: bash
+
+            # Update a pod
+            curl --request PUT \
+                 --url https://tacc.tapis.io/v3/pods/docpod \
+                 --header 'Content-Type: application/json' \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --data '{"description": "Updated description"}'
+
+            # Stop a pod
+            curl --request GET \
+                 --url https://tacc.tapis.io/v3/pods/docpod/stop \
+                 --header 'X-Tapis-Token: $JWT'
+
+            # Start a stopped pod
+            curl --request GET \
+                 --url https://tacc.tapis.io/v3/pods/docpod/start \
+                 --header 'X-Tapis-Token: $JWT'
+
+            # Restart a running pod
+            curl --request GET \
+                 --url https://tacc.tapis.io/v3/pods/docpod/restart \
+                 --header 'X-Tapis-Token: $JWT'
+
+            # Delete a pod
+            curl --request DELETE \
+                 --url https://tacc.tapis.io/v3/pods/docpod \
+                 --header 'X-Tapis-Token: $JWT'
 
 ----
 
@@ -527,6 +641,66 @@ The Pods service supports multiple methods for managing files and data:
 - **Volumes**: For declarative, persistent storage that can be shared across pods.
 - **Snapshots**: For creating backups of volumes or sharing read-only files.
 
+Volume Mounts Schema
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Volume mounts are specified as a dictionary keyed by the mount path inside the container. Each value is a ``VolumeMount``
+object describing the type and source of the mount. Set a mount path's value to ``null`` to remove an inherited mount from a template.
+
+.. list-table::
+    :header-rows: 1
+    :widths: 24 76
+
+    * - Field
+      - Description
+    * - type
+      - **Required**. Type of mount: ``tapisvolume``, ``tapissnapshot``, ``ephemeral``, or ``pvc``.
+    * - source_id
+      - ID of the volume, snapshot, or PVC to mount. Required for ``tapisvolume``, ``tapissnapshot``, and ``pvc`` types.
+    * - sub_path
+      - Sub-path within the source volume/snapshot to mount. Not used for ``ephemeral``. Default: ``""``.
+    * - read_only
+      - If ``true``, mount is read-only. Default: ``false`` for volumes/pvc, ``true`` for snapshots/ephemeral.
+    * - config_content
+      - Config file content. For ``ephemeral``: mounted as a Kubernetes ConfigMap. For ``tapisvolume``: written to NFS. Supports ``${pods:secrets:KEY}`` interpolation. Max 1MB.
+    * - config_permissions
+      - Unix file permissions for config files (e.g., ``'0644'``, ``'0600'``). Default: ``"0644"``.
+    * - config_filename
+      - Filename for the config file when using ``tapisvolume`` with ``config_content``. Defaults to the basename of the mount path.
+    * - config_update_mode
+      - Config update behavior: ``always`` recreates the config on each pod start, ``once`` only creates if the file/ConfigMap doesn't exist. Default: ``"always"``.
+
+**Mount Types:**
+
+- **tapisvolume**: Persistent networked storage created via the Pods volume API.
+- **tapissnapshot**: Read-only mount of a snapshot.
+- **ephemeral**: Kubernetes ConfigMap-backed mount, useful for injecting config files. Content is specified inline via ``config_content``.
+- **pvc**: Direct Kubernetes PersistentVolumeClaim mount.
+
+**Example with multiple mount types:**
+
+.. code-block:: python
+
+    t.pods.create_pod(
+        pod_id='configpod',
+        image='myapp:latest',
+        volume_mounts={
+            "/mnt/data": {
+                "type": "tapisvolume",
+                "source_id": "myvolume"
+            },
+            "/etc/app/config.ini": {
+                "type": "ephemeral",
+                "config_content": "[database]\nhost=localhost\nport=${pods:secrets:DB_PORT}"
+            },
+            "/mnt/backup": {
+                "type": "tapissnapshot",
+                "source_id": "mysnapshot",
+                "sub_path": "/data"
+            }
+        }
+    )
+
 Uploading Files to a Pod
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -581,9 +755,9 @@ Here's how to create a volume, mount it to a pod, upload files, and list files i
             t.pods.create_pod(
                 pod_id='mypod',
                 volume_mounts={
-                  "myvolume": {
+                  "/mnt/data": {
                     "type": "tapisvolume",
-                    "mount_path": "/mnt/data",
+                    "source_id": "myvolume",
                   }
                 }
             )
@@ -620,7 +794,7 @@ Here's how to create a volume, mount it to a pod, upload files, and list files i
                  --url https://tacc.tapis.io/v3/pods/mypod/volumes \
                  --header 'Content-Type: application/json' \
                  --header 'X-Tapis-Token: $JWT' \
-                 --data '{"volume_mounts": {"myvolume": {"type": "tapisvolume", "mount_path": "/mnt/data", "volume_id": "myvolume"}}}'
+                 --data '{"volume_mounts": {"/mnt/data": {"type": "tapisvolume", "source_id": "myvolume"}}}'
 
             # List files in the volume
             curl --request GET \
@@ -751,7 +925,7 @@ Here is how you can upload a file and then load it into MySQL using pod executio
                 ],
                 command_timeout=3600,
                 total_timeout=3600,
-                fail_on_non_success=true
+                fail_on_non_success=True
             )
             print(response)
 
@@ -1106,9 +1280,8 @@ Example of a pod with Tapis authentication enabled:
           "X-Tapis-Tenant": "<<tapistenantid>>",
           "X-Tapis-Site": "<<tapissiteid>>",
           "Flask-does-not-accept-underscores-in-headers": "tip#1",
-          "pods_service_still_accepts-underscores-in-headers_though": "tip#2"
-          "Random-Header-Which-User-Might-Set": "nottip#3"
-          # true email support changes per tenant, contact us to discuss
+          "pods_service_still_accepts-underscores-in-headers_though": "tip#2",
+          "Random-Header-Which-User-Might-Set": "nottip#3",
           "Lot-Of-Apps-Expect-Email-This-Works-For-Some": "<<tapisusername>>@domain.io",
           "Internal": "<<tapisusername>>.<<tapistenantid>>.<<tapissiteid>>",
         },
@@ -1286,6 +1459,147 @@ Example of TapisUI integration configuration:
 
 This will configure the TapisUI ``link`` button to redirect to the specified ``/admin`` route of the pod url (rather than ``/``), with a helpful description explaining where the link leads.
 
+Resource Configuration
+======================
+
+The Pods service allows you to configure CPU, memory, ephemeral storage, and GPU resources for your pods. Resources are
+specified via the ``resources`` object when creating or updating a pod.
+
+Resource Fields
+---------------
+
+.. list-table::
+    :header-rows: 1
+    :widths: 24 76
+
+    * - Field
+      - Description
+    * - cpu_request
+      - CPU allocation the pod requests at startup, in millicpus (m). 1000m = 1 CPU. Default: ``250``.
+    * - cpu_limit
+      - Maximum CPU the pod is allowed to use, in millicpus (m). Default: ``2000``.
+    * - mem_request
+      - Memory the pod requests at startup, in megabytes (Mi). Default: ``256``.
+    * - mem_limit
+      - Maximum memory the pod is allowed to use, in megabytes (Mi). Default: ``3072``.
+    * - ephemeral_storage_request
+      - Ephemeral storage requested at startup, in mebibytes (Mi). ``-1`` for no explicit request. Default: ``-1``.
+    * - ephemeral_storage_limit
+      - Maximum ephemeral storage allowed, in mebibytes (Mi). ``-1`` for no explicit limit. Default: ``-1``.
+    * - gpus
+      - Number of GPUs to allocate. Default: ``0``.
+    * - compute_queue
+      - Queue to run the pod in. Default: ``"default"``.
+
+.. note::
+    GPU availability is limited by the shared Kubernetes cluster's hardware. Currently only integer GPU counts are
+    supported. Contact the Tapis team if you need multi-GPU access or have specific hardware requirements.
+
+Example: Creating a Pod with Custom Resources
+----------------------------------------------
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        .. code-block:: python
+
+            t.pods.create_pod(
+                pod_id='mlpod',
+                image='ollama/ollama:latest',
+                description='Ollama with GPU',
+                resources={
+                    "cpu_request": 1000,
+                    "cpu_limit": 4000,
+                    "mem_request": 2048,
+                    "mem_limit": 8192,
+                    "gpus": 1
+                },
+                time_to_stop_default=-1
+            )
+
+    .. group-tab:: Bash
+
+        .. code-block:: bash
+
+            curl --request POST \
+                 --url https://tacc.tapis.io/v3/pods \
+                 --header 'Content-Type: application/json' \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --data '{
+                    "pod_id": "mlpod",
+                    "image": "ollama/ollama:latest",
+                    "description": "Ollama with GPU",
+                    "resources": {
+                        "cpu_request": 1000,
+                        "cpu_limit": 4000,
+                        "mem_request": 2048,
+                        "mem_limit": 8192,
+                        "gpus": 1
+                    },
+                    "time_to_stop_default": -1
+                 }'
+
+----
+
+Secrets
+=======
+
+Built-in Secret Placeholders
+----------------------------
+
+Built-in placeholders are replaced at pod creation time with auto-generated or Tapis-provided values.
+These use double angle bracket syntax and can be placed in ``environment_variables``:
+
+- ``<<tapissecret_user_username>>`` — the pod's user username
+- ``<<tapissecret_user_password>>`` — the pod's user password
+- ``<<tapissecret_service_username>>`` — the pod's service username
+- ``<<tapissecret_service_password>>`` — the pod's service password
+
+All placeholders must use ``<< >>`` (double angle brackets). The legacy ``<<TAPIS_*>>`` prefix is also accepted but ``<<tapissecret_*>>`` is preferred.
+
+.. code-block:: python
+
+    t.pods.create_pod(
+        pod_id='dbpod',
+        template='postgres',
+        environment_variables={
+            'POSTGRES_USER': '<<tapissecret_user_username>>',
+            'POSTGRES_PASSWORD': '<<tapissecret_user_password>>'
+        }
+    )
+
+Secret Map
+----------
+
+The ``secret_map`` provides a more flexible secrets mechanism. It allows you to define named secrets that are resolved
+at pod start time and can be referenced from ``environment_variables`` or ``config_content`` via the ``${pods:secrets:KEY}`` syntax.
+
+Secret map values use the syntax:
+
+- ``${secret:name}`` — reference a secret owned by the current user
+- ``${secret:user:name}`` — reference a secret with an explicit owner
+
+.. code-block:: python
+
+    t.pods.create_pod(
+        pod_id='apipod',
+        image='myapi:latest',
+        secret_map={
+            'DB_PASS': '${secret:my_db_password}',
+            'API_KEY': '${secret:collaborator:shared_api_key}'
+        },
+        environment_variables={
+            'DATABASE_PASSWORD': '${pods:secrets:DB_PASS}',
+            'EXTERNAL_API_KEY': '${pods:secrets:API_KEY}'
+        }
+    )
+
+The ``secret_map`` keys are resolved at pod start and injected wherever ``${pods:secrets:KEY}`` is referenced. This
+keeps raw secret values out of the pod definition and supports sharing secrets across users.
+
+----
+
 Templates
 =================
 
@@ -1410,42 +1724,46 @@ This example shows how to create a template tag for the ``mongo`` template:
 
 .. tabs::
 
-    .. code-tab:: python
+    .. group-tab:: Python
 
-        t.pods.add_template_tag(
-            template_id='mongo',
-            pod_definition={
-                "image": "mongo:8",
-                "networking": {"default": {"port": 27017, "protocol": "tcp"}},
-                "time_to_stop_default": -1,
-                "environment_variables": {
-                    "MONGO_INITDB_ROOT_USERNAME": "<TAPIS_user_username>",
-                    "MONGO_INITDB_ROOT_PASSWORD": "<TAPIS_user_password>"
-                }
-            },
-            tag='8',
-            commit_message='mongo:8 template'
-        )
+        .. code-block:: python
 
-    .. code-tab:: bash
+            t.pods.add_template_tag(
+                template_id='mongo',
+                pod_definition={
+                    "image": "mongo:8",
+                    "networking": {"default": {"port": 27017, "protocol": "tcp"}},
+                    "time_to_stop_default": -1,
+                    "environment_variables": {
+                        "MONGO_INITDB_ROOT_USERNAME": "<<tapissecret_user_username>>",
+                        "MONGO_INITDB_ROOT_PASSWORD": "<<tapissecret_user_password>>"
+                    }
+                },
+                tag='8',
+                commit_message='mongo:8 template'
+            )
 
-        curl --request POST \
-             --url https://tacc.tapis.io/v3/pods/templates/mongo/tags \
-             --header 'Content-Type: application/json' \
-             --header 'X-Tapis-Token: $JWT' \
-             --data '{  
-                 "pod_definition": {  
-                     "image": "mongo:8",  
-                     "networking": { "default": { "port": 27017, "protocol": "tcp" } },  
-                     "time_to_stop_default": -1,  
-                     "environment_variables": {  
-                         "MONGO_INITDB_ROOT_USERNAME": "<TAPIS_user_username>",  
-                         "MONGO_INITDB_ROOT_PASSWORD": "<TAPIS_user_password>"  
-                     }  
-                 },  
-                 "tag": "8",  
-                 "commit_message": "mongo:8 template"  
-             }'
+    .. group-tab:: Bash
+
+        .. code-block:: bash
+
+            curl --request POST \
+                 --url https://tacc.tapis.io/v3/pods/templates/mongo/tags \
+                 --header 'Content-Type: application/json' \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --data '{  
+                     "pod_definition": {  
+                         "image": "mongo:8",  
+                         "networking": { "default": { "port": 27017, "protocol": "tcp" } },  
+                         "time_to_stop_default": -1,  
+                         "environment_variables": {  
+                             "MONGO_INITDB_ROOT_USERNAME": "<<tapissecret_user_username>>",  
+                             "MONGO_INITDB_ROOT_PASSWORD": "<<tapissecret_user_password>>"  
+                         }  
+                     },  
+                     "tag": "8",  
+                     "commit_message": "mongo:8 template"  
+                 }'
 
 
 Using a Template Tag to Create a Pod
@@ -1455,29 +1773,138 @@ To create a pod from a specific template tag and timestamp, use:
 
 .. tabs::
 
+    .. group-tab:: Python
 
-    .. code-tab:: python
+        .. code-block:: python
 
-        t.pods.create_pod(
-            pod_id='mypod',
-            template='neo4j:5.26s3se@2025-01-30-17:14:14',
-            time_to_stop_default=-1
-        )
+            t.pods.create_pod(
+                pod_id='mypod',
+                template='neo4j:5.26s3se@2025-01-30-17:14:14',
+                time_to_stop_default=-1
+            )
 
-    .. code-tab:: bash
+    .. group-tab:: Bash
 
-        curl --request POST \
-             --url https://tacc.tapis.io/v3/pods \
-             --header 'Content-Type: application/json' \
-             --header 'X-Tapis-Token: $JWT' \
-             --data '{  
-                 "pod_id": "mypod",  
-                 "template": "neo4j:5.26s3se@2025-01-30-17:14:14",  
-                 "time_to_stop_default": -1  
-             }'
+        .. code-block:: bash
+
+            curl --request POST \
+                 --url https://tacc.tapis.io/v3/pods \
+                 --header 'Content-Type: application/json' \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --data '{  
+                     "pod_id": "mypod",  
+                     "template": "neo4j:5.26s3se@2025-01-30-17:14:14",  
+                     "time_to_stop_default": -1  
+                 }'
 
 
 Ensure that the template name and tag match exactly as shown in the Tapis UI or the ``list_templates()`` output.
+
+
+Template Overrides
+------------------
+
+When creating a pod from a template, you may want to partially override specific template values — for example,
+swapping a volume source or changing a secret — without rewriting the entire ``volume_mounts`` or ``secret_map``.
+The ``template_overrides`` field allows this:
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        .. code-block:: python
+
+            t.pods.create_pod(
+                pod_id='mypod',
+                template='neo4j',
+                template_overrides={
+                    "volume_mounts": {
+                        "/data": {"source_id": "my-custom-volume"}
+                    },
+                    "secret_map": {
+                        "DB_PASS": "${secret:my_db_password}"
+                    }
+                }
+            )
+
+    .. group-tab:: Bash
+
+        .. code-block:: bash
+
+            curl --request POST \
+                 --url https://tacc.tapis.io/v3/pods \
+                 --header 'Content-Type: application/json' \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --data '{
+                    "pod_id": "mypod",
+                    "template": "neo4j",
+                    "template_overrides": {
+                        "volume_mounts": {
+                            "/data": {"source_id": "my-custom-volume"}
+                        },
+                        "secret_map": {
+                            "DB_PASS": "${secret:my_db_password}"
+                        }
+                    }
+                 }'
+
+Values in ``template_overrides`` are merged into the resolved template fields. Only the keys you specify are overridden;
+the rest of the template definition is preserved.
+
+Saving a Pod as a Template Tag
+------------------------------
+
+If you have a running pod with a configuration you'd like to reuse, you can save its current definition as a new
+template tag using the ``save_pod_as_template_tag`` endpoint. This requires ADMIN permission on the pod.
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        .. code-block:: python
+
+            t.pods.save_pod_as_template_tag(
+                pod_id='mypod',
+                template_id='mytemplate',
+                tag='v1',
+                commit_message='Saved from running pod config'
+            )
+
+    .. group-tab:: Bash
+
+        .. code-block:: bash
+
+            curl --request POST \
+                 --url https://tacc.tapis.io/v3/pods/mypod/save_pod_as_template_tag \
+                 --header 'Content-Type: application/json' \
+                 --header 'X-Tapis-Token: $JWT' \
+                 --data '{
+                    "template_id": "mytemplate",
+                    "tag": "v1",
+                    "commit_message": "Saved from running pod config"
+                 }'
+
+Derived Pods
+------------
+
+The ``derived`` endpoint returns a list of pods that have been merged with their specific pod template. This is useful for viewing the resulting pod that was created.
+
+.. tabs::
+
+    .. group-tab:: Python
+
+        .. code-block:: python
+
+            derived = t.pods.get_pod_derived(pod_id='mypod')
+            print(derived)
+
+    .. group-tab:: Bash
+
+        .. code-block:: bash
+
+            curl --request GET \
+                 --url https://tacc.tapis.io/v3/pods/mypod/derived \
+                 --header 'X-Tapis-Token: $JWT'
 
 ----
 
