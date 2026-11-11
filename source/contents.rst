@@ -12,7 +12,7 @@ Welcome to Tapis's Documentation!
 
    index
    getting-started/index
-
+   getting-started/glossary
 
 .. toctree::
    :maxdepth: 2
