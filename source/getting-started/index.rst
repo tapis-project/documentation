@@ -48,7 +48,7 @@ Tapis Quickstart
 In this guide, we will use the Tapis APIs to list files on the Amazon AWS S3 storage system using the
 *tacc* instance of Tapis (an instance of Tapis is called a **tenant**; since Tapis is open source any organization can install it and run their own tenant) with base URL *https://tacc.tapis.io*. We will work the example in two ways: using cURL from the command line and using a Python script. Pick the path that most closely matches your needs.
 
-You will also see the term *JWT* (JSON Web Token) throughout this guide. A JWT is the access token Tapis gives you when you log in, and you'll include it in the ``X-Tapis-Token`` header of your request so Tapis knows who you are. Be sure to use the same tenant and base URl in every step. Each tenant has its own users, tokens, and systems, so if you mix them up (for example, getting a token from ``https://tacc.tapis.io`` and then sending requests to a ``-dev`` tenant), Tapis won't accept your token, and anything you created in one tenant won't show up in the other.
+You will also see the term *JWT* (JSON Web Token) throughout this guide. A JWT is the access token Tapis gives you when you log in, and you'll include it in the ``X-Tapis-Token`` header of your request so Tapis knows who you are. Be sure to use the same tenant and base URL in every step. Each tenant has its own users, tokens, and systems, so if you mix them up (for example, getting a token from ``https://tacc.tapis.io`` and then sending requests to a ``-dev`` tenant), Tapis won't accept your token, and anything you created in one tenant won't show up in the other.
 
 Python Example
 ---------------------
